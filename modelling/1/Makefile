@@ -1,5 +1,5 @@
-report_dir = .
-report_name = main
+report_dir := $(shell yq eval '.report.dir' config.yml)
+report_name := $(shell yq eval '.report.name' config.yml)
 
 clean:
 	# clean LaTeX artifacts

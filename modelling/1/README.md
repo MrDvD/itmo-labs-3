@@ -1,3 +1,3 @@
-# electronics-1
+# modelling-1
 
 Use xetex-base:labs image for work

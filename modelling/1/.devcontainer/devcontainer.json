@@ -1,4 +1,11 @@
 {
   "name": "XeTeX Local Container",
-  "image": "ghcr.io/mrdvd/xetex-base:labs"
+  "build": {
+    "dockerfile": "./Containerfile",
+    "options": [
+      "--net=host",
+      "--dns=8.8.8.8",
+      "--dns=1.1.1.1"
+    ]
+  }
 }
