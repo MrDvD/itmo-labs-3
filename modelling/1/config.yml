@@ -2,3 +2,4 @@ report:
     dir: ./
     tasks_dir: tasks
     name: main
+variant_num: 108

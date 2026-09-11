@@ -6,20 +6,33 @@ from typing import Any, Dict
 
 if __name__ == "__main__":
     cfg = config.load('config.yml')
+
+    pics_path = os.path.join(cfg['report']['dir'], 'pics')
+    os.makedirs(pics_path, exist_ok=True)
+
+    sequence_plot_path = os.path.join(pics_path, 'sequence_plot.pdf')
+    autocorr_plot_path = os.path.join(pics_path, 'autocorr_plot.pdf')
+    sequence_hist_plot_path = os.path.join(pics_path, 'sequence_hist.pdf')
     
     context: Dict[str, Any] = {
-    #   'variant_number': cfg['variant_num'],
+      'variant_number': cfg['variant_num'],
+      'sequence_plot_path': sequence_plot_path,
+      'autocorr_plot_path': autocorr_plot_path,
+      'sequence_hist_plot_path': sequence_hist_plot_path,
     }
 
     sequence = list()
     with open(os.path.join("src", "sequence.txt")) as f:
-        raw_number = f.readline().replace(",", ".").strip()
-        sequence.append(float(raw_number))
+        for line in f:
+            raw_number = line.replace(",", ".").strip()
+            sequence.append(float(raw_number))
 
-    # pics_path = os.path.join(cfg['report']['dir'], 'pics')
-    # os.makedirs(pics_path, exist_ok=True)
+    context = ReportFiller.compute_main_characteristics(context, sequence)
+    context = ReportFiller.compute_autocorrelation(context, sequence)
 
-    report = ReportFiller(context)
+    ReportFiller.plot_sequence(sequence, sequence_plot_path)
+    ReportFiller.plot_autocorrelation(context["autocorr"], autocorr_plot_path)
+    ReportFiller.plot_sequence_histogram(sequence, sequence_hist_plot_path)
 
     artifacts = ArtifactsFiller(context, [cfg['report']['dir']])
     artifacts.compile_patterns()
