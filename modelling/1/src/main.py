@@ -8,13 +8,16 @@ if __name__ == "__main__":
     cfg = config.load('config.yml')
     
     context: Dict[str, Any] = {
-      # 'variant_number': cfg['variant_num'],
+    #   'variant_number': cfg['variant_num'],
     }
 
-    pics_path = os.path.join(cfg['report']['dir'], 'pics')
-    os.makedirs(pics_path, exist_ok=True)
-    population_diagram_path = os.path.join(pics_path, 'population.pdf')
-    colony_diagram_path = os.path.join(pics_path, 'colony.pdf')
+    sequence = list()
+    with open(os.path.join("src", "sequence.txt")) as f:
+        raw_number = f.readline().replace(",", ".").strip()
+        sequence.append(float(raw_number))
+
+    # pics_path = os.path.join(cfg['report']['dir'], 'pics')
+    # os.makedirs(pics_path, exist_ok=True)
 
     report = ReportFiller(context)
 

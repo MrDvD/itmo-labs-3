@@ -1,47 +1,137 @@
-\subsection{Заданная числовая последовательность}
+\subsection{Выборочные моменты}
 
-\begin{table}[h]
+Для описания характеристик заданной числовой последовательности вспомним некоторые формулы из курса математической статистики.
+
+Из определения математического ожидания выборки:
+\[
+    \mu(A) = \dfrac{1}{n}\sum_{i=1}^nA_i
+\]
+
+Для оценки дисперсии применим следующие формулы:
+
+\[
+    D(A)\approx\begin{cases}
+        S^2_0 = \dfrac{1}{n-1}\sum_{i=1}^n(A_i-\overline{A})^2,& n<100\\
+        S^2 = \dfrac{1}{n}\sum_{i=1}^n(A_i-\overline{A})^2,& n\geq 100
+    \end{cases},
+\]
+
+где \( S^2 \) --- смещённая выборочная дисперсия, а \( S^2_0 \) --- несмещённая выборочная дисперсия.
+
+Для оценки среднеквадратического отклонения \( \sigma \) имеем:
+\[
+    D(A)=\sigma^2\implies\sigma(A)=\sqrt{D(A)}
+\]
+
+Для оценки коэффициента вариации \( V \) используем формулу:
+\[
+    V(A) = \dfrac{\sigma(A)}{\mu(A)} \times 100\%
+\]
+
+Пусть \( A\sim\mathcal{F}_\mu \), тогда найдём доверительный интервал уровня доверия \( \alpha\equiv 1-\varepsilon \) для параметра \( \mu \). Из центральной предельной теоремы получаем:
+\begin{equation}
+    G_\mu(A)=\sqrt{n}\cdot\dfrac{\overline{X}-\mu}{\sigma}\xrightarrow[n\to 0]{}\mathcal{N}(0,1)\label{eq:central_limit_theorem}
+\end{equation}
+
+По определению доверительного интервала:
+\begin{equation}
+    P(\abs{G_\mu}<c)=\alpha,\ c \text{ --- квантиль }\mathcal{N}(0,1)\label{eq:confidence_interval}
+\end{equation}
+
+Квантили для указанного распределения известны:
+
+\begin{table}[H]
 \centering
 \begin{tblr}{
-  colspec = {|c|c|c|c|c|c|c|c|},
-  hlines,
-  vlines,
-  cells = {c, m},
+    colspec = {c c c c},
+    hlines,
+    vlines,
+    cells = {c, m},
+}
+\textbf{Уровень доверия} & 0,9 & 0,95 & 0,99 \\
+\textbf{Квантиль} & 1,645 & 1,960 & 2,576 \\
+\end{tblr}
+\caption{Квантили стандартного нормального распределения}
+\end{table}
+
+Из \eqref{eq:central_limit_theorem} и \eqref{eq:confidence_interval} следует, что:
+\[
+    \Delta \mu(A) = \abs{\overline{X}-\mu} = c\cdot\dfrac{\sigma(A)}{\sqrt{n}}
+\]
+
+Рассчитанные значения характеристик заданной числовой последовательности представлены в таблице \ref{tab:sequence_characteristics}.
+
+\begin{table}[H]
+\centering
+\begin{tblr}{
+    colspec = {|c|c|c|c|c|c|c|c|},
+    hlines,
+    vlines,
+    cells = {c, m},
 }
 \SetCell[r=2]{c} \textbf{Характеристика} & & \SetCell[c=6]{c} \textbf{Количество случайных величин} & & & & & \\
  & & \textbf{10} & \textbf{20} & \textbf{50} & \textbf{100} & \textbf{200} & \textbf{300} \\
-\SetCell[r=2]{c} \textbf{Мат.ож.} & Знач. & & & & & & \SetCell[r=2]{c} \\
- & \% & & & & & & \\
-\SetCell[r=2]{c} Дов. инт. (0,9) & Знач. & & & & & & \SetCell[r=2]{c} \\
- & \% & & & & & & \\
-\SetCell[r=2]{c} Дов. инт. (0,95) & Знач. & & & & & & \SetCell[r=2]{c} \\
- & \% & & & & & & \\
-\SetCell[r=2]{c} Дов. инт. (0,99) & Знач. & & & & & & \SetCell[r=2]{c} \\
- & \% & & & & & & \\
-\SetCell[r=2]{c} \textbf{Дисперсия} & Знач. & & & & & & \SetCell[r=2]{c} \\
- & \% & & & & & & \\
-\SetCell[r=2]{c} \textbf{С.к.о.} & Знач. & & & & & & \SetCell[r=2]{c} \\
- & \% & & & & & & \\
-\SetCell[r=2]{c} \textbf{К-т вариации} & Знач. & & & & & & \SetCell[r=2]{c} \\
- & \% & & & & & & \\
+\SetCell[r=2]{c} $\mu(A)$ & \textbf{1} & & & & & & \SetCell[r=2]{c} \\
+ & \textbf{\%} & & & & & & \\
+\SetCell[r=2]{c} $\Delta\mu\ (\alpha=0,9)$ & \textbf{1} & & & & & & \SetCell[r=2]{c} \\
+ & \textbf{\%} & & & & & & \\
+\SetCell[r=2]{c} $\Delta\mu\ (\alpha=0,95)$ & \textbf{1} & & & & & & \SetCell[r=2]{c} \\
+ & \textbf{\%} & & & & & & \\
+\SetCell[r=2]{c} $\Delta\mu\ (\alpha=0,99)$ & \textbf{1} & & & & & & \SetCell[r=2]{c} \\
+ & \textbf{\%} & & & & & & \\
+\SetCell[r=2]{c} $D(A)$ & \textbf{1} & & & & & & \SetCell[r=2]{c} \\
+ & \textbf{\%} & & & & & & \\
+\SetCell[r=2]{c} $\sigma(A)$ & \textbf{1} & & & & & & \SetCell[r=2]{c} \\
+ & \textbf{\%} & & & & & & \\
+\SetCell[r=2]{c} $V(A)$ & \textbf{1} & & & & & & \SetCell[r=2]{c} \\
+ & \textbf{\%} & & & & & & \\
 \end{tblr}
 \caption{Характеристики заданной последовательности (вариант \underline{108})}
+\label{tab:sequence_characteristics}
 \end{table}
 
-График...
+\subsection{Характер данной выборки}
 
-\begin{table}[h]
+\begin{figure}[H]
+    \centering
+    % \includegraphics[width=0.8\textwidth]{pics/sequence_plot.png}
+    \caption{График заданной числовой последовательности (вариант \underline{108})}
+    \label{fig:sequence_plot}
+\end{figure}
+
+\subsection{Автокорреляционный анализ}
+
+\begin{table}[H]
 \centering
 \begin{tblr}{
-  colspec = {|c|c|c|c|c|c|c|c|c|c|c|},
-  hlines,
-  vlines,
-  cells = {c, m},
+    colspec = {|c|c|c|c|c|c|c|c|c|c|c|},
+    hlines,
+    vlines,
+    cells = {c, m},
 }
-\textbf{Сдвиг ЧП} & 1 & 2 & 3 & 4 & 5 & 6 & 7 & 8 & 9 & 10 \\
-\textbf{К-т АК} для задан. \textbf{ЧП} & & & & & & & & & & \\
-\textbf{К-т АК} для сгенерир. \textbf{ЧП} & & & & & & & & & & \\
+\textbf{Сдвиг} $\mathbf{k}$ & 1 & 2 & 3 & 4 & 5 & 6 & 7 & 8 & 9 & 10 \\
+\textbf{К-т АК} & & & & & & & & & & \\
 \textbf{\%} & & & & & & & & & & \\
 \end{tblr}
 \caption{Результаты автокорреляционного анализа}
 \end{table}
+
+\begin{figure}[H]
+    \centering
+    % \includegraphics[width=0.8\textwidth]{pics/autocorrelation.png}
+    \caption{Автокорреляционный анализ (вариант \underline{108})}
+    \label{fig:autocorrelation_plot}
+\end{figure}
+
+Вывод...
+
+\subsection{Гистограмма данной выборки}
+
+Гистограмма...
+
+\begin{figure}[H]
+    \centering
+    % \includegraphics[width=0.8\textwidth]{pics/histogram.png}
+    \caption{Гистограмма данной выборки (вариант \underline{108})}
+    \label{fig:histogram_plot}
+\end{figure}
