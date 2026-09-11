@@ -1,5 +1,7 @@
 *.log
 *.aux
 *.toc
+*.compiled.*
 
 temp/
+__pycache__/

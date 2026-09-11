@@ -1,12 +1,12 @@
 import os
 import re
-from typing import Dict
+from typing import Dict, List
 from jinja2 import Environment, FileSystemLoader, meta
 
 class ArtifactsFiller:
-  def __init__(self, context: Dict[str, str], report_dir: str):
+  def __init__(self, context: Dict[str, str], artifacts_dirs: List[str]):
     self.context: Dict[str, str] = context
-    self.report_dir = report_dir
+    self.artifacts_dirs = artifacts_dirs
     self.section_regex = re.compile(r"## (.+)\n([\s\S]*?)(?=\n## |$)")
 
   def parse_artifact(self, artifact_path: str):
@@ -28,23 +28,24 @@ class ArtifactsFiller:
       raise RuntimeError(f"Error reading artifact: {e}")
 
   def compile_patterns(self):
-    if not os.path.isdir(self.report_dir):
-      raise NotADirectoryError(f"Invalid report directory: {self.report_dir}")
+    for artifacts_dir in self.artifacts_dirs:
+      if not os.path.isdir(artifacts_dir):
+        raise NotADirectoryError(f"Invalid artifacts directory: {artifacts_dir}")
 
-    env = Environment(loader=FileSystemLoader(self.report_dir))
+      env = Environment(loader=FileSystemLoader(artifacts_dir))
 
-    for root, _, files in os.walk(self.report_dir):
-      for filename in files:
-        if filename.endswith(".jinja"):
-          rel_path = os.path.relpath(os.path.join(root, filename), self.report_dir)
-          base, ext, _ = os.path.join(self.report_dir, rel_path).rsplit('.', 2)
-          output_path = base + '.compiled.' + ext
-          
-          rendered_content = self._render_template(env, rel_path)
-          
-          os.makedirs(os.path.dirname(output_path), exist_ok=True)
-          with open(output_path, "w") as f:
-            f.write(rendered_content)
+      for root, _, files in os.walk(artifacts_dir):
+        for filename in files:
+          if filename.endswith(".jinja"):
+            rel_path = os.path.relpath(os.path.join(root, filename), artifacts_dir)
+            base, ext, _ = os.path.join(artifacts_dir, rel_path).rsplit('.', 2)
+            output_path = base + '.compiled.' + ext
+            
+            rendered_content = self._render_template(env, rel_path)
+            
+            os.makedirs(os.path.dirname(output_path), exist_ok=True)
+            with open(output_path, "w") as f:
+              f.write(rendered_content)
 
   def _render_template(self, env: Environment, template_name: str) -> str:
     if env.loader is None:
