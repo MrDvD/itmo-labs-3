@@ -108,6 +108,8 @@
 
 \subsection{Характер данной выборки}
 
+Построим график заданной выборки, чтобы визуально оценить её характер:
+
 \begin{figure}[H]
     \centering
     \includegraphics[width=0.8\textwidth]{\VAR{ sequence_plot_path }}
@@ -115,7 +117,11 @@
     \label{fig:sequence_plot}
 \end{figure}
 
-Вывод...
+\textbf{Вывод:}
+\begin{enumerate}
+    \item \textbf{Анализ монотонности:} На исследуемой области определения выборки наблюдается чередование участков возрастания и убывания. Следовательно, выборка не является монотонной на всём рассматриваемом интервале.
+    \item \textbf{Анализ периодичности:} Ярко выраженная периодичность на рассматриваемом промежутке отсутствует, в ходе графического анализа не удалось выявить колебания.
+\end{enumerate}
 
 \subsection{Автокорреляционный анализ}
 
@@ -152,8 +158,75 @@ $\boldsymbol{\rho_k}$ & \VAR{ autocorr.abs_6 } & \VAR{ autocorr.abs_7 } & \VAR{ 
 
 \subsection{Гистограмма данной выборки}
 
-Гистограмма...
+Введём следующее разбиение для данной выборки:
+\[
+    \tau = \{ \VAR{ hist_nodes | map('round', 2) | join('; ') } \}
+\]
 
+Обозначим полуинтервалы разбиения следующим образом:
+\begin{align*}
+    \Delta_i &= [\tau_i, \tau_{i+1}),\ i=\overline{0, \VAR{ hist_bins|length - 1 }}\\
+    l_i &= \abs{\tau_{i+1}-\tau_i},\ i=\overline{0, \VAR{ hist_bins|length - 1 }}
+\end{align*}
+
+Определим частоты \( \nu_i \) попадания элементов выборки в каждый полуинтервал \( \Delta_i \) разбиения:
+
+\BLOCK{ set half = (hist_bins|length / 2)|round(0, 'ceil')|int }
+\begin{table}[H]
+\centering
+\begin{tblr}{
+    colspec = {|c|c|c||c|c|c|},
+    hlines,
+    vlines,
+    cells = {c, m},
+}
+$i$ & $\Delta_i$ & $\nu_i$ & $i$ & $\Delta_i$ & $\nu_i$ \\
+\BLOCK{ for left_item in hist_bins[:half] }
+  \BLOCK{- set right_idx = loop.index0 + half -}
+  \BLOCK{- set right_item = hist_bins[right_idx] if right_idx < hist_bins|length else none -}
+\VAR{- loop.index0 -} & [\VAR{ "%.2f"|format(left_item.left) }; \VAR{ "%.2f"|format(left_item.right) }) & \VAR{ left_item.freq } &
+  \BLOCK{- if right_item -}
+    \VAR{ right_idx } & [\VAR{ "%.2f"|format(right_item.left) }; \VAR{ "%.2f"|format(right_item.right) }) & \VAR{ right_item.freq }
+  \BLOCK{- else -}
+    & &
+  \BLOCK{- endif -} \\
+\BLOCK{ endfor }
+\end{tblr}
+\caption{Частотное распределение по интервалам $\Delta_i$}
+\label{tab:histogram_frequencies}
+\end{table}
+
+Высота столбцов гистограммы находится по формуле:
+\[
+    h_i = \dfrac{\nu_i}{n\cdot l_i},\ i=\overline{0, \VAR{ hist_bins|length - 1 }}
+\]
+
+Итого имеем следующую таблицу для построения гистограммы:
+\begin{table}[H]
+\centering
+\begin{tblr}{
+    colspec = {|c|c|c||c|c|c|},
+    hlines,
+    vlines,
+    cells = {c, m},
+}
+$i$ & $\Delta_i$ & $h_i$ & $i$ & $\Delta_i$ & $h_i$ \\
+\BLOCK{ for left_item in hist_bins[:half] }
+  \BLOCK{- set right_idx = loop.index0 + half -}
+  \BLOCK{- set right_item = hist_bins[right_idx] if right_idx < hist_bins|length else none -}
+\VAR{- loop.index0 -} & [\VAR{ "%.2f"|format(left_item.left) }; \VAR{ "%.2f"|format(left_item.right) }) & \VAR{ "%.4f"|format(left_item.height) } &
+  \BLOCK{- if right_item -}
+    \VAR{ right_idx } & [\VAR{ "%.2f"|format(right_item.left) }; \VAR{ "%.2f"|format(right_item.right) }) & \VAR{"%.4f"|format(right_item.height) }
+  \BLOCK{- else -}
+    & &
+  \BLOCK{- endif -} \\
+\BLOCK{ endfor }
+\end{tblr}
+\caption{Гистограмма распределения по интервалам $\Delta_i$}
+\label{tab:histogram_heights}
+\end{table}
+
+Построим гистограмму по полученным данным:
 \begin{figure}[H]
     \centering
     \includegraphics[width=0.8\textwidth]{\VAR{ sequence_hist_plot_path }}

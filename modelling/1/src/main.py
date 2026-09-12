@@ -29,6 +29,7 @@ if __name__ == "__main__":
 
     context = ReportFiller.compute_main_characteristics(context, sequence)
     context = ReportFiller.compute_autocorrelation(context, sequence)
+    context = ReportFiller.compute_histogram_distribution(context, sequence, bins=10)
 
     ReportFiller.plot_sequence(sequence, sequence_plot_path)
     ReportFiller.plot_autocorrelation(context["autocorr"], autocorr_plot_path)

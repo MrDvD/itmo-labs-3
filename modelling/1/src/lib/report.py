@@ -102,6 +102,43 @@ class ReportFiller:
         return context
 
     @staticmethod
+    def compute_histogram_distribution(context: Dict[str, Any], sequence: List[float], bins: int = 10) -> Dict[str, Any]:
+        if len(sequence) == 0:
+            raise ValueError("Sequence cannot be empty.")
+
+        Amin = min(sequence)
+        Amax = max(sequence)
+
+        # Generate bin node boundaries (floats)
+        tau = [Amin + i * (Amax - Amin) / bins for i in range(bins + 1)]
+        sorted_sequence = sorted(sequence)
+        counts = [0] * bins
+
+        # Bin frequency counting
+        for value in sorted_sequence:
+            for i in range(bins):
+                if tau[i] <= value < tau[i + 1]:
+                    counts[i] += 1
+                    break
+            else:
+                if value == tau[-1]:
+                    counts[-1] += 1
+
+        hist_bins = [
+            {
+                "left": tau[i],
+                "right": tau[i + 1],
+                "freq": counts[i],
+                "height": counts[i] / len(sequence),
+            }
+            for i in range(bins)
+        ]
+
+        context["hist_nodes"] = tau
+        context["hist_bins"] = hist_bins
+        return context
+
+    @staticmethod
     def compute_autocorrelation(
         context: Dict[str, Any], sequence: List[float], max_lag: int = 10
     ) -> Dict[str, Any]:

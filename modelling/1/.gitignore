@@ -1,6 +1,7 @@
 *.log
 *.aux
 *.toc
+*.out
 *.compiled.*
 
 temp/
