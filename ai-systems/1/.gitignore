@@ -1,0 +1,9 @@
+*.log
+*.aux
+*.toc
+*.out
+*.compiled.*
+
+temp/
+__pycache__/
+pics/
