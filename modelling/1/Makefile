@@ -3,13 +3,14 @@ report_name := $(shell yq eval '.report.name' config.yml)
 
 clean:
 	# clean LaTeX artifacts
-	@for file_ext in "*.pdf" "*.aux" "*.log" "*.toc" "*.out"; do \
+	@for file_ext in "*.pdf" "*.aux" "*.log" "*.toc" "*.out" "*.bbl" "*.blg" "*.bcf" "*.run.xml"; do \
 		find $(report_dir) -name "$${file_ext}" -delete; \
 	done
 	# clean project compiled files
 	find . -name "*.compiled.*" -delete
-pdf:
+pdf: clean
 	python3 src/main.py
 	cd "${report_dir}"; \
 	xelatex --shell-escape -interaction=nonstopmode "${report_name}"; \
+	biber "${report_name}"; \
 	xelatex --shell-escape -interaction=nonstopmode "${report_name}"

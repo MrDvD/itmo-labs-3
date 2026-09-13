@@ -24,4 +24,12 @@
     pdfborder={0 0 0}       % убрать рамки вокруг ссылок
 }
 
+% Подключение библиографии
+\usepackage[
+    backend=biber,
+    style=gost-numeric,
+    sorting=none
+]{biblatex}
+\addbibresource{refs.bib}
+
 \newcommand{\abs}[1]{\left|#1\right|}

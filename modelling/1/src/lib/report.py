@@ -1,6 +1,7 @@
 import math
 from typing import Dict, List, Any
 import matplotlib.pyplot as plt
+import numpy as np
 
 class ReportFiller:
     @staticmethod
@@ -24,7 +25,7 @@ class ReportFiller:
         # Unbiased variance for full sequence
         var_full = sum((x - mu_full) ** 2 for x in sequence) / (N_full - 1) if N_full > 1 else 0.0
         std_full = math.sqrt(var_full)
-        cv_full = (std_full / mu_full * 100.0) if mu_full != 0 else 0.0
+        cv_full = std_full / mu_full if mu_full != 0 else 0.0
 
         d_mu_full = {
             alpha: z * (std_full / math.sqrt(N_full)) 
@@ -60,7 +61,7 @@ class ReportFiller:
                 var_n = sum((x - mu_n) ** 2 for x in subsequence) / n_curr
 
             std_n = math.sqrt(var_n)
-            cv_n = (std_n / mu_n * 100.0) if mu_n != 0 else 0.0
+            cv_n = std_n / mu_n if mu_n != 0 else 0.0
 
             # Confidence margin d_mu = c * (sigma / sqrt(n))
             d_mu_n = {
@@ -102,15 +103,19 @@ class ReportFiller:
         return context
 
     @staticmethod
-    def compute_histogram_distribution(context: Dict[str, Any], sequence: List[float], bins: int = 10) -> Dict[str, Any]:
-        if len(sequence) == 0:
+    def compute_histogram_distribution(
+        context: Dict[str, Any], sequence: List[float], bins: int = 10
+    ) -> Dict[str, Any]:
+        N = len(sequence)
+        if N == 0:
             raise ValueError("Sequence cannot be empty.")
 
         Amin = min(sequence)
         Amax = max(sequence)
+        bin_width = (Amax - Amin) / bins
 
-        # Generate bin node boundaries (floats)
-        tau = [Amin + i * (Amax - Amin) / bins for i in range(bins + 1)]
+        # Generate bin node boundaries
+        tau = [Amin + i * bin_width for i in range(bins + 1)]
         sorted_sequence = sorted(sequence)
         counts = [0] * bins
 
@@ -124,12 +129,13 @@ class ReportFiller:
                 if value == tau[-1]:
                     counts[-1] += 1
 
+        # Calculate true height density h_i = nu_i / (n * l_i)
         hist_bins = [
             {
                 "left": tau[i],
                 "right": tau[i + 1],
                 "freq": counts[i],
-                "height": counts[i] / len(sequence),
+                "height": counts[i] / (N * bin_width),
             }
             for i in range(bins)
         ]
@@ -165,6 +171,44 @@ class ReportFiller:
         return context
 
     @staticmethod
+    def compute_hyperparameters(
+        context: Dict[str, Any], sequence: List[float]
+    ) -> Dict[str, Any]:
+        N = len(sequence)
+        if N == 0:
+            raise ValueError("Sequence cannot be empty.")
+
+        mu = sum(sequence) / N
+        var = sum((x - mu) ** 2 for x in sequence) / (N - 1)
+        std = math.sqrt(var)
+
+        if mu == 0:
+            raise ValueError("Mean (mu) cannot be zero for CV calculation.")
+
+        # Квадрат коэффициента вариации V^2 = (sigma / mu)^2
+        v_sq = (std / mu) ** 2
+
+        # Проверка условия применения распределения Эрланга (V^2 < 1)
+        if v_sq >= 1.0:
+            raise ValueError(
+                f"Coefficient of variation squared (V^2 = {v_sq:.4f}) must be < 1 for Erlang (E_k) approximation."
+            )
+
+        # 1. Порядок распределения k (округление 1 / V^2)
+        k = round(1.0 / v_sq)
+        if k < 1:
+            k = 1
+
+        # 2. Интенсивность lambda = k / mu
+        lambda_val = k / mu
+
+        context["hyperparameters"] = {
+            "k": str(k),
+            "lambda": f"{lambda_val:.4f}",
+        }
+        return context
+
+    @staticmethod
     def plot_sequence(sequence: List[float], output_path: str):
         plt.figure(figsize=(10, 6))
         plt.plot(range(1, len(sequence) + 1), sequence, marker='o', linestyle='-', color='b')
@@ -191,9 +235,59 @@ class ReportFiller:
     @staticmethod
     def plot_sequence_histogram(sequence: List[float], output_path: str, bins: int = 10):
         plt.figure(figsize=(10, 6))
-        plt.hist(sequence, bins=bins, color='lightgreen', edgecolor='black')
+        plt.hist(sequence, bins=bins, density=True, color='lightgreen', edgecolor='black')
         plt.xlabel('Value')
         plt.ylabel('Frequency')
         plt.grid(axis='y')
         plt.savefig(output_path)
+        plt.close()
+
+    @staticmethod
+    def plot_sequence_with_erlang_density(
+        context: Dict[str, Any],
+        sequence: List[float],
+        output_path: str,
+        bins: int = 15,
+    ):
+        # Извлечение параметров k и lambda из контекста
+        k = int(context["hyperparameters"]["k"])
+        lambda_val = float(context["hyperparameters"]["lambda"])
+
+        plt.figure(figsize=(10, 6))
+
+        # Нормированная гистограмма выборки
+        plt.hist(
+            sequence,
+            bins=bins,
+            density=True,
+            color="lightgreen",
+            edgecolor="black",
+            alpha=0.6,
+            label="Histogram",
+        )
+
+        # Расчет теоретической плотности Эрланга E_k(x)
+        x_min, x_max = max(0.0, min(sequence)), max(sequence)
+        x_grid = np.linspace(x_min, x_max, 500)
+
+        pdf_erlang = (
+            (lambda_val**k)
+            * (x_grid ** (k - 1))
+            * np.exp(-lambda_val * x_grid)
+        ) / math.factorial(k - 1)
+
+        plt.plot(
+            x_grid,
+            pdf_erlang,
+            color="darkgreen",
+            linewidth=2.5,
+            label=f"f(x)",
+        )
+
+        plt.xlabel("Value")
+        plt.ylabel("Density")
+        plt.legend()
+        plt.grid(True, linestyle="--", alpha=0.5)
+
+        plt.savefig(output_path, dpi=300, bbox_inches="tight")
         plt.close()

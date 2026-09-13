@@ -1,4 +1,6 @@
-\subsection{Выборочные моменты}
+\subsection{Данная выборка}
+
+\subsubsection{Выборочные моменты}
 
 Для описания характеристик заданной числовой последовательности вспомним некоторые формулы из курса математической статистики.
 
@@ -106,7 +108,7 @@
 \label{tab:sequence_characteristics}
 \end{table}
 
-\subsection{Характер данной выборки}
+\subsubsection{Характер выборки}
 
 Построим график заданной выборки, чтобы визуально оценить её характер:
 
@@ -123,7 +125,7 @@
     \item \textbf{Анализ периодичности:} Ярко выраженная периодичность на рассматриваемом промежутке отсутствует, в ходе графического анализа не удалось выявить колебания.
 \end{enumerate}
 
-\subsection{Автокорреляционный анализ}
+\subsubsection{Автокорреляционный анализ}
 
 Формула...
 
@@ -156,7 +158,7 @@ $\boldsymbol{\rho_k}$ & \VAR{ autocorr.abs_6 } & \VAR{ autocorr.abs_7 } & \VAR{ 
 
 Вывод...
 
-\subsection{Гистограмма данной выборки}
+\subsubsection{Гистограмма выборки}
 
 Введём следующее разбиение для данной выборки:
 \[
@@ -233,3 +235,107 @@ $i$ & $\Delta_i$ & $h_i$ & $i$ & $\Delta_i$ & $h_i$ \\
     \caption{Гистограмма данной выборки (вариант \underline{\VAR{ variant_number|default(108) }})}
     \label{fig:histogram_plot}
 \end{figure}
+
+\subsubsection{Аппроксимация закона распределения}
+
+По условию учебно-исследовательской работы необходимо аппроксимировать закон распределения заданной выборки в зависимости от значения коэффициента вариации \( V(A) \).
+
+С целью восполнения теоретических пробелов касательно показательных распределений было решено обратиться к литературному источнику \cite{kleinrok_mass_service}:
+
+\begin{table}[H]
+\centering
+\begin{tblr}{
+    colspec = {X[1, c, m] X[2, c, m] X[3, l, m]},
+    hlines,
+    vlines,
+}
+$\boldsymbol{V(A)}$ & \textbf{Распределение} & \textbf{Пояснение} \\
+$1\slash\sqrt{3}$ & Равномерное & --- \\
+$1$ & Показательное & --- \\
+$<1$ & Показательное $k$-го~порядка & Соответствует меньшему диапазону возможных отклонений \\
+$<1$ & Нормированное Эрланга & При $1\slash V^2(A)\in\mathbb{Z}$ \\
+$>1$ & Гиперпоказательное & Соответствует большему диапазону возможных отклонений \\
+\end{tblr}
+\caption{Рекомендации по аппроксимации закона распределения}
+\label{tab:distribution_approximation}
+\end{table}
+
+Поскольку \( V(A) < 1 \), аппроксимация осуществляется с использованием \textit{показательного распределения $k$-го порядка} (распределения Эрланга $E_k$), плотность вероятности которого определяется выражением:
+\[
+    f(x) = \dfrac{\lambda^k x^{k-1} e^{-\lambda x}}{(k-1)!},\ x \geq 0
+\]
+
+где \( k \in \mathbb{N} \) — порядок распределения (число фаз), а \( \lambda > 0 \) — параметр интенсивности каждой фазы.
+
+По определению математического ожидания:
+\[
+    \mu_{E_k}(A) = \int_0^{+\infty} x f(x) \, dx = \dfrac{\lambda^k}{(k-1)!} \int_0^{+\infty} x^k e^{-\lambda x} \, dx
+\]
+
+Используем свойство гамма-функции:
+\begin{equation}
+    \int_0^{+\infty} x^k e^{-\lambda x} \, dx = \dfrac{k!}{\lambda^{k+1}} \label{eq:gamma_integral}
+\end{equation}
+
+Итого имеем математическое ожидание:
+\[
+    \mu_{E_k}(A) = \dfrac{\lambda^k}{(k-1)!} \cdot \dfrac{k!}{\lambda^{k+1}} = \dfrac{k}{\lambda}
+\]
+
+По определению второго начального момента:
+\[
+    \mu_{E_k}^{(2)}(A) = \int_0^{+\infty} x^2 f(x) \, dx = \dfrac{\lambda^k}{(k-1)!} \int_0^{+\infty} x^{k+1} e^{-\lambda x} \, dx
+\]
+
+Применяя формулу \eqref{eq:gamma_integral} для степени \( k+1 \):
+\[
+    \int_0^{+\infty} x^{k+1} e^{-\lambda x} \, dx = \dfrac{(k+1)!}{\lambda^{k+2}}
+\]
+
+Итого имеем второй начальный момент:
+\[
+    \mu_{E_k}^{(2)}(A) = \dfrac{\lambda^k}{(k-1)!} \cdot \dfrac{(k+1)!}{\lambda^{k+2}} = \dfrac{k(k+1)}{\lambda^2}
+\]
+
+Дисперсия распределения $E_k$ выражается как:
+\[
+    D(A) = \mu_{E_k}^{(2)}(A) - \mu_{E_k}^2(A) = \dfrac{k(k+1)}{\lambda^2} - \dfrac{k^2}{\lambda^2} = \dfrac{k}{\lambda^2}
+\]
+
+Откуда квадрат коэффициента вариации равен:
+\[
+    V^2(A) = \dfrac{D(A)}{\mu_{E_k}^2(A)} = \dfrac{k / \lambda^2}{k^2 / \lambda^2} = \dfrac{1}{k}
+\]
+
+Решая полученную систему уравнений методом моментов относительно искомых параметров, получаем:
+\[
+    \begin{aligned}
+        k &= \mathrm{round}\left( \dfrac{1}{V^2(A)} \right) \\
+        \lambda &= \dfrac{k}{\mu(A)}
+    \end{aligned}
+\]
+
+Рассчитаем значения параметров показательного распределения $k$-го порядка:
+\begin{table}[H]
+\centering
+\begin{tblr}{
+    colspec = {c c c c},
+    hlines,
+    vlines,
+    cells = {c, m},
+}
+\textbf{Параметр} & \textbf{Значение} & \textbf{Параметр} & \textbf{Значение} \\
+$k$ & \VAR{ hyperparameters.k } & $\lambda$ & \VAR{ hyperparameters.lambda } \\
+\end{tblr}
+\caption{Параметры распределения $E_k$ (вариант \underline{\VAR{ variant_number|default(108) }})}
+\end{table}
+
+Убедимся в корректности полученных параметров, построив график показательного распределения $k$-го порядка:
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.8\textwidth]{\VAR{ erlang_plot_path }}
+    \caption{График показательного распределения $k$-го порядка (вариант \underline{\VAR{ variant_number|default(108) }})}
+    \label{fig:erlang_plot}
+\end{figure}
+
+\textbf{При чём здесь метод моментов?}

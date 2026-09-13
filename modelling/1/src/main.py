@@ -13,12 +13,14 @@ if __name__ == "__main__":
     sequence_plot_path = os.path.join(pics_path, 'sequence_plot.pdf')
     autocorr_plot_path = os.path.join(pics_path, 'autocorr_plot.pdf')
     sequence_hist_plot_path = os.path.join(pics_path, 'sequence_hist.pdf')
+    erlang_plot_path = os.path.join(pics_path, 'erlang_plot.pdf')
     
     context: Dict[str, Any] = {
       'variant_number': cfg['variant_num'],
       'sequence_plot_path': sequence_plot_path,
       'autocorr_plot_path': autocorr_plot_path,
       'sequence_hist_plot_path': sequence_hist_plot_path,
+      'erlang_plot_path': erlang_plot_path,
     }
 
     sequence = list()
@@ -30,10 +32,11 @@ if __name__ == "__main__":
     context = ReportFiller.compute_main_characteristics(context, sequence)
     context = ReportFiller.compute_autocorrelation(context, sequence)
     context = ReportFiller.compute_histogram_distribution(context, sequence, bins=10)
+    context = ReportFiller.compute_hyperparameters(context, sequence)
 
     ReportFiller.plot_sequence(sequence, sequence_plot_path)
     ReportFiller.plot_autocorrelation(context["autocorr"], autocorr_plot_path)
     ReportFiller.plot_sequence_histogram(sequence, sequence_hist_plot_path)
-
+    ReportFiller.plot_sequence_with_erlang_density(context, sequence, erlang_plot_path, bins=10)
     artifacts = ArtifactsFiller(context, [cfg['report']['dir']])
     artifacts.compile_patterns()
