@@ -5,7 +5,7 @@ import numpy as np
 
 class ReportFiller:
     @staticmethod
-    def compute_main_characteristics(context: Dict[str, Any], sequence: List[float]) -> Dict[str, Any]:
+    def compute_main_characteristics(context: Dict[str, Any], sequence: List[float], key: str) -> Dict[str, Any]:
         sample_sizes = [10, 20, 50, 100, 200]
         
         # Standard normal quantiles from Table 1 in the assignment
@@ -33,14 +33,16 @@ class ReportFiller:
         }
 
         # Dict structure to match Jinja template key paths
-        metrics: Dict[str, Dict[str, str]] = {
-            "mu": {"total": f"{mu_full:.4f}"},
-            "d_mu_90": {"total": f"{d_mu_full[0.90]:.4f}"},
-            "d_mu_95": {"total": f"{d_mu_full[0.95]:.4f}"},
-            "d_mu_99": {"total": f"{d_mu_full[0.99]:.4f}"},
-            "var": {"total": f"{var_full:.4f}"},
-            "std": {"total": f"{std_full:.4f}"},
-            "cv": {"total": f"{cv_full:.2f}"}
+        metrics: Dict[str, Dict[str, Dict[str, str]]] = {
+            key: {
+                "mu": {"total": f"{mu_full:.4f}"},
+                "d_mu_90": {"total": f"{d_mu_full[0.90]:.4f}"},
+                "d_mu_95": {"total": f"{d_mu_full[0.95]:.4f}"},
+                "d_mu_99": {"total": f"{d_mu_full[0.99]:.4f}"},
+                "var": {"total": f"{var_full:.4f}"},
+                "std": {"total": f"{std_full:.4f}"},
+                "cv": {"total": f"{cv_full:.2f}"}
+            }
         }
 
         # 2. Subsample calculations (10, 20, 50, 100, 200)
@@ -70,14 +72,14 @@ class ReportFiller:
             }
 
             # --- Absolute values ("1") ---
-            metrics["mu"][f"abs_{N}"] = f"{mu_n:.4f}"
-            metrics["var"][f"abs_{N}"] = f"{var_n:.4f}"
-            metrics["std"][f"abs_{N}"] = f"{std_n:.4f}"
-            metrics["cv"][f"abs_{N}"] = f"{cv_n:.2f}"
+            metrics[key]["mu"][f"abs_{N}"] = f"{mu_n:.4f}"
+            metrics[key]["var"][f"abs_{N}"] = f"{var_n:.4f}"
+            metrics[key]["std"][f"abs_{N}"] = f"{std_n:.4f}"
+            metrics[key]["cv"][f"abs_{N}"] = f"{cv_n:.2f}"
 
-            metrics["d_mu_90"][f"abs_{N}"] = f"{d_mu_n[0.90]:.4f}"
-            metrics["d_mu_95"][f"abs_{N}"] = f"{d_mu_n[0.95]:.4f}"
-            metrics["d_mu_99"][f"abs_{N}"] = f"{d_mu_n[0.99]:.4f}"
+            metrics[key]["d_mu_90"][f"abs_{N}"] = f"{d_mu_n[0.90]:.4f}"
+            metrics[key]["d_mu_95"][f"abs_{N}"] = f"{d_mu_n[0.95]:.4f}"
+            metrics[key]["d_mu_99"][f"abs_{N}"] = f"{d_mu_n[0.99]:.4f}"
 
             # --- Relative errors ("%") compared to full-sequence baseline ---
             rel_mu = abs((mu_n - mu_full) / mu_full) * 100.0 if mu_full != 0 else 0.0
@@ -85,18 +87,18 @@ class ReportFiller:
             rel_std = abs((std_n - std_full) / std_full) * 100.0 if std_full != 0 else 0.0
             rel_cv = abs((cv_n - cv_full) / cv_full) * 100.0 if cv_full != 0 else 0.0
 
-            metrics["mu"][f"rel_{N}"] = f"{rel_mu:.2f}"
-            metrics["var"][f"rel_{N}"] = f"{rel_var:.2f}"
-            metrics["std"][f"rel_{N}"] = f"{rel_std:.2f}"
-            metrics["cv"][f"rel_{N}"] = f"{rel_cv:.2f}"
+            metrics[key]["mu"][f"rel_{N}"] = f"{rel_mu:.2f}"
+            metrics[key]["var"][f"rel_{N}"] = f"{rel_var:.2f}"
+            metrics[key]["std"][f"rel_{N}"] = f"{rel_std:.2f}"
+            metrics[key]["cv"][f"rel_{N}"] = f"{rel_cv:.2f}"
 
             rel_d90 = abs((d_mu_n[0.90] - d_mu_full[0.90]) / d_mu_full[0.90]) * 100.0 if d_mu_full[0.90] != 0 else 0.0
             rel_d95 = abs((d_mu_n[0.95] - d_mu_full[0.95]) / d_mu_full[0.95]) * 100.0 if d_mu_full[0.95] != 0 else 0.0
             rel_d99 = abs((d_mu_n[0.99] - d_mu_full[0.99]) / d_mu_full[0.99]) * 100.0 if d_mu_full[0.99] != 0 else 0.0
 
-            metrics["d_mu_90"][f"rel_{N}"] = f"{rel_d90:.2f}"
-            metrics["d_mu_95"][f"rel_{N}"] = f"{rel_d95:.2f}"
-            metrics["d_mu_99"][f"rel_{N}"] = f"{rel_d99:.2f}"
+            metrics[key]["d_mu_90"][f"rel_{N}"] = f"{rel_d90:.2f}"
+            metrics[key]["d_mu_95"][f"rel_{N}"] = f"{rel_d95:.2f}"
+            metrics[key]["d_mu_99"][f"rel_{N}"] = f"{rel_d99:.2f}"
 
         # Update context dictionary and return
         context.update(metrics)
@@ -146,28 +148,44 @@ class ReportFiller:
 
     @staticmethod
     def compute_autocorrelation(
-        context: Dict[str, Any], sequence: List[float], max_lag: int = 10
+        context: Dict[str, Any], sequence: List[float], key: str, max_lag: int = 10
     ) -> Dict[str, Any]:
         N = len(sequence)
-        if N == 0:
-            raise ValueError("Sequence cannot be empty.")
-
-        mu = sum(sequence) / N
-        var = sum((x - mu) ** 2 for x in sequence) / N
+        if N <= 1:
+            raise ValueError("Sequence length must be greater than 1.")
 
         autocorr_data: Dict[str, str] = {}
 
         for k in range(1, max_lag + 1):
-            if k >= N or var == 0.0:
+            n_k = N - k  # Number of valid overlapping pairs for lag k
+            
+            if n_k <= 1:
                 r_k = 0.0
             else:
-                gamma_k = sum((sequence[i] - mu) * (sequence[i + k] - mu) for i in range(N - k)) / N
-                r_k = gamma_k / var
+                # Sub-sequences for lag k
+                seq_a = sequence[:n_k]      # A = (x_1, x_2, ..., x_{N-k})
+                seq_b = sequence[k:]        # A_k = (x_{1+k}, x_{2+k}, ..., x_N)
+
+                # Local means for the valid length (N - k)
+                mu_a = sum(seq_a) / n_k
+                mu_b = sum(seq_b) / n_k
+
+                # Local variances for the valid length (N - k)
+                var_a = sum((x - mu_a) ** 2 for x in seq_a) / n_k
+                var_b = sum((x - mu_b) ** 2 for x in seq_b) / n_k
+
+                if var_a == 0.0 or var_b == 0.0:
+                    r_k = 0.0
+                else:
+                    # Covariance and correlation coefficient over (N - k) items
+                    cov_k = sum((seq_a[i] - mu_a) * (seq_b[i] - mu_b) for i in range(n_k)) / n_k
+                    r_k = cov_k / math.sqrt(var_a * var_b)
+
             autocorr_data[f"abs_{k}"] = f"{r_k:.4f}"
             rel_k = abs(r_k) * 100.0
             autocorr_data[f"rel_{k}"] = f"{rel_k:.2f}\\%"
 
-        context["autocorr"] = autocorr_data
+        context[key] = autocorr_data
         return context
 
     @staticmethod
@@ -209,6 +227,45 @@ class ReportFiller:
         return context
 
     @staticmethod
+    def compute_erlang_sequence(context: Dict[str, Any], N: int = 300, big_number: float = 1000.0) -> List[float]:
+        k = int(context["hyperparameters"]["k"])
+        lambda_val = float(context["hyperparameters"]["lambda"])
+
+        if k < 1 or lambda_val <= 0:
+            raise ValueError("Invalid hyperparameters for Erlang distribution.")
+
+        def erlang(x: float) -> float:
+            if x < 0:
+                return 0.0
+            return (lambda_val**k) * (x ** (k - 1)) * np.exp(-lambda_val * x) / math.factorial(k - 1)
+
+        erlang_sequence: List[float] = list()
+        while len(erlang_sequence) < N:
+            x, y = np.random.uniform(0, big_number), np.random.uniform(0, 1)
+            if y < erlang(x):
+                erlang_sequence.append(x)
+
+        return erlang_sequence
+
+    @staticmethod
+    def compute_correlation(context: Dict[str, Any], sequence_1: List[float], sequence_2: List[float]) -> Dict[str, Any]:
+        N = min(len(sequence_1), len(sequence_2))
+        if N == 0:
+            raise ValueError("Sequences cannot be empty.")
+
+        mu_1 = sum(sequence_1[:N]) / N
+        mu_2 = sum(sequence_2[:N]) / N
+        var_1 = sum((x - mu_1) ** 2 for x in sequence_1[:N]) / (N - 1)
+        var_2 = sum((x - mu_2) ** 2 for x in sequence_2[:N]) / (N - 1)
+
+        covariance = sum((sequence_1[i] - mu_1) * (sequence_2[i] - mu_2) for i in range(N)) / (N - 1)
+
+        correlation = covariance / math.sqrt(var_1 * var_2)
+
+        context['correlation'] = round(correlation, 4)
+        return context
+
+    @staticmethod
     def plot_sequence(sequence: List[float], output_path: str):
         plt.figure(figsize=(10, 6))
         plt.plot(range(1, len(sequence) + 1), sequence, marker='o', linestyle='-', color='b')
@@ -233,9 +290,9 @@ class ReportFiller:
         plt.close()
 
     @staticmethod
-    def plot_sequence_histogram(sequence: List[float], output_path: str, bins: int = 10):
+    def plot_sequence_histogram(sequence: List[float], output_path: str, tau: List[float]):
         plt.figure(figsize=(10, 6))
-        plt.hist(sequence, bins=bins, density=True, color='lightgreen', edgecolor='black')
+        plt.hist(sequence, bins=tau, density=True, color='lightgreen', edgecolor='black')
         plt.xlabel('Value')
         plt.ylabel('Frequency')
         plt.grid(axis='y')
@@ -247,7 +304,7 @@ class ReportFiller:
         context: Dict[str, Any],
         sequence: List[float],
         output_path: str,
-        bins: int = 15,
+        tau: List[float],
     ):
         # Извлечение параметров k и lambda из контекста
         k = int(context["hyperparameters"]["k"])
@@ -258,7 +315,7 @@ class ReportFiller:
         # Нормированная гистограмма выборки
         plt.hist(
             sequence,
-            bins=bins,
+            bins=tau,
             density=True,
             color="lightgreen",
             edgecolor="black",
