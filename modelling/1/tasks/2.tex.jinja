@@ -64,36 +64,45 @@ def compute_erlang_sequence(context: Dict[str, Any], N: int = 300, big_number: f
  & & \textbf{10} & \textbf{20} & \textbf{50} & \textbf{100} & \textbf{200} & \textbf{300} \\
 
 % Среднее значение \mu(A)
-\SetCell[r=2]{c} $\mu(A)$ & \textbf{1} & \VAR{ generated_chars.mu.abs_10 } & \VAR{ generated_chars.mu.abs_20 } & \VAR{ generated_chars.mu.abs_50 } & \VAR{ generated_chars.mu.abs_100 } & \VAR{ generated_chars.mu.abs_200 } & \SetCell[r=2]{c}\VAR{ generated_chars.mu.total } \\
- & \textbf{\%} & \VAR{ generated_chars.mu.rel_10 } & \VAR{ generated_chars.mu.rel_20 } & \VAR{ generated_chars.mu.rel_50 } & \VAR{ generated_chars.mu.rel_100 } & \VAR{ generated_chars.mu.rel_200 } &  \\
+\SetCell[r=2]{c} $\mu(A)$ & \textbf{1} & \VAR{ generated_chars.mu.abs_10 } & \VAR{ generated_chars.mu.abs_20 } & \VAR{ generated_chars.mu.abs_50 } & \VAR{ generated_chars.mu.abs_100 } & \VAR{ generated_chars.mu.abs_200 } & \VAR{ generated_chars.mu.total } \\
+ & \textbf{\%} & \VAR{ generated_chars.mu.rel_10 } & \VAR{ generated_chars.mu.rel_20 } & \VAR{ generated_chars.mu.rel_50 } & \VAR{ generated_chars.mu.rel_100 } & \VAR{ generated_chars.mu.rel_200 } & \VAR{ generated_chars.mu.rel_total } \\
 
 % Доверительный интервал \Delta\mu (\alpha=0.9)
-\SetCell[r=2]{c} {$\Delta\mu$\\$(\alpha=0{,}9)$} & \textbf{1} & \VAR{ generated_chars.d_mu_90.abs_10 } & \VAR{ generated_chars.d_mu_90.abs_20 } & \VAR{ generated_chars.d_mu_90.abs_50 } & \VAR{ generated_chars.d_mu_90.abs_100 } & \VAR{ generated_chars.d_mu_90.abs_200 } & \SetCell[r=2]{c}\VAR{ generated_chars.d_mu_90.total } \\
- & \textbf{\%} & \VAR{ generated_chars.d_mu_90.rel_10 } & \VAR{ generated_chars.d_mu_90.rel_20 } & \VAR{ generated_chars.d_mu_90.rel_50 } & \VAR{ generated_chars.d_mu_90.rel_100 } & \VAR{ generated_chars.d_mu_90.rel_200 } & \\
+\SetCell[r=2]{c} {$\Delta\mu$\\$(\alpha=0{,}9)$} & \textbf{1} & \VAR{ generated_chars.d_mu_90.abs_10 } & \VAR{ generated_chars.d_mu_90.abs_20 } & \VAR{ generated_chars.d_mu_90.abs_50 } & \VAR{ generated_chars.d_mu_90.abs_100 } & \VAR{ generated_chars.d_mu_90.abs_200 } & \VAR{ generated_chars.d_mu_90.total } \\
+ & \textbf{\%} & \VAR{ generated_chars.d_mu_90.rel_10 } & \VAR{ generated_chars.d_mu_90.rel_20 } & \VAR{ generated_chars.d_mu_90.rel_50 } & \VAR{ generated_chars.d_mu_90.rel_100 } & \VAR{ generated_chars.d_mu_90.rel_200 } & \VAR{ generated_chars.d_mu_90.rel_total } \\
 
 % Доверительный интервал \Delta\mu (\alpha=0.95)
-\SetCell[r=2]{c} {$\Delta\mu$\\$(\alpha=0{,}95)$} & \textbf{1} & \VAR{ generated_chars.d_mu_95.abs_10 } & \VAR{ generated_chars.d_mu_95.abs_20 } & \VAR{ generated_chars.d_mu_95.abs_50 } & \VAR{ generated_chars.d_mu_95.abs_100 } & \VAR{ generated_chars.d_mu_95.abs_200 } & \SetCell[r=2]{c}\VAR{ generated_chars.d_mu_95.total } \\
- & \textbf{\%} & \VAR{ generated_chars.d_mu_95.rel_10 } & \VAR{ generated_chars.d_mu_95.rel_20 } & \VAR{ generated_chars.d_mu_95.rel_50 } & \VAR{ generated_chars.d_mu_95.rel_100 } & \VAR{ generated_chars.d_mu_95.rel_200 } & \\
+\SetCell[r=2]{c} {$\Delta\mu$\\$(\alpha=0{,}95)$} & \textbf{1} & \VAR{ generated_chars.d_mu_95.abs_10 } & \VAR{ generated_chars.d_mu_95.abs_20 } & \VAR{ generated_chars.d_mu_95.abs_50 } & \VAR{ generated_chars.d_mu_95.abs_100 } & \VAR{ generated_chars.d_mu_95.abs_200 } & \VAR{ generated_chars.d_mu_95.total } \\
+ & \textbf{\%} & \VAR{ generated_chars.d_mu_95.rel_10 } & \VAR{ generated_chars.d_mu_95.rel_20 } & \VAR{ generated_chars.d_mu_95.rel_50 } & \VAR{ generated_chars.d_mu_95.rel_100 } & \VAR{ generated_chars.d_mu_95.rel_200 } & \VAR{ generated_chars.d_mu_95.rel_total } \\
 
 % Доверительный интервал \Delta\mu (\alpha=0.99)
-\SetCell[r=2]{c} {$\Delta\mu$\\$(\alpha=0{,}99)$} & \textbf{1} & \VAR{ generated_chars.d_mu_99.abs_10 } & \VAR{ generated_chars.d_mu_99.abs_20 } & \VAR{ generated_chars.d_mu_99.abs_50 } & \VAR{ generated_chars.d_mu_99.abs_100 } & \VAR{ generated_chars.d_mu_99.abs_200 } & \SetCell[r=2]{c}\VAR{ generated_chars.d_mu_99.total } \\
- & \textbf{\%} & \VAR{ generated_chars.d_mu_99.rel_10 } & \VAR{ generated_chars.d_mu_99.rel_20 } & \VAR{ generated_chars.d_mu_99.rel_50 } & \VAR{ generated_chars.d_mu_99.rel_100 } & \VAR{ generated_chars.d_mu_99.rel_200 } & \\
+\SetCell[r=2]{c} {$\Delta\mu$\\$(\alpha=0{,}99)$} & \textbf{1} & \VAR{ generated_chars.d_mu_99.abs_10 } & \VAR{ generated_chars.d_mu_99.abs_20 } & \VAR{ generated_chars.d_mu_99.abs_50 } & \VAR{ generated_chars.d_mu_99.abs_100 } & \VAR{ generated_chars.d_mu_99.abs_200 } & \VAR{ generated_chars.d_mu_99.total } \\
+ & \textbf{\%} & \VAR{ generated_chars.d_mu_99.rel_10 } & \VAR{ generated_chars.d_mu_99.rel_20 } & \VAR{ generated_chars.d_mu_99.rel_50 } & \VAR{ generated_chars.d_mu_99.rel_100 } & \VAR{ generated_chars.d_mu_99.rel_200 } & \VAR{ generated_chars.d_mu_99.rel_total } \\
 
 % Дисперсия D(A)
-\SetCell[r=2]{c} $D(A)$ & \textbf{1} & \VAR{ generated_chars.var.abs_10 } & \VAR{ generated_chars.var.abs_20 } & \VAR{ generated_chars.var.abs_50 } & \VAR{ generated_chars.var.abs_100 } & \VAR{ generated_chars.var.abs_200 } & \SetCell[r=2]{c}\VAR{ generated_chars.var.total }\\
- & \textbf{\%} & \VAR{ generated_chars.var.rel_10 } & \VAR{ generated_chars.var.rel_20 } & \VAR{ generated_chars.var.rel_50 } & \VAR{ generated_chars.var.rel_100 } & \VAR{ generated_chars.var.rel_200 } & \\
+\SetCell[r=2]{c} $D(A)$ & \textbf{1} & \VAR{ generated_chars.var.abs_10 } & \VAR{ generated_chars.var.abs_20 } & \VAR{ generated_chars.var.abs_50 } & \VAR{ generated_chars.var.abs_100 } & \VAR{ generated_chars.var.abs_200 } & \VAR{ generated_chars.var.total }\\
+ & \textbf{\%} & \VAR{ generated_chars.var.rel_10 } & \VAR{ generated_chars.var.rel_20 } & \VAR{ generated_chars.var.rel_50 } & \VAR{ generated_chars.var.rel_100 } & \VAR{ generated_chars.var.rel_200 } & \VAR{ generated_chars.var.rel_total } \\
 
 % СКО \sigma(A)
-\SetCell[r=2]{c} $\sigma(A)$ & \textbf{1} & \VAR{ generated_chars.std.abs_10 } & \VAR{ generated_chars.std.abs_20 } & \VAR{ generated_chars.std.abs_50 } & \VAR{ generated_chars.std.abs_100 } & \VAR{ generated_chars.std.abs_200 } & \SetCell[r=2]{c}\VAR{ generated_chars.std.total } \\
- & \textbf{\%} & \VAR{ generated_chars.std.rel_10 } & \VAR{ generated_chars.std.rel_20 } & \VAR{ generated_chars.std.rel_50 } & \VAR{ generated_chars.std.rel_100 } & \VAR{ generated_chars.std.rel_200 } & \\
+\SetCell[r=2]{c} $\sigma(A)$ & \textbf{1} & \VAR{ generated_chars.std.abs_10 } & \VAR{ generated_chars.std.abs_20 } & \VAR{ generated_chars.std.abs_50 } & \VAR{ generated_chars.std.abs_100 } & \VAR{ generated_chars.std.abs_200 } & \VAR{ generated_chars.std.total } \\
+ & \textbf{\%} & \VAR{ generated_chars.std.rel_10 } & \VAR{ generated_chars.std.rel_20 } & \VAR{ generated_chars.std.rel_50 } & \VAR{ generated_chars.std.rel_100 } & \VAR{ generated_chars.std.rel_200 } & \VAR{ generated_chars.std.rel_total } \\
 
 % Коэффициент вариации V(A)
-\SetCell[r=2]{c} $V(A)$ & \textbf{1} & \VAR{ generated_chars.cv.abs_10 } & \VAR{ generated_chars.cv.abs_20 } & \VAR{ generated_chars.cv.abs_50 } & \VAR{ generated_chars.cv.abs_100 } & \VAR{ generated_chars.cv.abs_200 } & \SetCell[r=2]{c}\VAR{ generated_chars.cv.total } \\
- & \textbf{\%} & \VAR{ generated_chars.cv.rel_10 } & \VAR{ generated_chars.cv.rel_20 } & \VAR{ generated_chars.cv.rel_50 } & \VAR{ generated_chars.cv.rel_100 } & \VAR{ generated_chars.cv.rel_200 } & \\
+\SetCell[r=2]{c} $V(A)$ & \textbf{1} & \VAR{ generated_chars.cv.abs_10 } & \VAR{ generated_chars.cv.abs_20 } & \VAR{ generated_chars.cv.abs_50 } & \VAR{ generated_chars.cv.abs_100 } & \VAR{ generated_chars.cv.abs_200 } & \VAR{ generated_chars.cv.total } \\
+ & \textbf{\%} & \VAR{ generated_chars.cv.rel_10 } & \VAR{ generated_chars.cv.rel_20 } & \VAR{ generated_chars.cv.rel_50 } & \VAR{ generated_chars.cv.rel_100 } & \VAR{ generated_chars.cv.rel_200 } & \VAR{ generated_chars.cv.rel_total } \\
 \end{tblr}%
 }
 \caption{Характеристики сгенерированной последовательности}
 \end{table}
+
+Здесь процентами обозначены относительные отклонения характеристик сгенерированной случайной последовательности от одноименных значений заданной числовой последовательности
+
+\textbf{Выводы:}
+
+\begin{itemize}
+    \item Выборочные моменты сгенерированной выборки в большей степени соответствуют выборочным моментам исходной выборки, что позволяет сделать вывод о хорошем качестве аппроксимации выборки использованным законом распределения.
+    \item По этим результатам нельзя однозначно утверждать, что сгенерированная выборка была получена из того же закона распределения, что и исходная выборка. Для этого необходимо использовать другие методы.
+\end{itemize}
 
 \subsubsection{Автокорреляционный анализ}
 

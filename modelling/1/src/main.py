@@ -42,7 +42,7 @@ if __name__ == "__main__":
     context = ReportFiller.compute_hyperparameters(context, sequence)
     erlang_sequence = ReportFiller.compute_erlang_sequence(context, N=300, big_number=1000.0)
 
-    context = ReportFiller.compute_main_characteristics(context, erlang_sequence, key="generated_chars")
+    context = ReportFiller.compute_main_characteristics(context, erlang_sequence, key="generated_chars", reference_values=context["main_chars"])
     context = ReportFiller.compute_autocorrelation(context, erlang_sequence, key="generated_autocorr", max_lag=10)
     context = ReportFiller.compute_histogram_distribution(context, erlang_sequence, bins=10)
     context = ReportFiller.compute_hyperparameters(context, erlang_sequence)

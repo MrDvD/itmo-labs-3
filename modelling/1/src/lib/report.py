@@ -1,28 +1,25 @@
 import math
-from typing import Dict, List, Any
+from typing import Dict, List, Any, Optional
 import matplotlib.pyplot as plt
 import numpy as np
 
 class ReportFiller:
     @staticmethod
-    def compute_main_characteristics(context: Dict[str, Any], sequence: List[float], key: str) -> Dict[str, Any]:
+    def compute_main_characteristics(
+        context: Dict[str, Any],
+        sequence: List[float],
+        key: str,
+        reference_values: Optional[Dict[str, Any]] = None
+    ) -> Dict[str, Any]:
         sample_sizes = [10, 20, 50, 100, 200]
+        z_quantiles = {0.90: 1.645, 0.95: 1.960, 0.99: 2.576}
         
-        # Standard normal quantiles from Table 1 in the assignment
-        z_quantiles = {
-            0.90: 1.645,
-            0.95: 1.960,
-            0.99: 2.576
-        }
-        
-        # 1. Baseline metrics (full sequence)
         N_full = len(sequence)
         if N_full == 0:
             raise ValueError("Sequence cannot be empty.")
 
+        # 1. Full sequence (300-measurements) calculations
         mu_full = sum(sequence) / N_full
-        
-        # Unbiased variance for full sequence
         var_full = sum((x - mu_full) ** 2 for x in sequence) / (N_full - 1) if N_full > 1 else 0.0
         std_full = math.sqrt(var_full)
         cv_full = std_full / mu_full if mu_full != 0 else 0.0
@@ -32,75 +29,100 @@ class ReportFiller:
             for alpha, z in z_quantiles.items()
         }
 
-        # Dict structure to match Jinja template key paths
+        # Helper to safely extract reference values dynamically
+        def get_reference_target(metric_name: str, sub_key: str, fallback_val: float) -> float:
+            if not reference_values:
+                return fallback_val
+            
+            metric_dict = reference_values.get(metric_name)
+            if isinstance(metric_dict, dict):
+                raw_val = metric_dict.get(sub_key) or metric_dict.get("total")
+            else:
+                raw_val = metric_dict
+
+            try:
+                return float(raw_val)
+            except (ValueError, TypeError):
+                return fallback_val
+
+        def calc_rel_error(val: float, metric_name: str, sub_key: str, fallback_ref: float) -> str:
+            ref = get_reference_target(metric_name, sub_key, fallback_ref)
+            if ref == 0.0:
+                return "0.00"
+            return f"{(val - ref) / ref * 100.0:.2f}"
+
+        # 2. Base metrics structure (includes new `rel_total` key)
         metrics: Dict[str, Dict[str, Dict[str, str]]] = {
             key: {
-                "mu": {"total": f"{mu_full:.4f}"},
-                "d_mu_90": {"total": f"{d_mu_full[0.90]:.4f}"},
-                "d_mu_95": {"total": f"{d_mu_full[0.95]:.4f}"},
-                "d_mu_99": {"total": f"{d_mu_full[0.99]:.4f}"},
-                "var": {"total": f"{var_full:.4f}"},
-                "std": {"total": f"{std_full:.4f}"},
-                "cv": {"total": f"{cv_full:.2f}"}
+                "mu": {
+                    "total": f"{mu_full:.4f}",
+                    "rel_total": calc_rel_error(mu_full, "mu", "total", mu_full)
+                },
+                "d_mu_90": {
+                    "total": f"{d_mu_full[0.90]:.4f}",
+                    "rel_total": calc_rel_error(d_mu_full[0.90], "d_mu_90", "total", d_mu_full[0.90])
+                },
+                "d_mu_95": {
+                    "total": f"{d_mu_full[0.95]:.4f}",
+                    "rel_total": calc_rel_error(d_mu_full[0.95], "d_mu_95", "total", d_mu_full[0.95])
+                },
+                "d_mu_99": {
+                    "total": f"{d_mu_full[0.99]:.4f}",
+                    "rel_total": calc_rel_error(d_mu_full[0.99], "d_mu_99", "total", d_mu_full[0.99])
+                },
+                "var": {
+                    "total": f"{var_full:.4f}",
+                    "rel_total": calc_rel_error(var_full, "var", "total", var_full)
+                },
+                "std": {
+                    "total": f"{std_full:.4f}",
+                    "rel_total": calc_rel_error(std_full, "std", "total", std_full)
+                },
+                "cv": {
+                    "total": f"{cv_full:.2f}",
+                    "rel_total": calc_rel_error(cv_full, "cv", "total", cv_full)
+                }
             }
         }
 
-        # 2. Subsample calculations (10, 20, 50, 100, 200)
+        # 3. Subsample calculations
         for N in sample_sizes:
             subsequence = sequence[:N]
             n_curr = len(subsequence)
-
             if n_curr == 0:
                 continue
 
-            # Mean
-            mu_n = sum(subsequence) / n_curr
-            
-            # Variance logic per assignment (S_0^2 for N < 100, S^2 for N >= 100)
-            if n_curr < 100:
-                var_n = sum((x - mu_n) ** 2 for x in subsequence) / (n_curr - 1) if n_curr > 1 else 0.0
-            else:
-                var_n = sum((x - mu_n) ** 2 for x in subsequence) / n_curr
+            sub_key = f"abs_{N}"
 
+            mu_n = sum(subsequence) / n_curr
+            var_n = (sum((x - mu_n) ** 2 for x in subsequence) / (n_curr - 1)) if n_curr < 100 else (sum((x - mu_n) ** 2 for x in subsequence) / n_curr)
             std_n = math.sqrt(var_n)
             cv_n = std_n / mu_n if mu_n != 0 else 0.0
 
-            # Confidence margin d_mu = c * (sigma / sqrt(n))
             d_mu_n = {
                 alpha: z * (std_n / math.sqrt(n_curr))
                 for alpha, z in z_quantiles.items()
             }
 
-            # --- Absolute values ("1") ---
-            metrics[key]["mu"][f"abs_{N}"] = f"{mu_n:.4f}"
-            metrics[key]["var"][f"abs_{N}"] = f"{var_n:.4f}"
-            metrics[key]["std"][f"abs_{N}"] = f"{std_n:.4f}"
-            metrics[key]["cv"][f"abs_{N}"] = f"{cv_n:.2f}"
+            # Absolute values
+            metrics[key]["mu"][sub_key] = f"{mu_n:.4f}"
+            metrics[key]["var"][sub_key] = f"{var_n:.4f}"
+            metrics[key]["std"][sub_key] = f"{std_n:.4f}"
+            metrics[key]["cv"][sub_key] = f"{cv_n:.2f}"
+            metrics[key]["d_mu_90"][sub_key] = f"{d_mu_n[0.90]:.4f}"
+            metrics[key]["d_mu_95"][sub_key] = f"{d_mu_n[0.95]:.4f}"
+            metrics[key]["d_mu_99"][sub_key] = f"{d_mu_n[0.99]:.4f}"
 
-            metrics[key]["d_mu_90"][f"abs_{N}"] = f"{d_mu_n[0.90]:.4f}"
-            metrics[key]["d_mu_95"][f"abs_{N}"] = f"{d_mu_n[0.95]:.4f}"
-            metrics[key]["d_mu_99"][f"abs_{N}"] = f"{d_mu_n[0.99]:.4f}"
+            # Relative errors
+            metrics[key]["mu"][f"rel_{N}"] = calc_rel_error(mu_n, "mu", sub_key, mu_full)
+            metrics[key]["var"][f"rel_{N}"] = calc_rel_error(var_n, "var", sub_key, var_full)
+            metrics[key]["std"][f"rel_{N}"] = calc_rel_error(std_n, "std", sub_key, std_full)
+            metrics[key]["cv"][f"rel_{N}"] = calc_rel_error(cv_n, "cv", sub_key, cv_full)
+            
+            metrics[key]["d_mu_90"][f"rel_{N}"] = calc_rel_error(d_mu_n[0.90], "d_mu_90", sub_key, d_mu_full[0.90])
+            metrics[key]["d_mu_95"][f"rel_{N}"] = calc_rel_error(d_mu_n[0.95], "d_mu_95", sub_key, d_mu_full[0.95])
+            metrics[key]["d_mu_99"][f"rel_{N}"] = calc_rel_error(d_mu_n[0.99], "d_mu_99", sub_key, d_mu_full[0.99])
 
-            # --- Relative errors ("%") compared to full-sequence baseline ---
-            rel_mu = abs((mu_n - mu_full) / mu_full) * 100.0 if mu_full != 0 else 0.0
-            rel_var = abs((var_n - var_full) / var_full) * 100.0 if var_full != 0 else 0.0
-            rel_std = abs((std_n - std_full) / std_full) * 100.0 if std_full != 0 else 0.0
-            rel_cv = abs((cv_n - cv_full) / cv_full) * 100.0 if cv_full != 0 else 0.0
-
-            metrics[key]["mu"][f"rel_{N}"] = f"{rel_mu:.2f}"
-            metrics[key]["var"][f"rel_{N}"] = f"{rel_var:.2f}"
-            metrics[key]["std"][f"rel_{N}"] = f"{rel_std:.2f}"
-            metrics[key]["cv"][f"rel_{N}"] = f"{rel_cv:.2f}"
-
-            rel_d90 = abs((d_mu_n[0.90] - d_mu_full[0.90]) / d_mu_full[0.90]) * 100.0 if d_mu_full[0.90] != 0 else 0.0
-            rel_d95 = abs((d_mu_n[0.95] - d_mu_full[0.95]) / d_mu_full[0.95]) * 100.0 if d_mu_full[0.95] != 0 else 0.0
-            rel_d99 = abs((d_mu_n[0.99] - d_mu_full[0.99]) / d_mu_full[0.99]) * 100.0 if d_mu_full[0.99] != 0 else 0.0
-
-            metrics[key]["d_mu_90"][f"rel_{N}"] = f"{rel_d90:.2f}"
-            metrics[key]["d_mu_95"][f"rel_{N}"] = f"{rel_d95:.2f}"
-            metrics[key]["d_mu_99"][f"rel_{N}"] = f"{rel_d99:.2f}"
-
-        # Update context dictionary and return
         context.update(metrics)
         return context
 
