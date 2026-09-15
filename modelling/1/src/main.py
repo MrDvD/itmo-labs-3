@@ -37,6 +37,9 @@ if __name__ == "__main__":
             raw_number = line.replace(",", ".").strip()
             sequence.append(float(raw_number))
 
+    sequence = sequence[:300]
+    context['sequence_length'] = len(sequence)
+
     np.random.seed(cfg['random_seed'])
 
     context = ReportFiller.compute_main_characteristics(context, sequence, key="main_chars")
