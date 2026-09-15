@@ -22,7 +22,7 @@ class ReportFiller:
         mu_full = sum(sequence) / N_full
         var_full = sum((x - mu_full) ** 2 for x in sequence) / (N_full - 1) if N_full > 1 else 0.0
         std_full = math.sqrt(var_full)
-        cv_full = std_full / mu_full if mu_full != 0 else 0.0
+        cv_full = std_full / mu_full * 100 if mu_full != 0 else 0.0
 
         d_mu_full = {
             alpha: z * (std_full / math.sqrt(N_full)) 
@@ -97,7 +97,7 @@ class ReportFiller:
             mu_n = sum(subsequence) / n_curr
             var_n = (sum((x - mu_n) ** 2 for x in subsequence) / (n_curr - 1)) if n_curr < 100 else (sum((x - mu_n) ** 2 for x in subsequence) / n_curr)
             std_n = math.sqrt(var_n)
-            cv_n = std_n / mu_n if mu_n != 0 else 0.0
+            cv_n = std_n / mu_n * 100 if mu_n != 0 else 0.0
 
             d_mu_n = {
                 alpha: z * (std_n / math.sqrt(n_curr))
