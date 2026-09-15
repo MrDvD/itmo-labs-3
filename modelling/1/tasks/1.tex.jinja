@@ -113,8 +113,8 @@
 \textbf{Выводы:}
 
 \begin{itemize}
-    \item ...
-    \item ...
+    \item Выборка демонстрирует высокий уровень вариативности, что подтверждается значением коэффициента вариации \( V(A) \approx \VAR{ main_chars.cv.total } \).
+    \item На отрезке $[a_{200}, a_{300}]$ наблюдается значительное относительное изменение значений, что может говорить о наличии выбросов в выборке. 
 \end{itemize}
 
 \subsubsection{Характер выборки}
@@ -186,18 +186,18 @@ $\boldsymbol{\rho_k}$ & \VAR{ autocorr.abs_6 } & \VAR{ autocorr.abs_7 } & \VAR{ 
 
 Введём следующее разбиение для данной выборки:
 \[
-    \tau = \{ \VAR{ hist_nodes | map('round', 2) | join('; ') } \}
+    \tau = \{ \VAR{ main_hist.hist_nodes | map('round', 2) | join('; ') } \}
 \]
 
 Обозначим полуинтервалы разбиения следующим образом:
 \begin{align*}
-    \Delta_i &= [\tau_i, \tau_{i+1}),\ i=\overline{0, \VAR{ hist_bins|length - 1 }}\\
-    l_i &= \abs{\tau_{i+1}-\tau_i},\ i=\overline{0, \VAR{ hist_bins|length - 1 }}
+    \Delta_i &= [\tau_i, \tau_{i+1}),\ i=\overline{0, \VAR{ main_hist.hist_bins|length - 1 }}\\
+    l_i &= \abs{\tau_{i+1}-\tau_i},\ i=\overline{0, \VAR{ main_hist.hist_bins|length - 1 }}
 \end{align*}
 
 Определим частоты \( \nu_i \) попадания элементов выборки в каждый полуинтервал \( \Delta_i \) разбиения:
 
-\BLOCK{ set half = (hist_bins|length / 2)|round(0, 'ceil')|int }
+\BLOCK{ set half = (main_hist.hist_bins|length / 2)|round(0, 'ceil')|int }
 \begin{table}[H]
 \centering
 \begin{tblr}{
@@ -207,9 +207,9 @@ $\boldsymbol{\rho_k}$ & \VAR{ autocorr.abs_6 } & \VAR{ autocorr.abs_7 } & \VAR{ 
     cells = {c, m},
 }
 $i$ & $\Delta_i$ & $\nu_i$ & $i$ & $\Delta_i$ & $\nu_i$ \\
-\BLOCK{ for left_item in hist_bins[:half] }
+\BLOCK{ for left_item in main_hist.hist_bins[:half] }
   \BLOCK{- set right_idx = loop.index0 + half -}
-  \BLOCK{- set right_item = hist_bins[right_idx] if right_idx < hist_bins|length else none -}
+  \BLOCK{- set right_item = main_hist.hist_bins[right_idx] if right_idx < main_hist.hist_bins|length else none -}
 \VAR{- loop.index0 -} & [\VAR{ "%.2f"|format(left_item.left) }; \VAR{ "%.2f"|format(left_item.right) }) & \VAR{ left_item.freq } &
   \BLOCK{- if right_item -}
     \VAR{ right_idx } & [\VAR{ "%.2f"|format(right_item.left) }; \VAR{ "%.2f"|format(right_item.right) }) & \VAR{ right_item.freq }
@@ -224,7 +224,7 @@ $i$ & $\Delta_i$ & $\nu_i$ & $i$ & $\Delta_i$ & $\nu_i$ \\
 
 Высота столбцов гистограммы находится по формуле:
 \[
-    h_i = \dfrac{\nu_i}{n\cdot l_i},\ i=\overline{0, \VAR{ hist_bins|length - 1 }}
+    h_i = \dfrac{\nu_i}{n\cdot l_i},\ i=\overline{0, \VAR{ main_hist.hist_bins|length - 1 }}
 \]
 
 Итого имеем следующую таблицу для построения гистограммы:
@@ -237,9 +237,9 @@ $i$ & $\Delta_i$ & $\nu_i$ & $i$ & $\Delta_i$ & $\nu_i$ \\
     cells = {c, m},
 }
 $i$ & $\Delta_i$ & $h_i$ & $i$ & $\Delta_i$ & $h_i$ \\
-\BLOCK{ for left_item in hist_bins[:half] }
+\BLOCK{ for left_item in main_hist.hist_bins[:half] }
   \BLOCK{- set right_idx = loop.index0 + half -}
-  \BLOCK{- set right_item = hist_bins[right_idx] if right_idx < hist_bins|length else none -}
+  \BLOCK{- set right_item = main_hist.hist_bins[right_idx] if right_idx < main_hist.hist_bins|length else none -}
 \VAR{- loop.index0 -} & [\VAR{ "%.2f"|format(left_item.left) }; \VAR{ "%.2f"|format(left_item.right) }) & \VAR{ "%.4f"|format(left_item.height) } &
   \BLOCK{- if right_item -}
     \VAR{ right_idx } & [\VAR{ "%.2f"|format(right_item.left) }; \VAR{ "%.2f"|format(right_item.right) }) & \VAR{"%.4f"|format(right_item.height) }
@@ -263,8 +263,8 @@ $i$ & $\Delta_i$ & $h_i$ & $i$ & $\Delta_i$ & $h_i$ \\
 \textbf{Выводы:}
 
 \begin{itemize}
-    \item ...
-    \item ...
+    \item Гистограмма демонстрирует, что распределение значений выборки не является равномерным, а имеет выраженную асимметрию: на это указывает наличие тяжёлого хвоста в правой части гистограммы.
+    \item Наличие тяжёлого правого хвоста влечёт за собой смещение среднего значения вправо, что подтверждается значением математического ожидания \( \mu(A) \approx \VAR{ main_chars.mu.total } \).
 \end{itemize}
 
 \subsubsection{Аппроксимация закона распределения}
@@ -284,7 +284,7 @@ $\boldsymbol{V(A)}$ & \textbf{Распределение} & \textbf{Поясне
 $1\slash\sqrt{3}$ & Равномерное & --- \\
 $1$ & Показательное & --- \\
 $<1$ & Показательное $k$-го~порядка & Соответствует меньшему диапазону возможных отклонений \\
-$<1$ & Нормированное Эрланга & При $1\slash V^2(A)\in\mathbb{Z}$ \\
+$<1$ & Нормированное Эрланга & При $\mu(A) = 1$ \\
 $>1$ & Гиперпоказательное & Соответствует большему диапазону возможных отклонений \\
 \end{tblr}
 \caption{Рекомендации по аппроксимации закона распределения}
@@ -310,7 +310,9 @@ $>1$ & Гиперпоказательное & Соответствует бол�
 
 Итого имеем математическое ожидание:
 \[
-    \mu_{E_k}(A) = \dfrac{\lambda^k}{(k-1)!} \cdot \dfrac{k!}{\lambda^{k+1}} = \dfrac{k}{\lambda}
+    \boxed{
+        \mu_{E_k}(A) = \dfrac{\lambda^k}{(k-1)!} \cdot \dfrac{k!}{\lambda^{k+1}} = \dfrac{k}{\lambda}
+    }
 \]
 
 По определению второго начального момента:
@@ -335,7 +337,9 @@ $>1$ & Гиперпоказательное & Соответствует бол�
 
 Откуда квадрат коэффициента вариации равен:
 \[
-    V^2(A) = \dfrac{D(A)}{\mu_{E_k}^2(A)} = \dfrac{k / \lambda^2}{k^2 / \lambda^2} = \dfrac{1}{k}
+    \boxed{
+        V^2(A) = \dfrac{D(A)}{\mu_{E_k}^2(A)} = \dfrac{k / \lambda^2}{k^2 / \lambda^2} = \dfrac{1}{k}
+    }
 \]
 
 Решая полученную систему уравнений методом моментов относительно искомых параметров, получаем:
@@ -346,7 +350,7 @@ $>1$ & Гиперпоказательное & Соответствует бол�
     \end{aligned}
 \]
 
-Рассчитаем значения параметров показательного распределения $k$-го порядка:
+Рассчитаем значения параметров распределения, воспользовавшись \textit{методом моментов}:
 \begin{table}[H]
 \centering
 \begin{tblr}{
@@ -369,9 +373,8 @@ $k$ & \VAR{ hyperparameters.k } & $\lambda$ & \VAR{ hyperparameters.lambda } \\
     \label{fig:erlang_plot}
 \end{figure}
 
-\textbf{Выводы:}
+\textbf{Вывод:}
 
 \begin{itemize}
-    \item ...
-    \item ...
+    \item Теоретическая плотность вероятности распределения $E_k$ довольно точно повторяет форму гистограммы, что подтверждает корректность выбранного закона распределения для аппроксимации.
 \end{itemize}

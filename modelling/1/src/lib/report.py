@@ -128,7 +128,7 @@ class ReportFiller:
 
     @staticmethod
     def compute_histogram_distribution(
-        context: Dict[str, Any], sequence: List[float], bins: int = 10
+        context: Dict[str, Any], sequence: List[float], key: str, bins: int = 10
     ) -> Dict[str, Any]:
         N = len(sequence)
         if N == 0:
@@ -164,8 +164,10 @@ class ReportFiller:
             for i in range(bins)
         ]
 
-        context["hist_nodes"] = tau
-        context["hist_bins"] = hist_bins
+        context[key] = {
+            "hist_bins": hist_bins,
+            "hist_nodes": tau,
+        }
         return context
 
     @staticmethod
