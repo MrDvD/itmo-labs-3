@@ -1,5 +1,6 @@
 import os
 import lib.config as config
+import numpy as np
 from lib.artifacts import ArtifactsFiller
 from lib.report import ReportFiller
 from typing import Any, Dict
@@ -35,6 +36,8 @@ if __name__ == "__main__":
         for line in f:
             raw_number = line.replace(",", ".").strip()
             sequence.append(float(raw_number))
+
+    np.random.seed(cfg['random_seed'])
 
     context = ReportFiller.compute_main_characteristics(context, sequence, key="main_chars")
     context = ReportFiller.compute_autocorrelation(context, sequence, key="autocorr", max_lag=10)
