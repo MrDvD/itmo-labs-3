@@ -1,0 +1,11 @@
+{
+  "name": "XeTeX Local Container",
+  "build": {
+    "dockerfile": "./Containerfile",
+    "options": [
+      "--net=host",
+      "--dns=8.8.8.8",
+      "--dns=1.1.1.1"
+    ]
+  }
+}

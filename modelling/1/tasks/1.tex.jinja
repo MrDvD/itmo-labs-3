@@ -1,0 +1,380 @@
+\subsection{Данная выборка}
+
+\subsubsection{Выборочные моменты}
+
+Для описания характеристик заданной числовой последовательности вспомним некоторые формулы из курса математической статистики.
+
+Из определения математического ожидания выборки:
+\[
+    \mu(A) = \dfrac{1}{n}\sum_{i=1}^nA_i
+\]
+
+Для оценки дисперсии применим следующие формулы:
+
+\[
+    D(A)\approx\begin{cases}
+        S^2_0 = \dfrac{1}{n-1}\sum_{i=1}^n(A_i-\overline{A})^2,& n<100\\
+        S^2 = \dfrac{1}{n}\sum_{i=1}^n(A_i-\overline{A})^2,& n\geq 100
+    \end{cases},
+\]
+
+где \( S^2 \) --- смещённая выборочная дисперсия, а \( S^2_0 \) --- несмещённая выборочная дисперсия.
+
+Для оценки среднеквадратического отклонения \( \sigma \) имеем:
+\[
+    D(A)=\sigma^2\implies\sigma(A)=\sqrt{D(A)}
+\]
+
+Для оценки коэффициента вариации \( V \) используем формулу:
+\[
+    V(A) = \dfrac{\sigma(A)}{\mu(A)} \times 100\%
+\]
+
+Пусть \( A\sim\mathcal{F}_\mu \), тогда найдём доверительный интервал уровня доверия \( \alpha\equiv 1-\varepsilon \) для параметра \( \mu \). Из центральной предельной теоремы получаем:
+\begin{equation}
+    G_\mu(A)=\sqrt{n}\cdot\dfrac{\overline{X}-\mu}{\sigma}\xrightarrow[n\to 0]{}\mathcal{N}(0,1)\label{eq:central_limit_theorem}
+\end{equation}
+
+По определению доверительного интервала:
+\begin{equation}
+    P(\abs{G_\mu}<c)=\alpha,\ c \text{ --- квантиль }\mathcal{N}(0,1)\label{eq:confidence_interval}
+\end{equation}
+
+Квантили для указанного распределения известны:
+
+\begin{table}[H]
+\centering
+\begin{tblr}{
+    colspec = {c c c c},
+    hlines,
+    vlines,
+    cells = {c, m},
+}
+\textbf{Уровень доверия} & 0,9 & 0,95 & 0,99 \\
+\textbf{Квантиль} & 1,645 & 1,960 & 2,576 \\
+\end{tblr}
+\caption{Квантили стандартного нормального распределения}
+\end{table}
+
+Из \eqref{eq:central_limit_theorem} и \eqref{eq:confidence_interval} следует, что:
+\[
+    \Delta \mu(A) = \abs{\overline{X}-\mu} = c\cdot\dfrac{\sigma(A)}{\sqrt{n}}
+\]
+
+Рассчитанные значения характеристик заданной числовой последовательности представлены в таблице \ref{tab:sequence_characteristics}.
+
+\begin{table}[H]
+\centering
+\resizebox{\linewidth}{!}{%
+\begin{tblr}{
+    colspec = {|c|c|c|c|c|c|c|c|},
+    hlines,
+    vlines,
+    cells = {c, m},
+}
+\SetCell[r=2]{c} \textbf{Момент} & & \SetCell[c=6]{c} \textbf{Размер выборки} & & & & & \\
+ & & \textbf{10} & \textbf{20} & \textbf{50} & \textbf{100} & \textbf{200} & \textbf{300} \\
+
+% Среднее значение \mu(A)
+\SetCell[r=2]{c} $\mu(A)$ & \textbf{1} & \VAR{ main_chars.mu.abs_10 } & \VAR{ main_chars.mu.abs_20 } & \VAR{ main_chars.mu.abs_50 } & \VAR{ main_chars.mu.abs_100 } & \VAR{ main_chars.mu.abs_200 } & \SetCell[r=2]{c}\VAR{ main_chars.mu.total } \\
+ & \textbf{\%} & \VAR{ main_chars.mu.rel_10 } & \VAR{ main_chars.mu.rel_20 } & \VAR{ main_chars.mu.rel_50 } & \VAR{ main_chars.mu.rel_100 } & \VAR{ main_chars.mu.rel_200 } &  \\
+
+% Доверительный интервал \Delta\mu (\alpha=0.9)
+\SetCell[r=2]{c} {$\Delta\mu$\\$(\alpha=0{,}9)$} & \textbf{1} & \VAR{ main_chars.d_mu_90.abs_10 } & \VAR{ main_chars.d_mu_90.abs_20 } & \VAR{ main_chars.d_mu_90.abs_50 } & \VAR{ main_chars.d_mu_90.abs_100 } & \VAR{ main_chars.d_mu_90.abs_200 } & \SetCell[r=2]{c}\VAR{ main_chars.d_mu_90.total } \\
+ & \textbf{\%} & \VAR{ main_chars.d_mu_90.rel_10 } & \VAR{ main_chars.d_mu_90.rel_20 } & \VAR{ main_chars.d_mu_90.rel_50 } & \VAR{ main_chars.d_mu_90.rel_100 } & \VAR{ main_chars.d_mu_90.rel_200 } & \\
+
+% Доверительный интервал \Delta\mu (\alpha=0.95)
+\SetCell[r=2]{c} {$\Delta\mu$\\$(\alpha=0{,}95)$} & \textbf{1} & \VAR{ main_chars.d_mu_95.abs_10 } & \VAR{ main_chars.d_mu_95.abs_20 } & \VAR{ main_chars.d_mu_95.abs_50 } & \VAR{ main_chars.d_mu_95.abs_100 } & \VAR{ main_chars.d_mu_95.abs_200 } & \SetCell[r=2]{c}\VAR{ main_chars.d_mu_95.total } \\
+ & \textbf{\%} & \VAR{ main_chars.d_mu_95.rel_10 } & \VAR{ main_chars.d_mu_95.rel_20 } & \VAR{ main_chars.d_mu_95.rel_50 } & \VAR{ main_chars.d_mu_95.rel_100 } & \VAR{ main_chars.d_mu_95.rel_200 } & \\
+
+% Доверительный интервал \Delta\mu (\alpha=0.99)
+\SetCell[r=2]{c} {$\Delta\mu$\\$(\alpha=0{,}99)$} & \textbf{1} & \VAR{ main_chars.d_mu_99.abs_10 } & \VAR{ main_chars.d_mu_99.abs_20 } & \VAR{ main_chars.d_mu_99.abs_50 } & \VAR{ main_chars.d_mu_99.abs_100 } & \VAR{ main_chars.d_mu_99.abs_200 } & \SetCell[r=2]{c}\VAR{ main_chars.d_mu_99.total } \\
+ & \textbf{\%} & \VAR{ main_chars.d_mu_99.rel_10 } & \VAR{ main_chars.d_mu_99.rel_20 } & \VAR{ main_chars.d_mu_99.rel_50 } & \VAR{ main_chars.d_mu_99.rel_100 } & \VAR{ main_chars.d_mu_99.rel_200 } & \\
+
+% Дисперсия D(A)
+\SetCell[r=2]{c} $D(A)$ & \textbf{1} & \VAR{ main_chars.var.abs_10 } & \VAR{ main_chars.var.abs_20 } & \VAR{ main_chars.var.abs_50 } & \VAR{ main_chars.var.abs_100 } & \VAR{ main_chars.var.abs_200 } & \SetCell[r=2]{c}\VAR{ main_chars.var.total }\\
+ & \textbf{\%} & \VAR{ main_chars.var.rel_10 } & \VAR{ main_chars.var.rel_20 } & \VAR{ main_chars.var.rel_50 } & \VAR{ main_chars.var.rel_100 } & \VAR{ main_chars.var.rel_200 } & \\
+
+% СКО \sigma(A)
+\SetCell[r=2]{c} $\sigma(A)$ & \textbf{1} & \VAR{ main_chars.std.abs_10 } & \VAR{ main_chars.std.abs_20 } & \VAR{ main_chars.std.abs_50 } & \VAR{ main_chars.std.abs_100 } & \VAR{ main_chars.std.abs_200 } & \SetCell[r=2]{c}\VAR{ main_chars.std.total } \\
+ & \textbf{\%} & \VAR{ main_chars.std.rel_10 } & \VAR{ main_chars.std.rel_20 } & \VAR{ main_chars.std.rel_50 } & \VAR{ main_chars.std.rel_100 } & \VAR{ main_chars.std.rel_200 } & \\
+
+% Коэффициент вариации V(A)
+\SetCell[r=2]{c} $V(A)$ & \textbf{1} & \VAR{ main_chars.cv.abs_10 } & \VAR{ main_chars.cv.abs_20 } & \VAR{ main_chars.cv.abs_50 } & \VAR{ main_chars.cv.abs_100 } & \VAR{ main_chars.cv.abs_200 } & \SetCell[r=2]{c}\VAR{ main_chars.cv.total } \\
+ & \textbf{\%} & \VAR{ main_chars.cv.rel_10 } & \VAR{ main_chars.cv.rel_20 } & \VAR{ main_chars.cv.rel_50 } & \VAR{ main_chars.cv.rel_100 } & \VAR{ main_chars.cv.rel_200 } & \\
+\end{tblr}%
+}
+\caption{Характеристики заданной последовательности (вариант \underline{\VAR{ variant_number }})}
+\label{tab:sequence_characteristics}
+\end{table}
+
+Здесь процентами обозначены относительные отклонения рассчитанных значений от значений, полученных для выборки из трехсот величин.
+
+\textbf{Выводы:}
+
+\begin{itemize}
+    \item Выборка демонстрирует высокий уровень вариативности, что подтверждается значением коэффициента вариации \( V(A) \approx \VAR{ main_chars.cv.total } \).
+    \item На отрезке $[a_{200}, a_{300}]$ наблюдается значительное относительное изменение значений, что может говорить о наличии выбросов в выборке. 
+\end{itemize}
+
+\subsubsection{Характер выборки}
+
+Построим график заданной выборки, чтобы визуально оценить её характер:
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.8\textwidth]{\VAR{ sequence_plot_path }}
+    \caption{График заданной числовой последовательности (вариант \underline{\VAR{ variant_number|default(108) }})}
+    \label{fig:sequence_plot}
+\end{figure}
+
+\textbf{Вывод:}
+\begin{enumerate}
+    \item \textbf{Анализ монотонности:} На исследуемой области определения выборки наблюдается чередование участков возрастания и убывания. Следовательно, выборка не является монотонной на всём рассматриваемом интервале.
+    \item \textbf{Анализ периодичности:} Ярко выраженная периодичность на рассматриваемом промежутке отсутствует, в ходе графического анализа не удалось выявить колебания.
+\end{enumerate}
+
+\subsubsection{Автокорреляционный анализ}
+\label{sec:autocorrelation}
+
+Для проведения автокорреляционного анализа последовательности необходимо вычислить коэффициенты автокорреляции $\rho_k$, $k=\overline{1,10}$. Для этого воспользуемся следующей формулой:
+\[
+    \rho_k=\dfrac{\mathrm{cov}(A,A_k)}{\sigma_{A}\cdot\sigma_{A_k}},
+\]
+
+где $A_k$ --- выборка, которая получена из исходной $A$ путём сдвига всех элементов на $k$ назад.
+
+В результате вычислений получим следующие данные в табличной форме:
+
+\begin{table}[H]
+\centering
+\begin{tblr}{
+    colspec = {|c|c|c|c|c|c|},
+    hlines,
+    vlines,
+    cells = {c, m},
+}
+$\boldsymbol{k}$ & 1 & 2 & 3 & 4 & 5 \\
+$\boldsymbol{\rho_k}$ & \VAR{ autocorr.abs_1 } & \VAR{ autocorr.abs_2 } & \VAR{ autocorr.abs_3 } & \VAR{ autocorr.abs_4 } & \VAR{ autocorr.abs_5 } \\
+\textbf{\%} & \VAR{ autocorr.rel_1 } & \VAR{ autocorr.rel_2 } & \VAR{ autocorr.rel_3 } & \VAR{ autocorr.rel_4 } & \VAR{ autocorr.rel_5 } \\
+\hline
+$\boldsymbol{k}$ & 6 & 7 & 8 & 9 & 10 \\
+$\boldsymbol{\rho_k}$ & \VAR{ autocorr.abs_6 } & \VAR{ autocorr.abs_7 } & \VAR{ autocorr.abs_8 } & \VAR{ autocorr.abs_9 } & \VAR{ autocorr.abs_10 } \\
+\textbf{\%} & \VAR{ autocorr.rel_6 } & \VAR{ autocorr.rel_7 } & \VAR{ autocorr.rel_8 } & \VAR{ autocorr.rel_9 } & \VAR{ autocorr.rel_10 } \\
+\end{tblr}
+\caption{Числовые результаты автокорреляционного анализа (вариант \underline{\VAR{ variant_number|default(108) }})}
+\label{tab:autocorrelation_results}
+\end{table}
+
+Для наглядности представим те же данные в графической форме:
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.8\textwidth]{\VAR{ autocorr_plot_path }}
+    \caption{Графические результаты автокорреляционного анализа (вариант \underline{\VAR{ variant_number|default(108) }})}
+    \label{fig:autocorrelation_plot}
+\end{figure}
+
+\textbf{Выводы:}
+\begin{itemize}
+    \item Между соседними элементами выборки отсутствует статистическая линейная зависимость, то есть выборка не обладает свойством периодичности с точки зрения статистики. 
+    \item Результат подтверждает гипотезу о том, что выборка была сгенерирована из независимых друг от друга случайных величин, то есть её можно считать \textit{случайной}.
+\end{itemize}
+
+\subsubsection{Гистограмма выборки}
+\label{sec:histogram}
+
+Введём следующее разбиение для данной выборки:
+\[
+    \tau = \{ \VAR{ main_hist.hist_nodes | map('round', 2) | join('; ') } \}
+\]
+
+Обозначим полуинтервалы разбиения следующим образом:
+\begin{align*}
+    \Delta_i &= [\tau_i, \tau_{i+1}),\ i=\overline{0, \VAR{ main_hist.hist_bins|length - 1 }}\\
+    l_i &= \abs{\tau_{i+1}-\tau_i},\ i=\overline{0, \VAR{ main_hist.hist_bins|length - 1 }}
+\end{align*}
+
+Определим частоты \( \nu_i \) попадания элементов выборки в каждый полуинтервал \( \Delta_i \) разбиения:
+
+\BLOCK{ set half = (main_hist.hist_bins|length / 2)|round(0, 'ceil')|int }
+\begin{table}[H]
+\centering
+\begin{tblr}{
+    colspec = {|c|c|c||c|c|c|},
+    hlines,
+    vlines,
+    cells = {c, m},
+}
+$i$ & $\Delta_i$ & $\nu_i$ & $i$ & $\Delta_i$ & $\nu_i$ \\
+\BLOCK{ for left_item in main_hist.hist_bins[:half] }
+  \BLOCK{- set right_idx = loop.index0 + half -}
+  \BLOCK{- set right_item = main_hist.hist_bins[right_idx] if right_idx < main_hist.hist_bins|length else none -}
+\VAR{- loop.index0 -} & [\VAR{ "%.2f"|format(left_item.left) }; \VAR{ "%.2f"|format(left_item.right) }) & \VAR{ left_item.freq } &
+  \BLOCK{- if right_item -}
+    \VAR{ right_idx } & [\VAR{ "%.2f"|format(right_item.left) }; \VAR{ "%.2f"|format(right_item.right) }) & \VAR{ right_item.freq }
+  \BLOCK{- else -}
+    & &
+  \BLOCK{- endif -} \\
+\BLOCK{ endfor }
+\end{tblr}
+\caption{Частотное распределение по интервалам $\Delta_i$}
+\label{tab:histogram_frequencies}
+\end{table}
+
+Высота столбцов гистограммы находится по формуле:
+\[
+    h_i = \dfrac{\nu_i}{n\cdot l_i},\ i=\overline{0, \VAR{ main_hist.hist_bins|length - 1 }}
+\]
+
+Итого имеем следующую таблицу для построения гистограммы:
+\begin{table}[H]
+\centering
+\begin{tblr}{
+    colspec = {|c|c|c||c|c|c|},
+    hlines,
+    vlines,
+    cells = {c, m},
+}
+$i$ & $\Delta_i$ & $h_i$ & $i$ & $\Delta_i$ & $h_i$ \\
+\BLOCK{ for left_item in main_hist.hist_bins[:half] }
+  \BLOCK{- set right_idx = loop.index0 + half -}
+  \BLOCK{- set right_item = main_hist.hist_bins[right_idx] if right_idx < main_hist.hist_bins|length else none -}
+\VAR{- loop.index0 -} & [\VAR{ "%.2f"|format(left_item.left) }; \VAR{ "%.2f"|format(left_item.right) }) & \VAR{ "%.4f"|format(left_item.height) } &
+  \BLOCK{- if right_item -}
+    \VAR{ right_idx } & [\VAR{ "%.2f"|format(right_item.left) }; \VAR{ "%.2f"|format(right_item.right) }) & \VAR{"%.4f"|format(right_item.height) }
+  \BLOCK{- else -}
+    & &
+  \BLOCK{- endif -} \\
+\BLOCK{ endfor }
+\end{tblr}
+\caption{Гистограмма распределения по интервалам $\Delta_i$}
+\label{tab:histogram_heights}
+\end{table}
+
+Построим гистограмму по полученным данным:
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.8\textwidth]{\VAR{ sequence_hist_plot_path }}
+    \caption{Гистограмма данной выборки (вариант \underline{\VAR{ variant_number|default(108) }})}
+    \label{fig:histogram_plot}
+\end{figure}
+
+\textbf{Выводы:}
+
+\begin{itemize}
+    \item Гистограмма демонстрирует, что распределение значений выборки не является равномерным, а имеет выраженную асимметрию: на это указывает наличие тяжёлого хвоста в правой части гистограммы.
+    \item Наличие тяжёлого правого хвоста влечёт за собой смещение среднего значения вправо, что подтверждается значением математического ожидания \( \mu(A) \approx \VAR{ main_chars.mu.total } \).
+\end{itemize}
+
+\subsubsection{Аппроксимация закона распределения}
+
+По условию учебно-исследовательской работы необходимо аппроксимировать закон распределения заданной выборки в зависимости от значения коэффициента вариации \( V(A) \).
+
+С целью восполнения теоретических пробелов касательно показательных распределений было решено обратиться к литературному источнику \cite{kleinrok_mass_service}:
+
+\begin{table}[H]
+\centering
+\begin{tblr}{
+    colspec = {X[1, c, m] X[2, c, m] X[3, l, m]},
+    hlines,
+    vlines,
+}
+$\boldsymbol{V(A)}$ & \textbf{Распределение} & \textbf{Пояснение} \\
+$1\slash\sqrt{3}$ & Равномерное & --- \\
+$1$ & Показательное & --- \\
+$<1$ & Показательное $k$-го~порядка & Соответствует меньшему диапазону возможных отклонений \\
+$<1$ & Нормированное Эрланга & При $\mu(A) = 1$ \\
+$>1$ & Гиперпоказательное & Соответствует большему диапазону возможных отклонений \\
+\end{tblr}
+\caption{Рекомендации по аппроксимации закона распределения}
+\label{tab:distribution_approximation}
+\end{table}
+
+Поскольку \( V(A) < 1 \), аппроксимация осуществляется с использованием \textit{показательного распределения $k$-го порядка} (распределения Эрланга $E_k$), плотность вероятности которого определяется выражением:
+\[
+    f(x) = \dfrac{\lambda^k x^{k-1} e^{-\lambda x}}{(k-1)!},\ x \geq 0
+\]
+
+где \( k \in \mathbb{N} \) — порядок распределения (число фаз), а \( \lambda > 0 \) — параметр интенсивности каждой фазы.
+
+По определению математического ожидания:
+\[
+    \mu_{E_k}(A) = \int_0^{+\infty} x f(x) \, dx = \dfrac{\lambda^k}{(k-1)!} \int_0^{+\infty} x^k e^{-\lambda x} \, dx
+\]
+
+Используем свойство гамма-функции:
+\begin{equation}
+    \int_0^{+\infty} x^k e^{-\lambda x} \, dx = \dfrac{k!}{\lambda^{k+1}} \label{eq:gamma_integral}
+\end{equation}
+
+Итого имеем математическое ожидание:
+\[
+    \boxed{
+        \mu_{E_k}(A) = \dfrac{\lambda^k}{(k-1)!} \cdot \dfrac{k!}{\lambda^{k+1}} = \dfrac{k}{\lambda}
+    }
+\]
+
+По определению второго начального момента:
+\[
+    \mu_{E_k}^{(2)}(A) = \int_0^{+\infty} x^2 f(x) \, dx = \dfrac{\lambda^k}{(k-1)!} \int_0^{+\infty} x^{k+1} e^{-\lambda x} \, dx
+\]
+
+Применяя формулу \eqref{eq:gamma_integral} для степени \( k+1 \):
+\[
+    \int_0^{+\infty} x^{k+1} e^{-\lambda x} \, dx = \dfrac{(k+1)!}{\lambda^{k+2}}
+\]
+
+Итого имеем второй начальный момент:
+\[
+    \mu_{E_k}^{(2)}(A) = \dfrac{\lambda^k}{(k-1)!} \cdot \dfrac{(k+1)!}{\lambda^{k+2}} = \dfrac{k(k+1)}{\lambda^2}
+\]
+
+Дисперсия распределения $E_k$ выражается как:
+\[
+    D(A) = \mu_{E_k}^{(2)}(A) - \mu_{E_k}^2(A) = \dfrac{k(k+1)}{\lambda^2} - \dfrac{k^2}{\lambda^2} = \dfrac{k}{\lambda^2}
+\]
+
+Откуда квадрат коэффициента вариации равен:
+\[
+    \boxed{
+        V^2(A) = \dfrac{D(A)}{\mu_{E_k}^2(A)} = \dfrac{k / \lambda^2}{k^2 / \lambda^2} = \dfrac{1}{k}
+    }
+\]
+
+Решая полученную систему уравнений методом моментов относительно искомых параметров, получаем:
+\[
+    \begin{aligned}
+        k &= \mathrm{round}\left( \dfrac{1}{V^2(A)} \right) \\
+        \lambda &= \dfrac{k}{\mu(A)}
+    \end{aligned}
+\]
+
+Рассчитаем значения параметров распределения, воспользовавшись \textit{методом моментов}:
+\begin{table}[H]
+\centering
+\begin{tblr}{
+    colspec = {c c c c},
+    hlines,
+    vlines,
+    cells = {c, m},
+}
+\textbf{Параметр} & \textbf{Значение} & \textbf{Параметр} & \textbf{Значение} \\
+$k$ & \VAR{ hyperparameters.k } & $\lambda$ & \VAR{ hyperparameters.lambda } \\
+\end{tblr}
+\caption{Параметры распределения $E_k$ (вариант \underline{\VAR{ variant_number|default(108) }})}
+\end{table}
+
+Убедимся в корректности полученных параметров, построив график показательного распределения $k$-го порядка:
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.8\textwidth]{\VAR{ erlang_plot_path }}
+    \caption{График показательного распределения $k$-го порядка (вариант \underline{\VAR{ variant_number|default(108) }})}
+    \label{fig:erlang_plot}
+\end{figure}
+
+\textbf{Вывод:}
+
+\begin{itemize}
+    \item Теоретическая плотность вероятности распределения $E_k$ довольно точно повторяет форму гистограммы, что подтверждает корректность выбранного закона распределения для аппроксимации.
+\end{itemize}

@@ -1,0 +1,162 @@
+\subsection{Сгенерированная выборка}
+
+\subsubsection{Генератор случайных величин}
+
+Воспользуемся методом Монте-Карло для генерации случайных величин, распределённых по закону Эрланга.
+
+Для этого сгенерируем случайные величины $x\sim U[0,\infty)$, $y\sim U[0,1]$. Если точка $(x,y)$ оказалась на графике показательного распределения $k$-го порядка ниже, чем функция плотности $f(x)$, то число $x$ будет воспринято как значение случайной величины $x\sim E_k$. В противном случае повторяем выборку $(x,y)$.
+
+Для моделирования равномерного распределения воспользуемся генератором случайных чисел, который реализован в стандартной библиотеке языка Python. Из-за ограничения на абсолютную величину генерируемых чисел, в качестве бесконечности предлагается взять некоторое большое число $M$.
+
+Описанные выше действия повторяются до тех пор, пока не будет сгенерировано необходимое количество случайных величин ($n = 300$).
+
+Для генерации случайных величин, распределённых по закону Эрланга, был использован следующий код на языке Python:
+\begin{lstlisting}[caption={Генерация случайных величин, распределённых по закону Эрланга}]
+@staticmethod
+def compute_erlang_sequence(context: Dict[str, Any], N: int = 300, big_number: float = 1000.0) -> Dict[str, Any]:
+    k = int(context["hyperparameters"]["k"])
+    lambda_val = float(context["hyperparameters"]["lambda"])
+
+    if k < 1 or lambda_val <= 0:
+        raise ValueError("Invalid hyperparameters for Erlang distribution.")
+
+    def erlang(x: float) -> float:
+        if x < 0:
+            return 0.0
+        return (lambda_val**k) * (x ** (k - 1)) * np.exp(-lambda_val * x) / math.factorial(k - 1)
+
+    erlang_sequence: List[float] = list()
+    while len(erlang_sequence) < N:
+        x, y = np.random.uniform(0, big_number), np.random.uniform(0, 1)
+        if y < erlang(x):
+            erlang_sequence.append(x)
+
+    context["erlang_sequence"] = erlang_sequence
+    return context
+\end{lstlisting}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.8\textwidth]{\VAR{ generated_sequence_plot_path }}
+    \caption{График сгенерированной числовой последовательности}
+    \label{fig:sequence_plot}
+\end{figure}
+
+Для наглядности, по аналогии с \ref{sec:histogram} и используя то же разбиение, построим гистограмму сгенерированной выборки:
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.8\textwidth]{\VAR{ generated_sequence_hist_plot_path }}
+    \caption{Гистограмма сгенерированной выборки}
+\end{figure}
+
+\subsubsection{Выборочные моменты}
+
+\begin{table}[H]
+\centering
+\resizebox{\linewidth}{!}{%
+\begin{tblr}{
+    colspec = {|c|c|c|c|c|c|c|c|},
+    hlines,
+    vlines,
+    cells = {c, m},
+}
+\SetCell[r=2]{c} \textbf{Момент} & & \SetCell[c=6]{c} \textbf{Размер выборки} & & & & & \\
+ & & \textbf{10} & \textbf{20} & \textbf{50} & \textbf{100} & \textbf{200} & \textbf{300} \\
+
+% Среднее значение \mu(A)
+\SetCell[r=2]{c} $\mu(A)$ & \textbf{1} & \VAR{ generated_chars.mu.abs_10 } & \VAR{ generated_chars.mu.abs_20 } & \VAR{ generated_chars.mu.abs_50 } & \VAR{ generated_chars.mu.abs_100 } & \VAR{ generated_chars.mu.abs_200 } & \VAR{ generated_chars.mu.total } \\
+ & \textbf{\%} & \VAR{ generated_chars.mu.rel_10 } & \VAR{ generated_chars.mu.rel_20 } & \VAR{ generated_chars.mu.rel_50 } & \VAR{ generated_chars.mu.rel_100 } & \VAR{ generated_chars.mu.rel_200 } & \VAR{ generated_chars.mu.rel_total } \\
+
+% Доверительный интервал \Delta\mu (\alpha=0.9)
+\SetCell[r=2]{c} {$\Delta\mu$\\$(\alpha=0{,}9)$} & \textbf{1} & \VAR{ generated_chars.d_mu_90.abs_10 } & \VAR{ generated_chars.d_mu_90.abs_20 } & \VAR{ generated_chars.d_mu_90.abs_50 } & \VAR{ generated_chars.d_mu_90.abs_100 } & \VAR{ generated_chars.d_mu_90.abs_200 } & \VAR{ generated_chars.d_mu_90.total } \\
+ & \textbf{\%} & \VAR{ generated_chars.d_mu_90.rel_10 } & \VAR{ generated_chars.d_mu_90.rel_20 } & \VAR{ generated_chars.d_mu_90.rel_50 } & \VAR{ generated_chars.d_mu_90.rel_100 } & \VAR{ generated_chars.d_mu_90.rel_200 } & \VAR{ generated_chars.d_mu_90.rel_total } \\
+
+% Доверительный интервал \Delta\mu (\alpha=0.95)
+\SetCell[r=2]{c} {$\Delta\mu$\\$(\alpha=0{,}95)$} & \textbf{1} & \VAR{ generated_chars.d_mu_95.abs_10 } & \VAR{ generated_chars.d_mu_95.abs_20 } & \VAR{ generated_chars.d_mu_95.abs_50 } & \VAR{ generated_chars.d_mu_95.abs_100 } & \VAR{ generated_chars.d_mu_95.abs_200 } & \VAR{ generated_chars.d_mu_95.total } \\
+ & \textbf{\%} & \VAR{ generated_chars.d_mu_95.rel_10 } & \VAR{ generated_chars.d_mu_95.rel_20 } & \VAR{ generated_chars.d_mu_95.rel_50 } & \VAR{ generated_chars.d_mu_95.rel_100 } & \VAR{ generated_chars.d_mu_95.rel_200 } & \VAR{ generated_chars.d_mu_95.rel_total } \\
+
+% Доверительный интервал \Delta\mu (\alpha=0.99)
+\SetCell[r=2]{c} {$\Delta\mu$\\$(\alpha=0{,}99)$} & \textbf{1} & \VAR{ generated_chars.d_mu_99.abs_10 } & \VAR{ generated_chars.d_mu_99.abs_20 } & \VAR{ generated_chars.d_mu_99.abs_50 } & \VAR{ generated_chars.d_mu_99.abs_100 } & \VAR{ generated_chars.d_mu_99.abs_200 } & \VAR{ generated_chars.d_mu_99.total } \\
+ & \textbf{\%} & \VAR{ generated_chars.d_mu_99.rel_10 } & \VAR{ generated_chars.d_mu_99.rel_20 } & \VAR{ generated_chars.d_mu_99.rel_50 } & \VAR{ generated_chars.d_mu_99.rel_100 } & \VAR{ generated_chars.d_mu_99.rel_200 } & \VAR{ generated_chars.d_mu_99.rel_total } \\
+
+% Дисперсия D(A)
+\SetCell[r=2]{c} $D(A)$ & \textbf{1} & \VAR{ generated_chars.var.abs_10 } & \VAR{ generated_chars.var.abs_20 } & \VAR{ generated_chars.var.abs_50 } & \VAR{ generated_chars.var.abs_100 } & \VAR{ generated_chars.var.abs_200 } & \VAR{ generated_chars.var.total }\\
+ & \textbf{\%} & \VAR{ generated_chars.var.rel_10 } & \VAR{ generated_chars.var.rel_20 } & \VAR{ generated_chars.var.rel_50 } & \VAR{ generated_chars.var.rel_100 } & \VAR{ generated_chars.var.rel_200 } & \VAR{ generated_chars.var.rel_total } \\
+
+% СКО \sigma(A)
+\SetCell[r=2]{c} $\sigma(A)$ & \textbf{1} & \VAR{ generated_chars.std.abs_10 } & \VAR{ generated_chars.std.abs_20 } & \VAR{ generated_chars.std.abs_50 } & \VAR{ generated_chars.std.abs_100 } & \VAR{ generated_chars.std.abs_200 } & \VAR{ generated_chars.std.total } \\
+ & \textbf{\%} & \VAR{ generated_chars.std.rel_10 } & \VAR{ generated_chars.std.rel_20 } & \VAR{ generated_chars.std.rel_50 } & \VAR{ generated_chars.std.rel_100 } & \VAR{ generated_chars.std.rel_200 } & \VAR{ generated_chars.std.rel_total } \\
+
+% Коэффициент вариации V(A)
+\SetCell[r=2]{c} $V(A)$ & \textbf{1} & \VAR{ generated_chars.cv.abs_10 } & \VAR{ generated_chars.cv.abs_20 } & \VAR{ generated_chars.cv.abs_50 } & \VAR{ generated_chars.cv.abs_100 } & \VAR{ generated_chars.cv.abs_200 } & \VAR{ generated_chars.cv.total } \\
+ & \textbf{\%} & \VAR{ generated_chars.cv.rel_10 } & \VAR{ generated_chars.cv.rel_20 } & \VAR{ generated_chars.cv.rel_50 } & \VAR{ generated_chars.cv.rel_100 } & \VAR{ generated_chars.cv.rel_200 } & \VAR{ generated_chars.cv.rel_total } \\
+\end{tblr}%
+}
+\caption{Характеристики сгенерированной последовательности}
+\end{table}
+
+Здесь процентами обозначены относительные отклонения характеристик сгенерированной случайной последовательности от одноименных значений заданной числовой последовательности
+
+\textbf{Выводы:}
+
+\begin{itemize}
+    \item Выборочные моменты сгенерированной выборки в большей степени соответствуют выборочным моментам исходной выборки, что позволяет сделать вывод о хорошем качестве аппроксимации выборки использованным законом распределения.
+    \item По этим результатам нельзя однозначно утверждать, что сгенерированная выборка была получена из того же закона распределения, что и исходная выборка. Для этого необходимо использовать другие методы.
+\end{itemize}
+
+\subsubsection{Автокорреляционный анализ}
+
+Воспользуемся тем же подходом, как и в \ref{sec:autocorrelation}, применяя его к сгенерированной выборке.
+
+Результаты расчётов приведены в табличной форме ниже:
+
+\begin{table}[H]
+\centering
+\begin{tblr}{
+    colspec = {|c|c|c|c|c|c|},
+    hlines,
+    vlines,
+    cells = {c, m},
+}
+$\boldsymbol{k}$ & 1 & 2 & 3 & 4 & 5 \\
+$\boldsymbol{\rho_k}$ & \VAR{ generated_autocorr.abs_1 } & \VAR{ generated_autocorr.abs_2 } & \VAR{ generated_autocorr.abs_3 } & \VAR{ generated_autocorr.abs_4 } & \VAR{ generated_autocorr.abs_5 } \\
+\textbf{\%} & \VAR{ generated_autocorr.rel_1 } & \VAR{ generated_autocorr.rel_2 } & \VAR{ generated_autocorr.rel_3 } & \VAR{ generated_autocorr.rel_4 } & \VAR{ generated_autocorr.rel_5 } \\
+\hline
+$\boldsymbol{k}$ & 6 & 7 & 8 & 9 & 10 \\
+$\boldsymbol{\rho_k}$ & \VAR{ generated_autocorr.abs_6 } & \VAR{ generated_autocorr.abs_7 } & \VAR{ generated_autocorr.abs_8 } & \VAR{ generated_autocorr.abs_9 } & \VAR{ generated_autocorr.abs_10 } \\
+\textbf{\%} & \VAR{ generated_autocorr.rel_6 } & \VAR{ generated_autocorr.rel_7 } & \VAR{ generated_autocorr.rel_8 } & \VAR{ generated_autocorr.rel_9 } & \VAR{ generated_autocorr.rel_10 } \\
+\end{tblr}
+\caption{Числовые результаты автокорреляционного анализа сгенерированной последовательности}
+\end{table}
+
+Для наглядности те же результаты приведены в графической форме:
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.8\textwidth]{\VAR{ generated_autocorr_plot_path }}
+    \caption{Графические результаты автокорреляционного анализа}
+\end{figure}
+
+\textbf{Выводы:}
+\begin{itemize}
+    \item Как и ранее отмечалось, между соседними элементами выборки отсутствует статистическая линейная зависимость, то есть выборка не обладает свойством периодичности с точки зрения статистики. 
+    \item Также результат подтверждает гипотезу о том, что выборка была сгенерирована из независимых друг от друга случайных величин.
+\end{itemize}
+
+\subsubsection{Корреляционная зависимость}
+
+Для проведения корреляционного анализа заданной выборки $A$ и сгенерированной выборки $B$ необходимо вычислить коэффициент корреляции $r_{AB}$. Для этого воспользуемся следующей формулой:
+\[
+    \rho_{AB}=\dfrac{\mathrm{cov}(A,B)}{\sigma(A)\cdot\sigma(B)}
+\]
+
+В результате расчётов получаем:
+\[
+    \rho_{AB}\approx\VAR{ correlation }
+\]
+
+\textbf{Выводы:}
+\begin{itemize}
+    \item Случайные величины $A$ и $B$ не связаны друг с другом линейно с точки зрения статистики, то есть являются \textit{статистически независимыми величинами}.
+    \item Гипотеза о связи $A$ и $B$ с одинаковым законом распределения ни подтверждается, ни опровергается: для этого необходимо использовать другие методы.
+\end{itemize}
