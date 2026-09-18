@@ -1,0 +1,4 @@
+{
+  "name": "XeTeX Local Container",
+  "image": "ghcr.io/mrdvd/xetex-base:labs"
+}

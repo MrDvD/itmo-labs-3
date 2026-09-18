@@ -1,0 +1,9 @@
+*.log
+*.aux
+*.toc
+*.out
+*.run.xml
+*.bcf
+
+
+temp/
