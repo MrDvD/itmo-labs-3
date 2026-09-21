@@ -1,0 +1,8 @@
+report:
+    dir: .
+    name: main
+api:
+    url: http://localhost:8000/
+    prefix: /api/v1
+    circuit_endpoint: /circuit
+variant_num: 009

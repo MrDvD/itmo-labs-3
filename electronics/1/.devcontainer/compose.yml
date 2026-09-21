@@ -1,0 +1,23 @@
+services:
+  # spice:
+  #   build:
+  #     context: .
+  #     dockerfile: Containerfile.spice
+  #   container_name: spice
+  #   volumes:
+  #     - ../:/app
+  #   networks:
+  #     - electronics-1
+  report:
+    build:
+      context: .
+      dockerfile: Containerfile.report
+    container_name: report
+    command: sleep infinity
+    volumes:
+      - ../:/app
+    networks:
+      - electronics-1
+
+networks:
+  electronics-1: {}

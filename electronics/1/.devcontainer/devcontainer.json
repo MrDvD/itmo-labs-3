@@ -1,4 +1,16 @@
 {
   "name": "XeTeX Local Container",
-  "image": "ghcr.io/mrdvd/xetex-base:labs"
+  "dockerComposeFile": "./compose.yml",
+  "service": "report",
+  "workspaceFolder": "/app",
+  "customizations": {
+    "vscode": {
+      "extensions": [
+        "ms-python.vscode-pylance",
+        "ms-python.python",
+        "ms-python.debugpy",
+        "ms-python.vscode-python-envs"
+      ]
+    }
+  }
 }

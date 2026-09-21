@@ -1,0 +1,57 @@
+FROM docker.io/ubuntu:24.04
+
+# install dependencies
+RUN apt-get update && \
+    apt-get install -y \
+        curl \
+        gpg \
+        libvulkan1 \
+        xvfb && \
+    apt-get clean && \
+    rm -rf /var/lib/apt/lists/*
+# 004c:err:vulkan:vulkan_init_once Failed to load libvulkan.so.1
+# xvfb for suppressing gui during installation of wine
+
+# prepare winehq repository
+RUN curl https://dl.winehq.org/wine-builds/winehq.key | gpg --dearmor -o /etc/apt/keyrings/winehq-archive.key - && \
+    dpkg --add-architecture i386 && \
+    curl -fsSL -o /etc/apt/sources.list.d/winehq-noble.sources https://dl.winehq.org/wine-builds/ubuntu/dists/noble/winehq-noble.sources
+
+# install winehq-stable
+RUN apt-get update && \
+    apt-get install -y --install-recommends \
+        winehq-stable && \
+    apt-get clean && \
+    rm -rf /var/lib/apt/lists/*
+
+# error: XDG_RUNTIME_DIR is invalid or not set in the environment. 
+ENV XDG_RUNTIME_DIR=/tmp/runtime-root
+
+# install wine-mono
+RUN curl -L https://github.com/wine-mono/wine-mono/releases/download/wine-mono-11.3.0/wine-mono-11.3.0-x86.msi -o /tmp/wine-mono.msi && \
+    WINEDLLOVERRIDES="mscoree,mshtml=" xvfb-run sh -c "wineboot --init && msiexec /i /tmp/wine-mono.msi /quiet && wineserver -w" && \
+    rm /tmp/wine-mono.msi
+
+# install LTspice
+RUN curl -L https://ltspice.analog.com/software/LTspice64.msi -o /tmp/LTspice64.msi && \
+    xvfb-run sh -c "msiexec /i /tmp/LTspice64.msi /quiet && wineserver -w" && \
+    rm /tmp/LTspice64.msi
+
+COPY LTspice.ini /root/.wine/drive_c/users/root/AppData/Roaming/LTspice.ini
+
+# install python dependencies
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    python3 \
+    python3-pip \
+    python3-venv \
+    && apt-get clean \
+    && rm -rf /var/lib/apt/lists/*
+
+COPY requirements-spice.txt /tmp/requirements.txt
+RUN python3 -m venv /opt/venv && \
+    /opt/venv/bin/pip install --no-cache-dir -r /tmp/requirements.txt
+
+WORKDIR /app
+
+# ENTRYPOINT ["/opt/venv/bin/python3", "/app/src/spice/main.py"]
+ENTRYPOINT ["bash"]

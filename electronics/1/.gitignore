@@ -4,6 +4,8 @@
 *.out
 *.run.xml
 *.bcf
+*.compiled.*
 
 
 temp/
+__pycache__/
