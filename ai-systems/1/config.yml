@@ -1,4 +1,3 @@
 report:
-    dir: ./
-    tasks_dir: tasks
+    dir: .
     name: main

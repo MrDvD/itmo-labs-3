@@ -6,7 +6,6 @@
 \usepackage{graphicx}
 \usepackage{float}
 \usepackage{tabularray}
-\usepackage{hyperref}
 \usepackage[a4paper,
             left=3cm,
             right=3cm,
@@ -16,6 +15,15 @@
 \setmainfont{CMU Serif}
 \setsansfont{CMU Sans Serif}
 \setmonofont{CMU Typewriter Text}
+
+\usepackage{hyperref}
+\hypersetup{
+    colorlinks=true,        % цветные ссылки (false - черные рамки)
+    linkcolor=black,        % цвет ссылок на разделы
+    urlcolor=blue,          % цвет URL-ссылок
+    citecolor=blue,         % цвет ссылок на литературу
+    pdfborder={0 0 0}       % убрать рамки вокруг ссылок
+}
 
 \definecolor{DarkOrange}{RGB}{255,140,0}
 

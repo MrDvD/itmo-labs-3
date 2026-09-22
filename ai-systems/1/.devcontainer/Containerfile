@@ -1,8 +1,5 @@
 FROM ghcr.io/mrdvd/xetex-base:labs
 
-# to resolve the problem during ubuntu's active incident 
-RUN sed -i 's|archive.ubuntu.com|mirror.yandex.ru|g; s|security.ubuntu.com|mirror.yandex.ru|g' /etc/apt/sources.list
-
 RUN apt-get update && apt-get install -y --no-install-recommends \
     python3 \
     python3-pip \
@@ -20,3 +17,6 @@ ENV PLATFORM=linux_amd64
 RUN curl -sL https://github.com/mikefarah/yq/releases/download/${VERSION}/yq_${PLATFORM}.tar.gz | \
     tar -xzf - -C /usr/local/bin ./yq_${PLATFORM} && \
     mv /usr/local/bin/yq_${PLATFORM} /usr/local/bin/yq
+
+# download dataset
+RUN curl -L https://archive.ics.uci.edu/static/public/320/student+performance.zip -o /lab/dataset.zip
