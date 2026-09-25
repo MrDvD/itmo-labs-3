@@ -52,6 +52,39 @@
     captionpos=b
 }
 
+\usepackage{tabularray}
+  \UseTblrLibrary{varwidth}
+  \UseTblrLibrary{counter}
+
+\DefTblrTemplate{firsthead,middlehead,lasthead}{default}{
+}
+\DefTblrTemplate{firstfoot}{default}{
+  \UseTblrTemplate{contfoot}{default}
+}
+\DefTblrTemplate{middlefoot}{default}{
+  \UseTblrTemplate{contfoot}{default}
+  \UseTblrTemplate{capcont}{default}
+}
+\DefTblrTemplate{lastfoot}{default}{
+  \UseTblrTemplate{note}{default}
+  \UseTblrTemplate{remark}{default}
+  \addvspace{9pt}
+  \UseTblrTemplate{caption}{default}
+}
+\DeclareTblrTemplate{contfoot-text}{default}{См. далее}
+
+\NewTblrEnviron{featurestable}
+\SetTblrInner[featurestable]{
+  rowhead = 1, hlines, vlines,
+  row{1} = {font=\bfseries, halign=c},
+  rowsep = 4pt,
+  measure=vbox,
+}
+\SetTblrOuter[featurestable]{
+  postsep = 9pt,
+  long,
+}
+
 \definecolor{DarkOrange}{RGB}{255,140,0}
 
 \newcommand{\abs}[1]{\left|#1\right|}
