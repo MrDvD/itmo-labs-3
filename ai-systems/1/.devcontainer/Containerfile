@@ -3,6 +3,7 @@ FROM ghcr.io/mrdvd/xetex-base:labs
 RUN apt-get update && apt-get install -y --no-install-recommends \
     python3 \
     python3-pip \
+    unzip \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/*
 
@@ -19,4 +20,10 @@ RUN curl -sL https://github.com/mikefarah/yq/releases/download/${VERSION}/yq_${P
     mv /usr/local/bin/yq_${PLATFORM} /usr/local/bin/yq
 
 # download dataset
-RUN curl -L https://archive.ics.uci.edu/static/public/320/student+performance.zip -o /lab/dataset.zip
+RUN mkdir -p /lab && \
+    curl -L https://archive.ics.uci.edu/static/public/320/student+performance.zip -o /lab/dataset.zip && \
+    unzip /lab/dataset.zip -d /lab && \
+    unzip /lab/student.zip -d /lab && \
+    rm /lab/dataset.zip && \
+    rm /lab/student.zip && \
+    rm /lab/.student.zip_old

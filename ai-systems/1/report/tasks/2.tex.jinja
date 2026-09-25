@@ -1,0 +1,282 @@
+\subsection{Обучение моделей}
+
+\subsubsection{Формулировка задачи}
+
+Для оригинальности и с некоторой долей шутки возьмём в качестве целевой переменной \textit{(регрессанта, предиктанта)} не итоговую оценку G3, как было сделано в оригинальной статье\cite{cortez2008using}, а суммарное потребление алкоголя студентами. Его можно выразить как сумму двух признаков из датасета:
+\[
+    \texttt{TotalAlc}=\texttt{Dalc}+\texttt{Walc},
+\]
+
+где:
+\begin{itemize}
+    \item \texttt{Dalc} --- потребление алкоголя в будние дни;
+    \item \texttt{Walc} --- потребление алкоголя в выходные дни. 
+\end{itemize}
+
+Добавим новый признак \texttt{TotalAlc} в датафрейм:
+
+\begin{lstlisting}[caption={Скрипт для создания целевой переменной \texttt{TotalAlc}.}]
+df['TotalAlc'] = df['Dalc'] + df['Walc']
+\end{lstlisting}
+
+В качестве фичей \textit{(регрессоров, предикторов)} возьмём следующие признаки из датасета:
+\begin{itemize}
+    \item \texttt{sex} (пол) --- бинарный признак, который может влиять на социальные паттерны потребления алкоголя;
+    \item \texttt{age} (возраст) --- числовой признак, который может коррелировать с уровнем потребления алкоголя;
+    \item \texttt{famsize} (размер семьи) --- бинарный признак, который может отражать социальную среду студента;
+    \item \texttt{Pstatus} (статус совместного проживания родителей) --- бинарный признак, который может влиять на психологическое состояние студентов и их поведение;
+    \item \texttt{Medu} (образование матери) --- числовой признак, который может коррелировать с социальным статусом семьи и, следовательно, с поведением студентов;
+    \item \texttt{Fedu} (образование отца) --- числовой признак, аналогично \texttt{Medu};
+    \item \texttt{famrel} (качество семейных отношений) --- числовой признак, который может отражать эмоциональную поддержку и влияние на поведение студентов;
+    \item \texttt{goout} (проведение времени с друзьями) --- числовой признак, который может коррелировать с социальными активностями студентов, включая потребление алкоголя;
+    \item \texttt{absences} (количество пропусков) --- числовой признак, который может отражать уровень ответственности и дисциплины студентов;
+    \item \texttt{failures} (количество академических неудач) --- числовой признак, который может быть связан с поведением студентов и их отношением к учебе.
+\end{itemize}
+
+\subsubsection{EDA}
+
+\paragraph{Утечки данных.} Учтём комментарий задания о том, что в задаче регрессии необходимо избегать утечки данных. Поэтому всё обучение моделей будет проводиться строго на обучающей выборке (\texttt{train}), а тестовая выборка (\texttt{test}) будет использоваться только для финальной оценки качества модели.
+
+Параметры разбиения на обучающую и тестовую выборки:
+\begin{itemize}
+    \item размер тестовой выборки (\texttt{test\_size}) --- \VAR{ test_size };
+    \item начальное значение генератора (\texttt{random\_seed}) --- \VAR{ random_seed }.
+\end{itemize}
+
+\begin{lstlisting}[caption={Скрипт разбиения на обучающую и тестовую выборки.}]
+rng = np.random.default_rng(random_state)
+
+shuffled_indices = rng.permutation(len(data))
+test_set_size = int(len(data) * test_size)
+
+test_indices = shuffled_indices[:test_set_size]
+train_indices = shuffled_indices[test_set_size:]
+
+train_data, test_data = data.iloc[train_indices], data.iloc[test_indices]
+\end{lstlisting}
+
+\paragraph{Пустые значения.} Проверим, что в выборках \texttt{train} и \texttt{test} нет пустых значений для признаков, которые будут использоваться в моделях:
+
+\begin{lstlisting}[caption={Скрипт для проверки на пустые значения в выборках.}]
+target_column = 'TotalAlc'
+categorical_columns = ['sex', 'famsize', 'Pstatus']
+numeric_columns = ['age', 'Medu', 'Fedu', 'famrel', 'goout', 'absences', 'failures', 'TotalAlc']
+predictors = categorical_columns + numeric_columns
+features = predictors + [target_column]
+
+train_nans = train_data[features].isnull().sum().sum()
+test_nans = test_data[features].isnull().sum().sum()
+
+if train_nans > 0 or test_nans > 0:
+    raise ValueError(f"Found NaN values in train or test data. Train NaNs: {train_nans}, Test NaNs: {test_nans}")
+\end{lstlisting}
+
+В результате запуска скрипта выше ошибки не возникло, что подтверждает отсутствие пустых значений.
+
+\paragraph{Категориальные признаки.} Далее применим One Hot Encoding к категориальным признакам \texttt{sex}, \texttt{famsize} и \texttt{Pstatus} для подготовки данных к обучению моделей линейной регрессии:
+
+\begin{lstlisting}[caption={Скрипт для One Hot Encoding категориальных признаков.}]
+data = pd.get_dummies(data, columns=categorical_columns, drop_first=False)
+\end{lstlisting}
+
+\paragraph{Нормализация признаков.} В датасете присутствуют числовые признаки с разными диапазонами значений. Например, признак \texttt{age} может принимать значения от 15 до 22, в то время как признак \texttt{absences} может варьироваться от 0 до 93.
+
+Для корректного обучения моделей линейной регрессии и интерпретации весов необходимо привести все числовые признаки к единому масштабу:
+
+\begin{lstlisting}[caption={Скрипт для нормализации числовых признаков.}]
+scaler = StandardScaler()
+data[numerical_cols + [target_column]] = scaler.fit_transform(data[numerical_cols + [target_column]])
+\end{lstlisting}
+
+\paragraph{Удаление выбросов.} Для улучшения качества модели удалим выбросы из обучающей выборки на основе межквартильного размаха (IQR) для числовых признаков:
+
+\begin{lstlisting}[caption={Скрипт для удаления выбросов из обучающей выборки.}]
+for col in numerical_columns:
+    Q1 = data[col].quantile(0.25)
+    Q3 = data[col].quantile(0.75)
+    IQR = Q3 - Q1
+    lower_bound = Q1 - 1.5 * IQR
+    upper_bound = Q3 + 1.5 * IQR
+    data = data[(data[col] >= lower_bound) & (data[col] <= upper_bound)]
+\end{lstlisting}
+
+\subsubsection{Обучение без регуляризации}
+
+В качестве базовой модели выступает классическая линейная регрессия (метод наименьших квадратов, OLS), минимизирующая среднеквадратичную ошибку на обучающей выборке:
+\[
+    L_{OLS}(w) = \frac{1}{N} \sum_{i=1}^{N} \left( y_i - \mathbf{w}^T \mathbf{x}_i \right)^2 \to \min_{\mathbf{w}}
+\]
+
+\begin{lstlisting}[caption={Скрипт обучения классической линейной регрессии.}]
+from sklearn.linear_model import LinearRegression
+from sklearn.metrics import root_mean_squared_error, r2_score
+
+X_train = train_data.drop(columns=[target_column])
+y_train = train_data[target_column]
+
+X_test = test_data.drop(columns=[target_column])
+y_test = test_data[target_column]
+
+model = LinearRegression()
+model.fit(X_train, y_train)
+
+y_train_pred = model.predict(X_train)
+y_test_pred = model.predict(X_test)
+
+metrics = {
+    "train_rmse": root_mean_squared_error(y_train, y_train_pred),
+    "test_rmse": root_mean_squared_error(y_test, y_test_pred),
+    "train_r2": r2_score(y_train, y_train_pred),
+    "test_r2": r2_score(y_test, y_test_pred),
+}
+
+_, axes = plt.subplots(1, 2, figsize=(12, 5))
+
+axes[0].scatter(y_test, y_test_pred, alpha=0.6, color="blue")
+axes[0].plot(
+    [y_test.min(), y_test.max()],
+    [y_test.min(), y_test.max()],
+    "r--",
+    lw=2,
+    label="Ideal Fit",
+)
+axes[0].set_xlabel("y_test")
+axes[0].set_ylabel("y_pred")
+axes[0].set_title("Fact vs Pred")
+axes[0].legend()
+axes[0].grid(True)
+
+residuals = y_test - y_test_pred
+axes[1].scatter(y_test_pred, residuals, alpha=0.6, color="purple")
+axes[1].axhline(y=0, color="r", linestyle="--", lw=2)
+axes[1].set_xlabel("y_pred")
+axes[1].set_ylabel("y_test - y_pred")
+axes[1].set_title("Residuals vs Predicted Values")
+axes[1].grid(True)
+
+plt.tight_layout()
+
+plt.savefig(plot_path, dpi=300)
+plt.close()
+\end{lstlisting}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=\textwidth]{\VAR{ teach_model_without_regularization_plot_path }}
+    \caption{Сравнение предсказанных и фактических значений \texttt{TotalAlc} на тестовой выборке.}
+\end{figure}
+
+Результаты оценки модели без регуляризации:
+\begin{itemize}
+    \item $RMSE$ на обучающей выборке (\texttt{train}): \VAR{ regression_results.metrics.train_rmse | round(5) };
+    \item $RMSE$ на тестовой выборке (\texttt{test}): \VAR{ regression_results.metrics.test_rmse | round(5) };
+    \item Коэффициент детерминации ($R^2$) на обучающей выборке: \VAR{ regression_results.metrics.train_r2 | round(5) };
+    \item Коэффициент детерминации ($R^2$) на тестовой выборке: \VAR{ regression_results.metrics.test_r2 | round(5) }.
+\end{itemize}
+
+\subsubsection{Обучение с регуляризацией}
+
+Для предотвращения переобучения применяются методы регуляризации. 
+
+\paragraph{Ridge-регрессия ($L_2$-регуляризация).} Добавляет штраф за сумму квадратов весов:
+\[
+    L_{Ridge}(w) = \frac{1}{N} \sum_{i=1}^{N} \left( y_i - \mathbf{w}^T \mathbf{x}_i \right)^2 + \alpha \sum_{j=1}^{p} w_j^2 \to \min_{\mathbf{w}}
+\]
+
+\paragraph{Lasso-регрессия ($L_1$-регуляризация).} Добавляет штраф за сумму модулей весов, что способствует обнулению наименее важных коэффициентов и отбору признаков:
+\[
+    L_{Lasso}(w) = \frac{1}{N} \sum_{i=1}^{N} \left( y_i - \mathbf{w}^T \mathbf{x}_i \right)^2 + \alpha \sum_{j=1}^{p} |w_j| \to \min_{\mathbf{w}}
+\]
+
+Мы воспользуемся $L_1$ регуляризацией для отбора признаков, а $L_2$ регуляризацией для снижения дисперсии модели.
+
+\begin{lstlisting}[caption={Скрипт обучения Ridge и Lasso регрессий с фиксированным гиперпараметром $\alpha$.}]
+from sklearn.linear_model import Ridge, Lasso
+
+ridge_model = Ridge(alpha=alpha)
+ridge_model.fit(X_train, y_train)
+
+y_pred_ridge_train = ridge_model.predict(X_train)
+y_pred_ridge_test = ridge_model.predict(X_test)
+
+ridge_metrics = {
+    "train_rmse": root_mean_squared_error(y_train, y_pred_ridge_train),
+    "test_rmse": root_mean_squared_error(y_test, y_pred_ridge_test),
+    "train_r2": r2_score(y_train, y_pred_ridge_train),
+    "test_r2": r2_score(y_test, y_pred_ridge_test),
+}
+
+random_seed = context.get("random_seed", 42)
+lasso_model = Lasso(alpha=alpha, random_state=random_seed)
+lasso_model.fit(X_train, y_train)
+
+y_pred_lasso_train = lasso_model.predict(X_train)
+y_pred_lasso_test = lasso_model.predict(X_test)
+
+lasso_metrics = {
+    "train_rmse": root_mean_squared_error(y_train, y_pred_lasso_train),
+    "test_rmse": root_mean_squared_error(y_test, y_pred_lasso_test),
+    "train_r2": r2_score(y_train, y_pred_lasso_train),
+    "test_r2": r2_score(y_test, y_pred_lasso_test),
+}
+
+_, axes = plt.subplots(1, 2, figsize=(14, 5))
+
+coef_df = pd.DataFrame(
+    {
+        "Ridge (L2)": ridge_model.coef_.ravel(),
+        "Lasso (L1)": lasso_model.coef_.ravel(),
+    },
+    index=X_train.columns,
+)
+
+coef_df.plot(kind="bar", ax=axes[0], alpha=0.8)
+axes[0].axhline(0, color="black", linestyle="--", linewidth=0.8)
+axes[0].set_title("Feature Weights")
+axes[0].set_ylabel("Weight")
+axes[0].tick_params(axis="x", rotation=45)
+axes[0].grid(True, linestyle=":", alpha=0.6)
+
+axes[1].scatter(
+    y_test,
+    y_pred_ridge_test,
+    alpha=0.6,
+    color="blue",
+    label="Ridge",
+)
+axes[1].scatter(
+    y_test,
+    y_pred_lasso_test,
+    alpha=0.6,
+    color="orange",
+    label="Lasso",
+)
+
+y_min = float(y_test.min())
+y_max = float(y_test.max())
+axes[1].plot(
+    [y_min, y_max], [y_min, y_max], "r--", lw=2, label="Ideal Fit"
+)
+
+axes[1].set_xlabel("y_test")
+axes[1].set_ylabel("y_pred")
+axes[1].set_title("Ridge vs Lasso: Fact vs Pred")
+axes[1].legend()
+axes[1].grid(True)
+
+plt.tight_layout()
+plt.savefig(plot_path, dpi=300)
+plt.close()
+\end{lstlisting}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=\textwidth]{\VAR{ teach_model_with_regularization_plot_path }}
+    \caption{Сравнение весов признаков и качества предсказаний для Ridge ($L_2$) и Lasso ($L_1$) регрессий при $\alpha = \VAR{ alpha }$.}
+\end{figure}
+
+Результаты моделей с регуляризацией на тестовой выборке:
+\begin{itemize}
+    \item \textbf{Ridge ($L_2$):} $RMSE = \mathbf{\VAR{ ridge_test_rmse | round(5) }}$, $R^2 = \mathbf{\VAR{ ridge_test_r2 | round(5) }}$;
+    \item \textbf{Lasso ($L_1$):} $RMSE = \mathbf{\VAR{ lasso_test_rmse | round(5) }}$, $R^2 = \mathbf{\VAR{ lasso_test_r2 | round(5) }}$.
+\end{itemize}

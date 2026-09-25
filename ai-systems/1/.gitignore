@@ -2,6 +2,10 @@
 *.aux
 *.toc
 *.out
+*.bcf
+*.bbl
+*.blg
+*.run.xml
 *.compiled.*
 
 temp/

@@ -1,0 +1,86 @@
+\subsection{Математическое обоснование MSE}
+
+Покажем, что из максимизации функции правдоподобия (Maximum Likelihood Estimation, MLE) выборки невязок, распределенных по нормальному закону, строго следует задача минимизации среднеквадратичной ошибки (MSE).
+
+\paragraph{1. Формализация задачи и предпосылки}
+Рассмотрим модель линейной регрессии:
+\begin{equation}
+y_i = \mathbf{w}^T \mathbf{x}_i + \varepsilon_i, \quad i = 1, \dots, N
+\end{equation}
+
+где $y_i$ — целевая переменная, $\mathbf{x}_i$ — вектор признаков $i$-го объекта, $\mathbf{w}$ — вектор параметров модели, а $\varepsilon_i = y_i - \mathbf{w}^T \mathbf{x}_i$ — невязка (ошибка) модели.
+
+\textbf{Основное предположение:} Невязки $\varepsilon_i$ являются независимыми и одинаково распределенными ($i.i.d.$) случайными величинами, подчиняющимися нормальному закону с нулевым математическим ожиданием и постоянной дисперсией $\sigma^2$:
+\begin{equation}
+\varepsilon_i \sim \mathcal{N}(0, \sigma^2)
+\end{equation}
+
+Плотность вероятности для отдельной невязки $\varepsilon_i$ имеет вид:
+\begin{equation}
+p(\varepsilon_i) = \frac{1}{\sqrt{2\pi\sigma^2}} \exp\left( -\frac{\varepsilon_i^2}{2\sigma^2} \right) = \frac{1}{\sqrt{2\pi\sigma^2}} \exp\left( -\frac{(y_i - \mathbf{w}^T \mathbf{x}_i)^2}{2\sigma^2} \right)
+\end{equation}
+
+\paragraph{2. Построение функции правдоподобия (Likelihood Function)}
+В силу независимости выборки невязок, совместная плотность вероятности (функция правдоподобия $L(\mathbf{w}, \sigma^2)$) равна произведению плотностей отдельных наблюдений:
+\begin{equation}
+L(\mathbf{w}, \sigma^2) = \prod_{i=1}^{N} p(\varepsilon_i) = \prod_{i=1}^{N} \frac{1}{\sqrt{2\pi\sigma^2}} \exp\left( -\frac{(y_i - \mathbf{w}^T \mathbf{x}_i)^2}{2\sigma^2} \right)
+\end{equation}
+
+Объединяя множители, получаем:
+\begin{equation}
+L(\mathbf{w}, \sigma^2) = \left( 2\pi\sigma^2 \right)^{-\frac{N}{2}} \exp\left( -\frac{1}{2\sigma^2} \sum_{i=1}^{N} (y_i - \mathbf{w}^T \mathbf{x}_i)^2 \right)
+\end{equation}
+
+\paragraph{3. Переход к логарифмической функции правдоподобия (Log-Likelihood)}
+Задача максимизации правдоподобия по параметрам $\mathbf{w}$ имеет вид:
+\begin{equation}
+\max_{\mathbf{w}} L(\mathbf{w}, \sigma^2)
+\end{equation}
+
+Поскольку строго возрастающая функция $\ln(x)$ сохраняет точки экстремума, перейдем к логарифму функции правдоподобия $\ell(\mathbf{w}, \sigma^2) = \ln L(\mathbf{w}, \sigma^2)$:
+\begin{align}
+\ell(\mathbf{w}, \sigma^2) &= \ln \left( \left( 2\pi\sigma^2 \right)^{-\frac{N}{2}} \exp\left( -\frac{1}{2\sigma^2} \sum_{i=1}^{N} (y_i - \mathbf{w}^T \mathbf{x}_i)^2 \right) \right) \\
+&= -\frac{N}{2} \ln(2\pi\sigma^2) - \frac{1}{2\sigma^2} \sum_{i=1}^{N} (y_i - \mathbf{w}^T \mathbf{x}_i)^2
+\end{align}
+
+\paragraph{4. Оптимизация по параметрам модели $\mathbf{w}$}
+Найдем оценку максимального правдоподобия $\mathbf{w}_{\text{MLE}}$:
+\begin{equation}
+\mathbf{w}_{\text{MLE}} = \arg\max_{\mathbf{w}} \left( -\frac{N}{2} \ln(2\pi\sigma^2) - \frac{1}{2\sigma^2} \sum_{i=1}^{N} (y_i - \mathbf{w}^T \mathbf{x}_i)^2 \right)
+\end{equation}
+
+Преобразуем оптимизиуемое выражение:
+\begin{enumerate}
+    \item Отбросим слагаемое $-\frac{N}{2} \ln(2\pi\sigma^2)$, так как оно не зависит от $\mathbf{w}$:
+    \begin{equation}
+    \mathbf{w}_{\text{MLE}} = \arg\max_{\mathbf{w}} \left( -\frac{1}{2\sigma^2} \sum_{i=1}^{N} (y_i - \mathbf{w}^T \mathbf{x}_i)^2 \right)
+    \end{equation}
+    
+    \item Опустим положительную константу $\frac{1}{2\sigma^2} > 0$:
+    \begin{equation}
+    \mathbf{w}_{\text{MLE}} = \arg\max_{\mathbf{w}} \left( -\sum_{i=1}^{N} (y_i - \mathbf{w}^T \mathbf{x}_i)^2 \right)
+    \end{equation}
+    
+    \item Заменим знак функции (умножение на $-1$), преобразуя задачу максимизации в эквивалентную задачу \textbf{минимизации}:
+    \begin{equation}
+    \mathbf{w}_{\text{MLE}} = \arg\min_{\mathbf{w}} \sum_{i=1}^{N} (y_i - \mathbf{w}^T \mathbf{x}_i)^2
+    \end{equation}
+\end{enumerate}
+
+\paragraph{5. Переход к метрике MSE}
+Умножение на положительный масштабирующий коэффициент $\frac{1}{N}$ не меняет точку минимума:
+\begin{equation}
+\mathbf{w}_{\text{MLE}} = \arg\min_{\mathbf{w}} \left( \frac{1}{N} \sum_{i=1}^{N} (y_i - \mathbf{w}^T \mathbf{x}_i)^2 \right)
+\end{equation}
+
+По определению, среднеквадратичная ошибка $\text{MSE}(\mathbf{w})$ на выборке равна:
+\begin{equation}
+\text{MSE}(\mathbf{w}) = \frac{1}{N} \sum_{i=1}^{N} \varepsilon_i^2 = \frac{1}{N} \sum_{i=1}^{N} (y_i - \mathbf{w}^T \mathbf{x}_i)^2
+\end{equation}
+
+Таким образом:
+\begin{equation}
+\mathbf{w}_{\text{MLE}} = \arg\min_{\mathbf{w}} \text{MSE}(\mathbf{w})
+\end{equation}
+
+$$\mathbf{Q.E.D.}$$

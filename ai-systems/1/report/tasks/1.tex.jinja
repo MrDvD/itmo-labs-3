@@ -1,0 +1,168 @@
+\subsection{Описание задачи}
+
+\subsubsection{Выбор датасета}
+
+Для рассмотрения задачи регрессии был выбран датасет Student Performance с репозитория UCI Machine Learning.\cite{student_performance_dataset} Он имеет следующие характеристики:
+\begin{itemize}
+    \item количество признаков --- 30;
+    \item количество объектов --- 649;
+    \item год публикации --- 2014.
+\end{itemize}
+
+В датасете представлены результаты студентов среднего образования двух португальских школ. Данные включают оценки студентов, демографические, социальные и школьные характеристики, и были собраны с использованием школьных отчётов и анкет.
+
+Предоставлены два набора данных, касающиеся успеваемости по двум различным предметам: Математика и Португальский язык. 
+
+\textbf{Важное замечание от авторов:} целевой признак G3 имеет сильную корреляцию с признаками G2 и G1. Это происходит потому, что G3 является итоговой оценкой за год (выданной в 3-м периоде), в то время как G1 и G2 соответствуют оценкам за 1-й и 2-й периоды.
+
+\subsubsection{EDA}
+
+Ниже приведены сформулированные вопросы и соответствующие решения.
+
+\begin{lstlisting}[caption={Импорт данных для EDA.}]
+import numpy as np
+
+student_mat = pd.read_csv('/lab/student-mat.csv', sep=';')
+student_por = pd.read_csv('/lab/student-por.csv', sep=';')
+\end{lstlisting}
+
+\paragraph{Объединение датафреймов.} Как объединить два датафрейма c информацией по двум разным предметам, чтобы получить один общий датафрейм?
+
+\begin{lstlisting}
+student_gen = pd.concat([student_mat, student_por], ignore_index=True)
+\end{lstlisting}
+
+\paragraph{Группировка с агрегацией.} Как различается средняя и медианная итоговая оценка (\texttt{G3}) студентов в зависимости от уровня образования матери (\texttt{Medu}) и пола (\texttt{sex})?
+
+\begin{lstlisting}[caption={Скрипт группировки с агрегацией.}]
+groupby_aggr_result = student_gen.groupby(['Medu', 'sex'])['G3'].agg(['mean', 'median', 'count']).reset_index()
+\end{lstlisting}
+
+\begin{lstlisting}[caption={Вывод первых 5 строк \texttt{groupby\_aggr\_result}.}]
+\VAR{ groupby_aggr_result }
+\end{lstlisting}
+
+\paragraph{Изменение дискретности по времени.} Если допустить, что в датасете есть информация о дате рождения студентов, как узнать среднюю итоговую оценку (\texttt{G3}) студентов по месяцам рождения?
+
+\begin{lstlisting}[caption={Скрипт изменения дискретности по времени.}]
+from pandas import Timestamp, Timedelta
+
+current_year = 2026
+birth_years = current_year - data['age']
+random_days = np.random.randint(0, 365, size=len(data))
+data['bday'] = [
+    Timestamp(f'{year}-01-01') + Timedelta(days=int(day))
+    for year, day in zip(birth_years, random_days)
+]
+
+resampled_df = (
+    data.resample('ME', on='bday')['G3']
+        .mean()
+        .reset_index(name='G3')
+)
+\end{lstlisting}
+
+\begin{lstlisting}[caption={Вывод первых 5 строк \texttt{resampled\_df}.}]
+\VAR{ resampled_df }
+\end{lstlisting}
+
+\paragraph{Статическая визуализация \texttt{seaborn}.} Каковы оценки студентов (\texttt{G3}) в зависимости от причины выбора школы (\texttt{reason}) с разбивкой по полу?
+
+\begin{lstlisting}[caption={Скрипт визуализации с использованием \texttt{seaborn}.}]
+import matplotlib.pyplot as plt
+import seaborn as sns
+
+plt.figure(figsize=(8, 5))
+sns.barplot(data=data, x='reason', y='G3', hue='sex', palette='Set2')
+plt.xlabel('Reason')
+plt.ylabel('G3 Score')
+plt.savefig(seaborn_plot_path)
+\end{lstlisting}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.8\textwidth]{\VAR{ seaborn_plot_path }}
+    \caption{Результат визуализации \texttt{seaborn}.}
+\end{figure}
+
+\paragraph{Визуализация распределений.} Какова форма распределения оценок \texttt{G3}? Покажите это с помощью гистограммы относительных частот, плотности (KDE), ящика с усами (boxplot) и violinplot.
+
+\begin{lstlisting}[caption={Скрипт визуализации распределений.}]
+plt.figure(figsize=(8, 5))
+sns.barplot(data=data, x='reason', y='G3', hue='sex', palette='Set2')
+plt.xlabel('Reason')
+plt.ylabel('G3 Score')
+plt.savefig(seaborn_plot_path)
+plt.close()
+
+_, axes = plt.subplots(2, 2, figsize=(12, 10))
+
+sns.histplot(data, y='G3', stat='probability', kde=True, ax=axes[0, 0], color='skyblue')
+axes[0, 0].set_title('Relative frequency histogram & KDE')
+
+sns.boxplot(x=data['G3'], ax=axes[0, 1], color='lightgreen')
+axes[0, 1].set_title('Boxplot of G3 scores')
+
+sns.violinplot(
+    x=data['sex'], 
+    y=data['G3'], 
+    hue=data['sex'],
+    legend=False,
+    ax=axes[1, 0], 
+    palette='pastel'
+)
+axes[1, 0].set_title('Violinplot of G3 scores by gender')
+
+sns.scatterplot(data=data, x='age', y='G3', hue='sex', ax=axes[1, 1])
+axes[1, 1].set_title('Scatterplot: age vs G3 score')
+
+plt.tight_layout()
+plt.savefig(plots_path)
+plt.close()
+\end{lstlisting}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=\textwidth]{\VAR{ plots_path }}
+    \caption{Результат визуализации распределений.}
+\end{figure}
+
+\paragraph{One Hot Encoding.} Как закодировать категориальный признак причины выбора школы (\texttt{reason}) в виде бинарных столбцов для использования в моделях машинного обучения?
+
+\begin{lstlisting}[caption={Скрипт One Hot Encoding.}]
+eason_encoded = pd.get_dummies(data, columns=['reason'], prefix='reason', drop_first=False)
+\end{lstlisting}
+
+\begin{lstlisting}[caption={Вывод первых 5 строк \texttt{reason\_encoded}.}]
+\VAR{ reason_encoded }
+\end{lstlisting}
+
+% \paragraph{Тесты на свойства распределения.} Подчиняется ли распределение итоговых оценок (\texttt{G3}) нормальному закону?
+
+% \begin{lstlisting}
+% # Shapiro-Wilk test for normality
+% stat, p_value = stats.shapiro(df['G3'])
+
+% print(f"Test Statistic: {stat:.4f}")
+% print(f"p-value: {p_value:.4f}")
+
+% if p_value > 0.05:
+%     print("Cannot reject null hypothesis (Data follows a normal distribution)")
+% else:
+%     print("Reject null hypothesis (Data does NOT follow a normal distribution)")
+% \end{lstlisting}
+
+% \paragraph{Интерактивный график \texttt{plotly}.} Как построить интерактивную диаграмму рассеяния, отображающую связь возраста (\texttt{age}) и итоговой оценки (\texttt{G3}) с цветовой группировкой по причине выбора школы?
+
+% \begin{lstlisting}
+% fig = px.scatter(
+%     df, 
+%     x='age', 
+%     y='G3', 
+%     color='reason', 
+%     symbol='sex',
+%     title='Interactive Distribution of Scores by Age and School Choice Reason',
+%     labels={'age': 'Age', 'G3': 'Final Grade (G3)'}
+% )
+% fig.show()
+% \end{lstlisting}
