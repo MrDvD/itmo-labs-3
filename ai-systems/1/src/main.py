@@ -35,6 +35,7 @@ if __name__ == "__main__":
         ),
         'test_size': cfg['test_size'],
         'random_seed': cfg['random_seed'],
+        'alpha': cfg['alpha'],
     }
 
     context = ReportFiller.make_eda(context, df, seaborn_plot_path, plots_path)

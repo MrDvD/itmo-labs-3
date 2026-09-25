@@ -170,6 +170,8 @@ plt.close()
 \begin{itemize}
     \item $RMSE$ на обучающей выборке (\texttt{train}): \VAR{ regression_results.metrics.train_rmse | round(5) };
     \item $RMSE$ на тестовой выборке (\texttt{test}): \VAR{ regression_results.metrics.test_rmse | round(5) };
+    \item $MAE$ на обучающей выборке (\texttt{train}): \VAR{ regression_results.metrics.train_mae | round(5) };
+    \item $MAE$ на тестовой выборке (\texttt{test}): \VAR{ regression_results.metrics.test_mae | round(5) };
     \item Коэффициент детерминации ($R^2$) на обучающей выборке: \VAR{ regression_results.metrics.train_r2 | round(5) };
     \item Коэффициент детерминации ($R^2$) на тестовой выборке: \VAR{ regression_results.metrics.test_r2 | round(5) }.
 \end{itemize}
@@ -190,7 +192,7 @@ plt.close()
 
 Мы воспользуемся $L_1$ регуляризацией для отбора признаков, а $L_2$ регуляризацией для снижения дисперсии модели.
 
-\begin{lstlisting}[caption={Скрипт обучения Ridge и Lasso регрессий с фиксированным гиперпараметром $\alpha$.}]
+\begin{lstlisting}[caption={Скрипт обучения Ridge и Lasso регрессий.}]
 from sklearn.linear_model import Ridge, Lasso
 
 ridge_model = Ridge(alpha=alpha)
@@ -272,11 +274,11 @@ plt.close()
 \begin{figure}[H]
     \centering
     \includegraphics[width=\textwidth]{\VAR{ teach_model_with_regularization_plot_path }}
-    \caption{Сравнение весов признаков и качества предсказаний для Ridge ($L_2$) и Lasso ($L_1$) регрессий при $\alpha = \VAR{ alpha }$.}
+    \caption{Сравнение весов признаков и качества предсказаний.}
 \end{figure}
 
 Результаты моделей с регуляризацией на тестовой выборке:
 \begin{itemize}
-    \item \textbf{Ridge ($L_2$):} $RMSE = \mathbf{\VAR{ ridge_test_rmse | round(5) }}$, $R^2 = \mathbf{\VAR{ ridge_test_r2 | round(5) }}$;
-    \item \textbf{Lasso ($L_1$):} $RMSE = \mathbf{\VAR{ lasso_test_rmse | round(5) }}$, $R^2 = \mathbf{\VAR{ lasso_test_r2 | round(5) }}$.
+    \item \textbf{Ridge ($L_2$):} $RMSE = \mathbf{\VAR{ regularization_results.ridge.metrics.test_rmse | round(5) }}$, $R^2 = \mathbf{\VAR{ regularization_results.ridge.metrics.test_r2 | round(5) }}$, $MAE = \mathbf{\VAR{ regularization_results.ridge.metrics.test_mae | round(5) }}$;
+    \item \textbf{Lasso ($L_1$):} $RMSE = \mathbf{\VAR{ regularization_results.lasso.metrics.test_rmse | round(5) }}$, $R^2 = \mathbf{\VAR{ regularization_results.lasso.metrics.test_r2 | round(5) }}$, $MAE = \mathbf{\VAR{ regularization_results.lasso.metrics.test_mae | round(5) }}$.
 \end{itemize}

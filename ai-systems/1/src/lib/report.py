@@ -6,7 +6,7 @@ import pandas as pd
 from pandas import DataFrame, Timestamp, Timedelta
 from sklearn.preprocessing import StandardScaler
 from sklearn.linear_model import LinearRegression, Ridge, Lasso
-from sklearn.metrics import root_mean_squared_error, r2_score
+from sklearn.metrics import mean_absolute_error, root_mean_squared_error, r2_score
 
 class ReportFiller:
     @staticmethod
@@ -121,6 +121,8 @@ class ReportFiller:
             "test_rmse": root_mean_squared_error(y_test, y_test_pred),
             "train_r2": r2_score(y_train, y_train_pred),
             "test_r2": r2_score(y_test, y_test_pred),
+            "train_mae": mean_absolute_error(y_train, y_train_pred),
+            "test_mae": mean_absolute_error(y_test, y_test_pred),
         }
 
         _, axes = plt.subplots(1, 2, figsize=(12, 5))
@@ -175,10 +177,10 @@ class ReportFiller:
         alpha: float,
     ) -> Dict[str, Any]:
         X_train = train_data.drop(columns=[target_column])
-        y_train = train_data[target_column].ravel()
+        y_train = train_data[target_column].to_numpy()
 
         X_test = test_data.drop(columns=[target_column])
-        y_test = test_data[target_column].ravel()
+        y_test = test_data[target_column].to_numpy()
 
         ridge_model = Ridge(alpha=alpha)
         ridge_model.fit(X_train, y_train)
@@ -191,6 +193,8 @@ class ReportFiller:
             "test_rmse": root_mean_squared_error(y_test, y_pred_ridge_test),
             "train_r2": r2_score(y_train, y_pred_ridge_train),
             "test_r2": r2_score(y_test, y_pred_ridge_test),
+            "train_mae": mean_absolute_error(y_train, y_pred_ridge_train),
+            "test_mae": mean_absolute_error(y_test, y_pred_ridge_test),
         }
 
         random_seed = context.get("random_seed", 42)
@@ -205,6 +209,8 @@ class ReportFiller:
             "test_rmse": root_mean_squared_error(y_test, y_pred_lasso_test),
             "train_r2": r2_score(y_train, y_pred_lasso_train),
             "test_r2": r2_score(y_test, y_pred_lasso_test),
+            "train_mae": mean_absolute_error(y_train, y_pred_lasso_train),
+            "test_mae": mean_absolute_error(y_test, y_pred_lasso_test),
         }
 
         _, axes = plt.subplots(1, 2, figsize=(14, 5))
@@ -255,29 +261,22 @@ class ReportFiller:
         plt.savefig(plot_path, dpi=300)
         plt.close()
 
-        context.update({
+        context["regularization_results"] = {
             "alpha": alpha,
-            "ridge_test_rmse": ridge_metrics["test_rmse"],
-            "ridge_test_r2": ridge_metrics["test_r2"],
-            "lasso_test_rmse": lasso_metrics["test_rmse"],
-            "lasso_test_r2": lasso_metrics["test_r2"],
-            "regularization_results": {
-                "alpha": alpha,
-                "ridge": {
-                    "model": ridge_model,
-                    "metrics": ridge_metrics,
-                    "coefficients": pd.Series(
-                        ridge_model.coef_.ravel(), index=X_train.columns
-                    ),
-                },
-                "lasso": {
-                    "model": lasso_model,
-                    "metrics": lasso_metrics,
-                    "coefficients": pd.Series(
-                        lasso_model.coef_.ravel(), index=X_train.columns
-                    ),
-                },
+            "ridge": {
+                "model": ridge_model,
+                "metrics": ridge_metrics,
+                "coefficients": pd.Series(
+                    ridge_model.coef_.ravel(), index=X_train.columns
+                ),
             },
-        })
+            "lasso": {
+                "model": lasso_model,
+                "metrics": lasso_metrics,
+                "coefficients": pd.Series(
+                    lasso_model.coef_.ravel(), index=X_train.columns
+                ),
+            },
+        }
 
         return context
