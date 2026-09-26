@@ -47,9 +47,11 @@ groupby_aggr_result = student_gen.groupby(['Medu', 'sex'])['G3'].agg(['mean', 'm
 \begin{lstlisting}[caption={Скрипт изменения дискретности по времени.}]
 from pandas import Timestamp, Timedelta
 
+rng = np.random.default_rng(seed=random_state)
+
 current_year = 2026
 birth_years = current_year - data['age']
-random_days = np.random.randint(0, 365, size=len(data))
+random_days = rng.integers(0, 365, size=len(data))
 data['bday'] = [
     Timestamp(f'{year}-01-01') + Timedelta(days=int(day))
     for year, day in zip(birth_years, random_days)
@@ -85,7 +87,7 @@ plt.savefig(seaborn_plot_path)
     \caption{Результат визуализации \texttt{seaborn}.}
 \end{figure}
 
-\paragraph{Визуализация распределений.} Какова форма распределения оценок \texttt{G3}? Покажите это с помощью гистограммы относительных частот, плотности (KDE), ящика с усами (boxplot) и violinplot.
+\paragraph{Визуализация распределений.} Какова форма распределения оценок \texttt{G3}? Покажите это с помощью гистограммы относительных частот, плотности (KDE), ящика с усами и violinplot.
 
 \begin{lstlisting}[caption={Скрипт визуализации распределений.}]
 plt.figure(figsize=(8, 5))
