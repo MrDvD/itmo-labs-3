@@ -3,21 +3,25 @@ import matplotlib.pyplot as plt
 import seaborn as sns
 import numpy as np
 import pandas as pd
+import plotly.graph_objects as go
 from pandas import DataFrame, Timestamp, Timedelta
 from sklearn.preprocessing import StandardScaler
+from scipy.stats import normaltest
 from sklearn.linear_model import LinearRegression, Ridge, Lasso
 from sklearn.metrics import mean_absolute_error, root_mean_squared_error, r2_score
 
 class ReportFiller:
     @staticmethod
-    def make_eda(context: Dict[str, Any], data: DataFrame, seaborn_plot_path: str, plots_path: str) -> Dict[str, Any]:
+    def make_eda(context: Dict[str, Any], data: DataFrame, random_state: int, seaborn_plot_path: str, plots_path: str) -> Dict[str, Any]:
         groupby_aggr_result = data.groupby(['Medu', 'sex'])['G3'].agg(['mean', 'median', 'count']).reset_index()
 
         context['groupby_aggr_result'] = groupby_aggr_result.head()
 
+        rng = np.random.default_rng(seed=random_state)
+
         current_year = 2026
         birth_years = current_year - data['age']
-        random_days = np.random.randint(0, 365, size=len(data))
+        random_days = rng.integers(0, 365, size=len(data))
         data['bday'] = [
             Timestamp(f'{year}-01-01') + Timedelta(days=int(day))
             for year, day in zip(birth_years, random_days)
@@ -66,6 +70,13 @@ class ReportFiller:
         reason_encoded = pd.get_dummies(data, columns=['reason'], prefix='reason', drop_first=False)
         cols = [col for col in reason_encoded.columns if col.startswith('reason_')]
         context['reason_encoded'] = reason_encoded[cols].head()
+
+        res = normaltest(data['G1'])
+        context['normaltest_G1'] = {
+            'statistic': res.statistic,
+            'p_value': res.pvalue,
+            'is_normal': res.pvalue > 0.05,
+        }
 
         return context
 
@@ -150,7 +161,6 @@ class ReportFiller:
         axes[1].grid(True)
 
         plt.tight_layout()
-
         plt.savefig(plot_path, dpi=300)
         plt.close()
 
@@ -197,8 +207,7 @@ class ReportFiller:
             "test_mae": mean_absolute_error(y_test, y_pred_ridge_test),
         }
 
-        random_seed = context.get("random_seed", 42)
-        lasso_model = Lasso(alpha=alpha, random_state=random_seed)
+        lasso_model = Lasso(alpha=alpha)
         lasso_model.fit(X_train, y_train)
 
         y_pred_lasso_train = lasso_model.predict(X_train)

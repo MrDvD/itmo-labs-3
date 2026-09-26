@@ -137,32 +137,49 @@ eason_encoded = pd.get_dummies(data, columns=['reason'], prefix='reason', drop_f
 \VAR{ reason_encoded }
 \end{lstlisting}
 
-% \paragraph{Тесты на свойства распределения.} Подчиняется ли распределение итоговых оценок (\texttt{G3}) нормальному закону?
+\paragraph{Тест на нормальность распределения.} Как проверить, подчиняется ли распределение оценки \texttt{G1} нормальному закону?
 
-% \begin{lstlisting}
-% # Shapiro-Wilk test for normality
-% stat, p_value = stats.shapiro(df['G3'])
+\begin{lstlisting}
+from scipy.stats import normaltest
 
-% print(f"Test Statistic: {stat:.4f}")
-% print(f"p-value: {p_value:.4f}")
+res = stats.normaltest(data['G1'])
+\end{lstlisting}
 
-% if p_value > 0.05:
-%     print("Cannot reject null hypothesis (Data follows a normal distribution)")
-% else:
-%     print("Reject null hypothesis (Data does NOT follow a normal distribution)")
-% \end{lstlisting}
+Получаем следующие результаты:
 
-% \paragraph{Интерактивный график \texttt{plotly}.} Как построить интерактивную диаграмму рассеяния, отображающую связь возраста (\texttt{age}) и итоговой оценки (\texttt{G3}) с цветовой группировкой по причине выбора школы?
+\begin{table}[H]
+\centering
+\begin{tblr}{colspec={|Q[m,c]|Q[m,c]|Q[m,c]|}, row{1}={font=\bfseries}}
+    \hline
+    Statistic & P-value & Is normal? \\
+    \hline
+    \VAR{ normaltest_G1.statistic | round(5) } & \VAR{ normaltest_G1.p_value | round(5) } & \VAR{ normaltest_G1.is_normal } \\
+    \hline
+\end{tblr}
+\caption{Результаты теста на нормальность распределения оценки \texttt{G1}.}
+\end{table}
 
-% \begin{lstlisting}
-% fig = px.scatter(
-%     df, 
-%     x='age', 
-%     y='G3', 
-%     color='reason', 
-%     symbol='sex',
-%     title='Interactive Distribution of Scores by Age and School Choice Reason',
-%     labels={'age': 'Age', 'G3': 'Final Grade (G3)'}
-% )
-% fig.show()
-% \end{lstlisting}
+\paragraph{Интерактивный график \texttt{plotly}.} Как построить интерактивную матрицу корреляции численных признаков из нашего набора данных?
+
+\begin{lstlisting}[caption={Скрипт построения интерактивного графика \texttt{plotly}.}]
+import plotly.graph_objects as go
+
+numeric_cols = student_gen.select_dtypes(include=['int64', 'float64']).columns
+corr_matrix = student_gen[numeric_cols].corr()
+
+fig = go.Figure(data=go.Heatmap(
+    z=corr_matrix.values,
+    x=corr_matrix.columns,
+    y=corr_matrix.index,
+    colorscale='RdBu',
+    zmin=-1, zmax=1,
+    text=corr_matrix.round(2).values,
+    texttemplate="%{text}"
+))
+
+fig.update_layout(
+    title="Correlation Matrix Heatmap",
+    width=800, height=800
+)
+fig.show()
+\end{lstlisting}

@@ -38,7 +38,7 @@ if __name__ == "__main__":
         'alpha': cfg['alpha'],
     }
 
-    context = ReportFiller.make_eda(context, df, seaborn_plot_path, plots_path)
+    context = ReportFiller.make_eda(context, df, cfg['random_seed'], seaborn_plot_path, plots_path)
     train_data, test_data = ReportFiller.split_dataset(df, test_size=cfg['test_size'], random_state=cfg['random_seed'])
 
     target_column = 'TotalAlc'
@@ -55,7 +55,6 @@ if __name__ == "__main__":
 
     if train_nans > 0 or test_nans > 0:
         raise ValueError(f"Found NaN values in train or test data. Train NaNs: {train_nans}, Test NaNs: {test_nans}")
-
 
     train_data = ReportFiller.prepare_features(train_data, categorical_columns, numeric_columns, target_column, is_train=True)
     test_data = ReportFiller.prepare_features(test_data, categorical_columns, numeric_columns, target_column)

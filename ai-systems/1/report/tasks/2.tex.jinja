@@ -128,6 +128,8 @@ metrics = {
     "test_rmse": root_mean_squared_error(y_test, y_test_pred),
     "train_r2": r2_score(y_train, y_train_pred),
     "test_r2": r2_score(y_test, y_test_pred),
+    "train_mae": mean_absolute_error(y_train, y_train_pred),
+    "test_mae": mean_absolute_error(y_test, y_test_pred),
 }
 
 _, axes = plt.subplots(1, 2, figsize=(12, 5))
@@ -155,7 +157,6 @@ axes[1].set_title("Residuals vs Predicted Values")
 axes[1].grid(True)
 
 plt.tight_layout()
-
 plt.savefig(plot_path, dpi=300)
 plt.close()
 \end{lstlisting}
@@ -167,14 +168,26 @@ plt.close()
 \end{figure}
 
 Результаты оценки модели без регуляризации:
-\begin{itemize}
-    \item $RMSE$ на обучающей выборке (\texttt{train}): \VAR{ regression_results.metrics.train_rmse | round(5) };
-    \item $RMSE$ на тестовой выборке (\texttt{test}): \VAR{ regression_results.metrics.test_rmse | round(5) };
-    \item $MAE$ на обучающей выборке (\texttt{train}): \VAR{ regression_results.metrics.train_mae | round(5) };
-    \item $MAE$ на тестовой выборке (\texttt{test}): \VAR{ regression_results.metrics.test_mae | round(5) };
-    \item Коэффициент детерминации ($R^2$) на обучающей выборке: \VAR{ regression_results.metrics.train_r2 | round(5) };
-    \item Коэффициент детерминации ($R^2$) на тестовой выборке: \VAR{ regression_results.metrics.test_r2 | round(5) }.
-\end{itemize}
+
+\begin{table}[h]
+    \centering
+    \begin{tblr}{
+        colspec = {l c c},
+        hlines,
+        vlines,
+        row{1} = {font=\bfseries, bg=gray!10},
+    }
+        Метрика & \texttt{train} & \texttt{test} \\
+        $RMSE$ & \VAR{ regression_results.metrics.train_rmse | round(5) } 
+               & \VAR{ regression_results.metrics.test_rmse | round(5) } \\
+        $MAE$  & \VAR{ regression_results.metrics.train_mae | round(5) } 
+               & \VAR{ regression_results.metrics.test_mae | round(5) } \\
+        $R^2$  & \VAR{ regression_results.metrics.train_r2 | round(5) } 
+               & \VAR{ regression_results.metrics.test_r2 | round(5) } \\
+    \end{tblr}
+    \caption{Результаты модели линейной регрессии без регуляризации.}
+    \label{tab:regression_metrics}
+\end{table}
 
 \subsubsection{Обучение с регуляризацией}
 
@@ -195,6 +208,12 @@ plt.close()
 \begin{lstlisting}[caption={Скрипт обучения Ridge и Lasso регрессий.}]
 from sklearn.linear_model import Ridge, Lasso
 
+X_train = train_data.drop(columns=[target_column])
+y_train = train_data[target_column].to_numpy()
+
+X_test = test_data.drop(columns=[target_column])
+y_test = test_data[target_column].to_numpy()
+
 ridge_model = Ridge(alpha=alpha)
 ridge_model.fit(X_train, y_train)
 
@@ -206,10 +225,11 @@ ridge_metrics = {
     "test_rmse": root_mean_squared_error(y_test, y_pred_ridge_test),
     "train_r2": r2_score(y_train, y_pred_ridge_train),
     "test_r2": r2_score(y_test, y_pred_ridge_test),
+    "train_mae": mean_absolute_error(y_train, y_pred_ridge_train),
+    "test_mae": mean_absolute_error(y_test, y_pred_ridge_test),
 }
 
-random_seed = context.get("random_seed", 42)
-lasso_model = Lasso(alpha=alpha, random_state=random_seed)
+lasso_model = Lasso(alpha=alpha)
 lasso_model.fit(X_train, y_train)
 
 y_pred_lasso_train = lasso_model.predict(X_train)
@@ -220,6 +240,8 @@ lasso_metrics = {
     "test_rmse": root_mean_squared_error(y_test, y_pred_lasso_test),
     "train_r2": r2_score(y_train, y_pred_lasso_train),
     "test_r2": r2_score(y_test, y_pred_lasso_test),
+    "train_mae": mean_absolute_error(y_train, y_pred_lasso_train),
+    "test_mae": mean_absolute_error(y_test, y_pred_lasso_test),
 }
 
 _, axes = plt.subplots(1, 2, figsize=(14, 5))
@@ -278,7 +300,23 @@ plt.close()
 \end{figure}
 
 Результаты моделей с регуляризацией на тестовой выборке:
-\begin{itemize}
-    \item \textbf{Ridge ($L_2$):} $RMSE = \mathbf{\VAR{ regularization_results.ridge.metrics.test_rmse | round(5) }}$, $R^2 = \mathbf{\VAR{ regularization_results.ridge.metrics.test_r2 | round(5) }}$, $MAE = \mathbf{\VAR{ regularization_results.ridge.metrics.test_mae | round(5) }}$;
-    \item \textbf{Lasso ($L_1$):} $RMSE = \mathbf{\VAR{ regularization_results.lasso.metrics.test_rmse | round(5) }}$, $R^2 = \mathbf{\VAR{ regularization_results.lasso.metrics.test_r2 | round(5) }}$, $MAE = \mathbf{\VAR{ regularization_results.lasso.metrics.test_mae | round(5) }}$.
-\end{itemize}
+
+\begin{table}[h]
+    \centering
+    \begin{tblr}{
+        colspec = {l c c c},
+        hlines,
+        vlines,
+        row{1} = {font=\bfseries, bg=gray!10},
+    }
+        Модель & $RMSE$ & $R^2$ & $MAE$ \\
+        Ridge ($L_2$) & \mathbf{\VAR{ regularization_results.ridge.metrics.test_rmse | round(5) }} 
+                      & \mathbf{\VAR{ regularization_results.ridge.metrics.test_r2 | round(5) }} 
+                      & \mathbf{\VAR{ regularization_results.ridge.metrics.test_mae | round(5) }} \\
+        Lasso ($L_1$) & \mathbf{\VAR{ regularization_results.lasso.metrics.test_rmse | round(5) }} 
+                      & \mathbf{\VAR{ regularization_results.lasso.metrics.test_r2 | round(5) }} 
+                      & \mathbf{\VAR{ regularization_results.lasso.metrics.test_mae | round(5) }} \\
+    \end{tblr}
+    \caption{Результаты моделей с регуляризацией на тестовой выборке.}
+    \label{tab:regularization_results}
+\end{table}
