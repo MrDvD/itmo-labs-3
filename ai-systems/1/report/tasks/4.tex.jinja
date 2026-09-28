@@ -1,0 +1,95 @@
+\subsection{Математическое обоснование MSE}
+
+Покажем, что из максимизации функции правдоподобия выборки невязок, распределённых по нормальному закону, строго следует задача минимизации среднеквадратичной ошибки.\cite{chernova2007mathematical}
+
+Рассмотрим линейную регрессию:
+\[
+y_i = \mathbf{w}^T \mathbf{x}_i + \varepsilon_i, \quad i = \overline{1\dots N}
+\]
+
+где:
+\begin{itemize}
+    \item $y_i$ — целевая переменная,
+    \item $\mathbf{x}_i$ — вектор признаков $i$-го объекта,
+    \item $\mathbf{w}$ --- вектор параметров модели,
+    \item $\varepsilon_i = y_i - \mathbf{w}^T \mathbf{x}_i$ --- невязка.
+\end{itemize}
+
+Допустим, что невязки $\varepsilon_i$ являются независимыми и одинаково распределёнными случайными величинами вида:
+\[
+\varepsilon_i \sim \mathcal{N}(0, \sigma^2)
+\]
+
+Тогда плотность вероятности для нормального закона имеет вид:
+\[
+p(\varepsilon_i) = \frac{1}{\sqrt{2\pi\sigma^2}} \exp\left( -\frac{\varepsilon_i^2}{2\sigma^2} \right) = \frac{1}{\sqrt{2\pi\sigma^2}} \exp\left( -\frac{(y_i - \mathbf{w}^T \mathbf{x}_i)^2}{2\sigma^2} \right)
+\]
+
+В силу независимости выборки невязок можем воспользоваться определением функции правдоподобия:
+\begin{align*}
+L(\mathbf{w}, \sigma^2) &= \prod_{i=1}^{N} \ln p(\varepsilon_i) = \prod_{i=1}^{N} \frac{1}{\sqrt{2\pi\sigma^2}} \exp\left( -\frac{(y_i - \mathbf{w}^T \mathbf{x}_i)^2}{2\sigma^2} \right)=\\
+&= \left( 2\pi\sigma^2 \right)^{-\frac{N}{2}} \exp\left( -\frac{1}{2\sigma^2} \sum_{i=1}^{N} (y_i - \mathbf{w}^T \mathbf{x}_i)^2 \right)
+\end{align*}
+
+Поскольку $\ln(x)$ строго возрастает, она сохраняет точки экстремума. Перейдем к логарифму функции правдоподобия:
+\begin{align*}
+\ell(\mathbf{w}, \sigma^2) &= \ln L(\mathbf{w}, \sigma^2) = \ln \left( \left( 2\pi\sigma^2 \right)^{-\frac{N}{2}} \exp\left( -\frac{1}{2\sigma^2} \sum_{i=1}^{N} (y_i - \mathbf{w}^T \mathbf{x}_i)^2 \right) \right) \\
+&= -\frac{N}{2} \ln(2\pi\sigma^2) - \frac{1}{2\sigma^2} \sum_{i=1}^{N} (y_i - \mathbf{w}^T \mathbf{x}_i)^2
+\end{align*}
+
+Найдем оценку максимального правдоподобия по определению:
+\[
+\mathbf{\hat{w}} = \arg\max_{\mathbf{w}} \left( -\frac{N}{2} \ln(2\pi\sigma^2) - \frac{1}{2\sigma^2} \sum_{i=1}^{N} (y_i - \mathbf{w}^T \mathbf{x}_i)^2 \right)
+\]
+
+Для удобства дифференцирования перепишем сумму квадратов в матричном виде, где $\mathbf{y} \in \mathbb{R}^N$, а матрица объектов-признаков $\mathbf{X} \in \mathbb{R}^{N \times d}$:
+\[
+\ell(\mathbf{w},\sigma^2) = -\frac{N}{2} \ln(2\pi\sigma^2) - \frac{1}{2\sigma^2} (\mathbf{y} - \mathbf{X}\mathbf{w})^T (\mathbf{y} - \mathbf{X}\mathbf{w})
+\]
+
+Раскроем скобки в квадратичной форме:
+\[
+\ell(\mathbf{w},\sigma^2) = -\frac{N}{2} \ln(2\pi\sigma^2) - \frac{1}{2\sigma^2} \left( \mathbf{y}^T \mathbf{y} - 2\mathbf{w}^T \mathbf{X}^T \mathbf{y} + \mathbf{w}^T \mathbf{X}^T \mathbf{X} \mathbf{w} \right)
+\]
+
+Возьмем градиент по вектору параметров $\mathbf{w}$:
+\[
+\frac{\partial \ell(\mathbf{w},\sigma^2)}{\partial \mathbf{w}} = -\frac{1}{2\sigma^2} \left( -2\mathbf{X}^T \mathbf{y} + 2\mathbf{X}^T \mathbf{X} \mathbf{w} \right) = \frac{1}{\sigma^2} \left( \mathbf{X}^T \mathbf{y} - \mathbf{X}^T \mathbf{X} \mathbf{w} \right)
+\]
+
+Приравняем частную производную к нулевому вектору:
+\[
+\frac{\partial \ell(\mathbf{w},\sigma^2)}{\partial \mathbf{w}} = \mathbf{0} \implies \frac{1}{\sigma^2} \left( \mathbf{X}^T \mathbf{y} - \mathbf{X}^T \mathbf{X} \mathbf{w} \right) = \mathbf{0}
+\]
+
+Предположим, что матрица $\mathbf{X}^T \mathbf{X}$ обратима. Тогда оценка максимального правдоподобия имеет вид:
+\[
+\mathbf{\hat{w}} = (\mathbf{X}^T \mathbf{X})^{-1} \mathbf{X}^T \mathbf{y}
+\]
+
+Чтобы убедиться, что найденная стационарная точка $\mathbf{\hat{w}}$ является именно точкой \textit{максимума}, вычислим гессиан логарифмической функции правдоподобия по вектору $\mathbf{w}$:
+\[
+\mathbf{H} = \frac{\partial^2 \ell(\mathbf{w},\sigma^2)}{\partial \mathbf{w} \partial \mathbf{w}^T} = \frac{\partial}{\partial \mathbf{w}^T} \left( \frac{1}{\sigma^2} \left( \mathbf{X}^T \mathbf{y} - \mathbf{X}^T \mathbf{X} \mathbf{w} \right) \right) = -\frac{1}{\sigma^2} \mathbf{X}^T \mathbf{X}
+\]
+
+Так как матрица $\mathbf{X}^T \mathbf{X}$ является положительно определённой при наших ограничениях, то для любого ненулевого вектора $\mathbf{v}$ справедливо:
+\[
+\mathbf{v}^T \mathbf{H} \mathbf{v} = -\frac{1}{\sigma^2} \mathbf{v}^T \mathbf{X}^T \mathbf{X} \mathbf{v} = -\frac{1}{\sigma^2} \|\mathbf{X}\mathbf{v}\|^2 < 0
+\]
+
+Следовательно, гессиан отрицательно определён, и точка $\mathbf{\hat{w}}$ является её единственным глобальным \textit{максимумом}.$\quad\square$
+
+Теперь свяжем полученный результат с функцией среднеквадратичной ошибки. По определению, MSE на выборке равна:
+\[
+\text{MSE}(\mathbf{w}) = \frac{1}{N} \sum_{i=1}^{N} \varepsilon_i^2 = \frac{1}{N} \sum_{i=1}^{N} (y_i - \mathbf{w}^T \mathbf{x}_i)^2 = \frac{1}{N} (\mathbf{y} - \mathbf{X}\mathbf{w})^T (\mathbf{y} - \mathbf{X}\mathbf{w})
+\]
+
+Выразим логарифмическую функцию правдоподобия через $\text{MSE}(\mathbf{w})$:
+\[
+\ell(\mathbf{w}, \sigma^2) = -\frac{N}{2} \ln(2\pi\sigma^2) - \frac{N}{2\sigma^2} \text{MSE}(\mathbf{w})
+\]
+
+Поскольку слагаемое $-\frac{N}{2} \ln(2\pi\sigma^2)$ константно относительно $\mathbf{w}$, а множитель $-\frac{N}{2\sigma^2}$ отрицателен, задача максимизации логарифма правдоподобия эквивалентна задаче минимизации среднеквадратичной ошибки:
+\[
+\mathbf{\hat{w}} = \arg\max_{\mathbf{w}} \ell(\mathbf{w}, \sigma^2) = \arg\min_{\mathbf{w}} \text{MSE}(\mathbf{w})\quad\blacksquare
+\]
