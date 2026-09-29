@@ -3,6 +3,7 @@
 \usepackage{amsmath, amsthm, amssymb}
 \usepackage{enumitem}
 \usepackage{graphicx}
+\usepackage{xcolor}
 \usepackage{float}
 \usepackage{tabularray}
 \usepackage[a4paper,
@@ -52,3 +53,18 @@
 }
 
 \newcommand{\abs}[1]{\left|#1\right|}
+\newcommand{\diff}{\mathrm{d}}
+
+\usepackage{caption} % required for caption param
+\usepackage{minted}
+% Настройки для cyrillic листингов кода
+\setminted{
+    frame=single,
+    fontsize=\small,
+    linenos=true,
+    numbersep=5pt,
+    tabsize=4,
+    breaklines=true
+}
+\newenvironment{code}{\captionsetup{type=listing}}{}
+\renewcommand{\listingscaption}{Листинг}

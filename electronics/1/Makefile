@@ -8,8 +8,10 @@ clean:
 	done
 	# clean project compiled files
 	find . -name "*.compiled.*" -delete
+	rm -rf pics/
 pdf: clean
-	python3 src/report/main.py
+	PYTHONPATH=src python3 src/report/main.py
 	cd "${report_dir}"; \
 	xelatex --shell-escape -interaction=nonstopmode "${report_name}"; \
+	biber "${report_name}"; \
 	xelatex --shell-escape -interaction=nonstopmode "${report_name}"

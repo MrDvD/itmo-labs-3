@@ -4,9 +4,14 @@
 *.out
 *.run.xml
 *.bcf
+*.bbl
+*.blg
 *.compiled.*
+*.db
+*.net
+*.raw
 
-
+_minted/
 temp/
 pics/
 __pycache__/

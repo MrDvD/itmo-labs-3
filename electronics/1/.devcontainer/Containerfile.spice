@@ -54,4 +54,4 @@ RUN python3 -m venv /opt/venv && \
 WORKDIR /app
 
 # ENTRYPOINT ["/opt/venv/bin/python3", "/app/src/spice/main.py"]
-ENTRYPOINT ["bash"]
+# ENTRYPOINT ["bash"]

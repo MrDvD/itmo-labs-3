@@ -5,19 +5,131 @@
 Для моделирования источника постоянного тока в среде LTspice была воспроизведена следующая схема:
 \begin{figure}[H]
     \centering
-    \includegraphics[width=0.5\textwidth]{\VAR{ ltspice_circuit_path }}
+    % \includegraphics[width=0.5\textwidth]{\VAR{ ltspice_circuit_path }}
     \caption{Схема источника постоянного тока в LTspice}
     \label{fig:ltspice_circuit}
 \end{figure}
 
+\begin{code}
+\begin{minted}{text}
+Version 4.1
+SHEET 1 880 680
+WIRE 288 48 112 48    ; Top horizontal wire (V1 pin to R1 pin)
+WIRE 112 96 112 48    ; Top-left vertical segment to V1 top pin
+WIRE 288 96 288 48    ; Top-right vertical segment to R1 top pin
+WIRE 112 240 112 176  ; Bottom-left segment from V1 bottom pin
+WIRE 288 240 288 176  ; Bottom-right segment from R1 bottom pin
+WIRE 288 240 112 240  ; Bottom horizontal wire (V1 ground to R1 ground)
+FLAG 112 240 0
+FLAG 288 48 out
+SYMBOL voltage 112 80 R0
+SYMATTR InstName V1
+SYMATTR Value 5 Rser=625
+SYMBOL res 272 80 R0
+SYMATTR InstName R1
+SYMATTR Value {Rload}
+\end{minted}
+\caption{Файл формата \texttt{asc} для LTspice.}
+\end{code}
+
 \subsection{Экспериментальные измерения}
 
-\dots
+Для проведения серии измерений характеристик источника электрической энергии постоянного тока при различных сопротивлениях нагрузки были использованы следующие директивы:
+
+\begin{code}
+\begin{minted}{text}
+.step param Rload LIST 1e12 5625 2500 1458 938 625 417 268 156 69 1m
+.meas tran V_out AVG V(out) FROM 0 TO 15ms
+.meas tran I_load AVG I(R1) FROM 0 TO 15ms
+.meas tran P_load AVG V(out)*I(R1) FROM 0 TO 10ms
+.tran 15ms
+\end{minted}
+\caption{Директивы для сбора метрик в LTspice.}
+\end{code}
+
+Результаты измерений были собраны в таблицу \ref{tab:source_params_calc}.
 
 \subsection{Расчёт ключевых параметров}
 
-\dots
+Для расчёта ключевых параметров источника электрической энергии постоянного тока были использованы следующие формулы:\cite{ltspice2026}
+
+\begin{table}[H]
+\centering
+\begin{tblr}{
+  colspec = {Q[c,m] Q[l,m]},
+  vlines,
+  hlines,
+  row{1} = {bg=gray!15, font=\bfseries},
+}
+Формула & Описание \\
+$\displaystyle In_{\text{p}}_k=\dfrac{E_{\text{p}}}{Rn_k+r_{\text{p}}}$ & Ток в нагрузке \\
+$\displaystyle J_{\text{p}}=\dfrac{E_{\text{p}}}{r_{\text{p}}}$ & Ток короткого замыкания \\
+$\displaystyle Un_{\text{p}}_k=E_{\text{p}}-r_{\text{p}}\cdot In_{\text{p}}_k$ & Напряжение в нагрузке \\
+$\displaystyle Pn_{\text{p}}_k=Un_{\text{p}}_k\cdot In_{\text{p}}_k$ & Мощность, рассеиваемая в нагрузке \\
+$\displaystyle \eta_{\text{p}}_k=1-\dfrac{r_{\text{p}}}{r_{\text{p}}+Rn_k}$ & Коэффициент полезного действия \\
+\end{tblr}
+\caption{Формулы для расчёта ключевых параметров источника.}
+\end{table}
+
+Для расчёта внутреннего сопротивления источника \( r_{\text{p}} \) предлагается воспользоваться среднеквадратичной метрикой для дифференциального сопротивления:\cite{ltspice2026}
+\[
+    r_k=\dfrac{\diff U_k}{\diff I_k}\approx\dfrac{U_{k+1}-U_k}{I_{k+1}-I_k},\qquad r_{\text{p}}=\sqrt{\dfrac{1}{n}\sum_{k=1}^{n}r_k^2}
+\]
+
+Также для расчёта ЭДС источника \( E_{\text{p}} \) можно использовать формулу:\cite{ltspice2026}
+\[
+    E_{\text{p}}=Un_{\text{p}}_0
+\]
+
+Результаты расчётов для внутреннего сопротивления источника \( r_{\text{p}} \) и ЭДС источника \( E_{\text{p}} \) представлены в таблице \ref{tab:source_params_calc}.
 
 \subsection{Результаты обработки данных}
 
-\dots
+По результатам эксперимента и расчётов были получены следующие данные:
+\begin{table}[H]
+\centering
+\begin{tblr}{
+  colspec = {c|cccc|Q[c,m,2.1cm]cccc},
+  vlines,
+  hlines,
+  rows = {c, m},
+  row{1-4} = {bg=gray!15},
+  cell{1}{1} = {r=4}{c},
+  cell{1}{2} = {r=2, c=4}{c, font=\bfseries},
+  cell{1}{6} = {c=5}{c, font=\bfseries},
+  cell{2}{6} = {c=5}{c},
+}
+$k$ & Измерения & & & & Расчёт & & & & \\
+    & & & & & $r_{\text{p}} = \VAR{ rp|round(3) }\ [\text{Ом}]; E_{\text{p}} = \VAR{ ep|round(3) }\ [\text{В}]; J_{\text{p}} = \VAR{ jp|round(3) }\ [\text{мА}]$ & & & & \\
+    & $Rn_k$ & $In_k$ & $Un_k$ & $Pn_k$ & $r_k$ & $In_{p k}$ & $Un_{p k}$ & $Pn_{p k}$ & $\eta_k$ \\
+    & Ом & мА & В & мВт & Ом & мА & В & мВт & --- \\
+\BLOCK{ for row in table_data }
+\VAR{ row.k } & \VAR{ row.Rn|round(3) } & \VAR{ row.In|round(3) } & \VAR{ row.Un|round(3) } & \VAR{ row.Pn|round(3) } & \VAR{ '---' if row.r is none else row.r|round(3) } & \VAR{ row.In_p|round(3) } & \VAR{ row.Un_p|round(3) } & \VAR{ row.Pn_p|round(3) } & \VAR{ row.eta|round(3) } \\
+\BLOCK{ endfor }
+\end{tblr}
+\caption{Результаты обработки данных}
+\label{tab:source_params_calc}
+\end{table}
+
+Представленные в таблице данные были использованы для построения графиков \ref{fig:ui_diagram}, \ref{fig:pi_diagram} и \ref{fig:nui_diagram}.
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.8\textwidth]{\VAR{ ui_diagram_path }}
+    \caption{Внешняя характеристика источника}
+    \label{fig:ui_diagram}
+\end{figure}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.8\textwidth]{\VAR{ pi_diagram_path }}
+    \caption{Рабочие характеристики источника}
+    \label{fig:pi_diagram}
+\end{figure}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.8\textwidth]{\VAR{ nui_diagram_path }}
+    \caption{Нормированные характеристики источника}
+    \label{fig:nui_diagram}
+\end{figure}
