@@ -1,23 +1,35 @@
 from typing import Any, Dict
 import matplotlib.pyplot as plt
 import math
+import json
+import urllib.request
 
 class ReportFiller:
     @staticmethod
-    def get_resistance_values(context: Dict[str, Any]) -> Dict[str, Any]:
-        resistance_values = [10, 20, 30, 40, 50, 60]
+    def get_resistance_values(context: Dict[str, Any], url: str) -> Dict[str, Any]:
+        req = urllib.request.Request(url)
+        with urllib.request.urlopen(req) as response:
+            data = json.loads(response.read().decode("utf-8"))
+
+        resistance_values = data.get("R", [])
+        
         new_context = context.copy()
         new_context["resistance"] = resistance_values
+        new_context["ep"] = data.get("E", 0.0)
         return new_context
 
     @staticmethod
-    def measure_ltspice_characteristics(context: Dict[str, Any]) -> Dict[str, Any]:
+    def measure_ltspice_characteristics(context: Dict[str, Any], url: str) -> Dict[str, Any]:
+        req = urllib.request.Request(url)
+        with urllib.request.urlopen(req) as response:
+            data = json.loads(response.read().decode("utf-8"))
+        
         measured = {
-            "I": [0, 0.1, 0.2, 0.3, 0.4, 0.5],
-            "U": [0, 1, 2, 3, 4, 5],
-            "P": [0, 0.1, 0.2, 0.3, 0.4, 0.5],
-            "nu": [0, 20, 40, 60, 80, 100]
+            "U": data["v_out"]["value"],
+            "I": data["i_load"]["value"],
+            "P": data["p_load"]["value"],
         }
+        
         new_context = context.copy()
         new_context["measured"] = measured
         return new_context
@@ -29,11 +41,11 @@ class ReportFiller:
         I = measured.get("I", [])
         N = len(I)
         calculated: Dict[str, Any] = {
-            "r": [None] + [(U[i + 1] - U[i]) / (I[i + 1] - I[i]) for i in range(1, N - 1)] + [None],
+            "r": [None] + [-(U[i + 1] - U[i]) / (I[i + 1] - I[i]) for i in range(1, N - 1)] + [None],
         }
         rp = math.sqrt(sum(x ** 2 for x in calculated["r"] if x is not None) / sum(1 for x in calculated["r"] if x is not None))
-        ep = U[0]
 
+        ep = context["ep"]
         calculated["I"] = [ep / (x+rp) for x in context["resistance"]]
         calculated["U"] = [ep - rp * x for x in calculated["I"]]
         calculated["P"] = [u * i for u, i in zip(calculated["U"], calculated["I"])]
@@ -41,7 +53,6 @@ class ReportFiller:
 
         new_context = context.copy()
         new_context["rp"] = rp
-        new_context["ep"] = ep
         new_context["jp"] = ep / rp if rp != 0 else None
         new_context["calculated"] = calculated
         return new_context
@@ -57,17 +68,15 @@ class ReportFiller:
         for k in range(num_rows):
             row = {
                 "k": k,
-                # "Rn": measured.get("R", [])[k],
-                "Rn": 0,
-                "In": measured.get("I", [])[k],
+                "Rn": context.get("resistance", [])[k],
+                "In": measured.get("I", [])[k] * 1000,
                 "Un": measured.get("U", [])[k],
-                "Pn": measured.get("P", [])[k],
+                "Pn": measured.get("P", [])[k] * 1000,
                 "r": calculated.get("r", [])[k],
-                "In_p": calculated.get("I", [])[k],
+                "In_p": calculated.get("I", [])[k] * 1000,
                 "Un_p": calculated.get("U", [])[k],
-                "Pn_p": calculated.get("P", [])[k],
-                # "eta": calculated.get("eta", [])[k],
-                "eta": 0,
+                "Pn_p": calculated.get("P", [])[k] * 1000,
+                "eta": calculated.get("eta", [])[k],
             }
             table_data.append(row)
 
@@ -76,54 +85,65 @@ class ReportFiller:
         return new_context
 
     @staticmethod
-    def plot_ltspice_characteristics(context: Dict[str, Any], path_1: str, path_2: str, path_3: str) -> None:
+    def plot_ltspice_characteristics(context: Dict[str, Any], path_1: str, path_2: str) -> None:
         calculated = context.get("calculated", {})
         measured = context.get("measured", {})
 
-
-
-        plots_config = [
-            {
-                "path": path_1,
-                "ylabel": "Voltage U (V)",
-                "calc_key": "U",
-                "meas_key": "U"
-            },
-            {
-                "path": path_2,
-                "ylabel": "Power P (W)",
-                "calc_key": "P",
-                "meas_key": "P"
-            },
-            {
-                "path": path_3,
-                "ylabel": "Efficiency \u03b7 (%)",
-                "calc_key": "nu",
-                "meas_key": "nu"
-            }
-        ]
-
-        # Extract current data
         i_calc = calculated.get("I", [])
         i_meas = measured.get("I", [])
 
-        for cfg in plots_config:
-            plt.figure(figsize=(8, 5))
+        # --- Plot 1: Voltage U ---
+        plt.figure(figsize=(8, 5))
+        if i_calc and "U" in calculated:
+            plt.plot(i_calc, calculated["U"], 'b-o', label='U Calculated', linewidth=1.5)
+        if i_meas and "U" in measured:
+            plt.plot(i_meas, measured["U"], 'r--s', label='U LTspice', linewidth=1.5)
 
-            # Plot calculated values if present
-            if i_calc and cfg["calc_key"] in calculated:
-                plt.plot(i_calc, calculated[cfg["calc_key"]], 'b-o', label='Calculated', linewidth=1.5)
+        plt.xlabel("Current I (A)", fontsize=10)
+        plt.ylabel("Voltage U (V)", fontsize=10)
+        plt.grid(True, linestyle='--', alpha=0.6)
+        plt.legend(loc='best')
+        plt.tight_layout()
+        plt.savefig(path_1, dpi=300)
+        plt.close()
 
-            # Plot measured/simulated values if present
-            if i_meas and cfg["meas_key"] in measured:
-                plt.plot(i_meas, measured[cfg["meas_key"]], 'r--s', label='LTspice', linewidth=1.5)
+        # --- Plot 2: Combined Power P & Efficiency η ---
+        fig, ax1 = plt.subplots(figsize=(8, 5))
 
-            plt.xlabel("Current I (A)", fontsize=10)
-            plt.ylabel(cfg["ylabel"], fontsize=10)
-            plt.grid(True, linestyle='--', alpha=0.6)
-            plt.legend(loc='best')
-            plt.tight_layout()
+        # Color Palette: Blue for Calculated, Red for LTspice
+        color_calc = 'tab:blue'
+        color_meas = 'tab:red'
 
-            # Save and clean up memory
-            plt.savefig(cfg["path"], dpi=300)
-            plt.close()
+        # Primary Y-axis: Power P
+        ax1.set_xlabel("Current I (A)", fontsize=10)
+        ax1.set_ylabel("Power P (W)", fontsize=10)
+
+        lines = []
+
+        if i_calc and "P" in calculated:
+            l1 = ax1.plot(i_calc, calculated["P"], color=color_calc, linestyle='-', marker='o', label='P Calculated', linewidth=1.5)
+            lines.extend(l1)
+        if i_meas and "P" in measured:
+            l2 = ax1.plot(i_meas, measured["P"], color=color_meas, linestyle='-', marker='s', label='P LTspice', linewidth=1.5)
+            lines.extend(l2)
+
+        # Secondary Y-axis: Efficiency η
+        ax2 = ax1.twinx()
+        ax2.set_ylabel("Efficiency \u03b7 (%)", fontsize=10)
+
+        if i_calc and "eta" in calculated:
+            l3 = ax2.plot(i_calc, calculated["eta"], color=color_calc, linestyle='--', marker='o', label='\u03b7 Calculated', linewidth=1.5)
+            lines.extend(l3)
+        if i_meas and "eta" in measured:
+            l4 = ax2.plot(i_meas, measured["eta"], color=color_meas, linestyle='--', marker='s', label='\u03b7 LTspice', linewidth=1.5)
+            lines.extend(l4)
+
+        # Consolidated Legend
+        labels = [line.get_label() for line in lines]
+        if lines:
+            ax1.legend(lines, labels, loc='best')
+
+        ax1.grid(True, linestyle='--', alpha=0.6)
+        fig.tight_layout()
+        plt.savefig(path_2, dpi=300)
+        plt.close()

@@ -53,5 +53,9 @@ RUN python3 -m venv /opt/venv && \
 
 WORKDIR /app
 
-# ENTRYPOINT ["/opt/venv/bin/python3", "/app/src/spice/main.py"]
-# ENTRYPOINT ["bash"]
+COPY data.json /tmp/data.json
+
+ENV PYTHONPATH="/app/src"
+ENV LTSPICE_PATH="/root/.wine/drive_c/Program Files/ADI/LTspice/LTspice.exe"
+
+CMD ["/opt/venv/bin/python3", "/app/src/spice/main.py"]

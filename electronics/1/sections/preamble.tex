@@ -68,3 +68,36 @@
 }
 \newenvironment{code}{\captionsetup{type=listing}}{}
 \renewcommand{\listingscaption}{Листинг}
+
+\usepackage{tabularray}
+  \UseTblrLibrary{varwidth}
+  \UseTblrLibrary{counter}
+
+\DefTblrTemplate{firsthead,middlehead,lasthead}{default}{
+}
+\DefTblrTemplate{firstfoot}{default}{
+  \UseTblrTemplate{contfoot}{default}
+}
+\DefTblrTemplate{middlefoot}{default}{
+  \UseTblrTemplate{contfoot}{default}
+  \UseTblrTemplate{capcont}{default}
+}
+\DefTblrTemplate{lastfoot}{default}{
+  \UseTblrTemplate{note}{default}
+  \UseTblrTemplate{remark}{default}
+  \addvspace{9pt}
+  \UseTblrTemplate{caption}{default}
+}
+\DeclareTblrTemplate{contfoot-text}{default}{См. далее}
+
+\NewTblrEnviron{lablongtblr}
+\SetTblrInner[lablongtblr]{
+%   rowhead = 1, hlines, vlines,
+%   row{1} = {font=\bfseries, bg=gray!10, halign=c},
+%   rowsep = 4pt,
+%   measure=vbox,
+}
+\SetTblrOuter[lablongtblr]{
+  postsep = 9pt,
+  long,
+}

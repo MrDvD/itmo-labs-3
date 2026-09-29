@@ -3,6 +3,7 @@
   "dockerComposeFile": "./compose.yml",
   "service": "report",
   "workspaceFolder": "/app",
+  "runServices": ["spice", "report"],
   "customizations": {
     "vscode": {
       "extensions": [

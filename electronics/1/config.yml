@@ -2,7 +2,12 @@ report:
     dir: .
     name: main
 api:
-    url: http://localhost:8000/
+    host: spice
+    port: 8000
     prefix: /api/v1
     circuit_endpoint: /circuit
+    measure_endpoint: /measure
 variant_num: 009
+server:
+    circuit_init_data_path: /tmp/data.json
+    circuit_file_path: /app/.devcontainer/circuit.asc
