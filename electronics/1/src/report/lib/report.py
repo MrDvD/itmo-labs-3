@@ -1,4 +1,4 @@
-from typing import Any, Dict
+from typing import Any, Dict, List
 import matplotlib.pyplot as plt
 import math
 import json
@@ -53,7 +53,7 @@ class ReportFiller:
 
         new_context = context.copy()
         new_context["rp"] = rp
-        new_context["jp"] = ep / rp if rp != 0 else None
+        new_context["jp"] = ep / rp * 1000 if rp != 0 else None
         new_context["calculated"] = calculated
         return new_context
 
@@ -89,8 +89,11 @@ class ReportFiller:
         calculated = context.get("calculated", {})
         measured = context.get("measured", {})
 
-        i_calc = calculated.get("I", [])
-        i_meas = measured.get("I", [])
+        def toMilli(lst: List[float]) -> List[float]:
+            return list(map(lambda x: x * 1000, lst)) 
+
+        i_calc = toMilli(calculated.get("I", []))
+        i_meas = toMilli(measured.get("I", []))
 
         # --- Plot 1: Voltage U ---
         plt.figure(figsize=(8, 5))
@@ -99,7 +102,7 @@ class ReportFiller:
         if i_meas and "U" in measured:
             plt.plot(i_meas, measured["U"], 'r--s', label='U LTspice', linewidth=1.5)
 
-        plt.xlabel("Current I (A)", fontsize=10)
+        plt.xlabel("Current I (mA)", fontsize=10)
         plt.ylabel("Voltage U (V)", fontsize=10)
         plt.grid(True, linestyle='--', alpha=0.6)
         plt.legend(loc='best')
@@ -110,21 +113,19 @@ class ReportFiller:
         # --- Plot 2: Combined Power P & Efficiency η ---
         fig, ax1 = plt.subplots(figsize=(8, 5))
 
-        # Color Palette: Blue for Calculated, Red for LTspice
         color_calc = 'tab:blue'
         color_meas = 'tab:red'
 
-        # Primary Y-axis: Power P
-        ax1.set_xlabel("Current I (A)", fontsize=10)
+        ax1.set_xlabel("Current I (mA)", fontsize=10)
         ax1.set_ylabel("Power P (W)", fontsize=10)
 
         lines = []
 
         if i_calc and "P" in calculated:
-            l1 = ax1.plot(i_calc, calculated["P"], color=color_calc, linestyle='-', marker='o', label='P Calculated', linewidth=1.5)
+            l1 = ax1.plot(i_calc, calculated["P"], color=color_calc, linestyle='-', marker='s', label='P Calculated', linewidth=1.5)
             lines.extend(l1)
         if i_meas and "P" in measured:
-            l2 = ax1.plot(i_meas, measured["P"], color=color_meas, linestyle='-', marker='s', label='P LTspice', linewidth=1.5)
+            l2 = ax1.plot(i_meas, measured["P"], color=color_meas, linestyle='-', marker='o', label='P LTspice', linewidth=1.5)
             lines.extend(l2)
 
         # Secondary Y-axis: Efficiency η
