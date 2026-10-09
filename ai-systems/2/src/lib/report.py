@@ -4,11 +4,9 @@ import matplotlib.patches as mpatches
 import numpy as np
 import pandas as pd
 import seaborn as sns
-import matplotlib.dates as mdates
-import matplotlib.ticker as ticker
 from pandas import DataFrame
 from sklearn.preprocessing import StandardScaler
-from sklearn.linear_model import Ridge, Lasso
+from sklearn.linear_model import Ridge
 from sklearn.metrics import mean_absolute_error, root_mean_squared_error, r2_score
 from sklearn.model_selection import (
     train_test_split, 
@@ -39,7 +37,7 @@ class ReportFiller:
                         data.index, 
                         test_size=test_size, 
                         random_state=random_state + i,
-                        shuffle=True
+                        shuffle=True,
                     )
                     folds.append((data.loc[train_indices], data.loc[test_indices]))
                 return folds
@@ -84,22 +82,6 @@ class ReportFiller:
                     for train_indices, test_indices in tscv.split(data)
                 ]
 
-            case "purged":
-                if time_col is not None:
-                    data = data.sort_values(by=time_col)
-                tscv = TimeSeriesSplit(n_splits=k)
-                folds = list()
-                for train_indices, test_indices in tscv.split(data):
-                    if purge_gap > 0:
-                        train_indices = train_indices[:-purge_gap]
-                    
-                    folds.append((
-                        data.iloc[train_indices], 
-                        data.iloc[test_indices]
-                    ))
-
-                return folds
-
             case _:
                 raise ValueError(f"Invalid mode: {mode}.")
 
@@ -107,56 +89,76 @@ class ReportFiller:
     def plot_folds(
         data: DataFrame,
         folds: List[Tuple[DataFrame, DataFrame]],
+        mode: str,
         plot_path: str,
         time_col: Optional[str] = None,
+        target_col: Optional[str] = None,
+        group_col: Optional[str] = None,
     ) -> None:
-
         if time_col is not None:
             data = data.sort_values(by=time_col)
 
         n_samples = len(data)
         n_folds = len(folds)
+        show_groups = mode in ("stratified", "grouped", "grouped_one_out") and (target_col is not None or group_col is not None)
+        ratio_col = group_col if mode in ["grouped","grouped_one_out"] else target_col
 
-        _, ax = plt.subplots(figsize=(12, max(3, n_folds * 0.6)))
+        if show_groups:
+            fig, (ax, ax_ratio) = plt.subplots(
+                2, 1, figsize=(12, max(3, n_folds * 0.6) + 3),
+                gridspec_kw={"height_ratios": [max(3, n_folds * 0.6), 3]},
+            )
+        else:
+            fig, ax = plt.subplots(figsize=(12, max(3, n_folds * 0.6)))
 
         for fold_num, (train_df, test_df) in enumerate(folds):
             y_pos = n_folds - 1 - fold_num
-
             train_positions = data.index.get_indexer(train_df.index)
             test_positions = data.index.get_indexer(test_df.index)
 
             if len(train_positions) > 0:
-                ax.barh(
-                    y_pos,
-                    width=1.0,
-                    left=train_positions,
-                    color="#3498db",
-                    edgecolor="none",
-                    height=0.6,
-                )
-
+                ax.barh(y_pos, 1.0, left=train_positions, color="#3498db", height=0.6)
             if len(test_positions) > 0:
-                ax.barh(
-                    y_pos,
-                    width=1.0,
-                    left=test_positions,
-                    color="#e74c3c",
-                    edgecolor="none",
-                    height=0.6,
+                ax.barh(y_pos, 1.0, left=test_positions, color="#e74c3c", height=0.6)
+
+            # Annotate the group used by this fold (for grouped mode)
+            if mode in ["grouped", "grouped_one_out"] and group_col is not None and len(test_df) > 0:
+                grp = test_df[group_col].mode().iloc[0]
+                ax.text(
+                    n_samples * 1.01, y_pos, f"grp={grp}",
+                    va="center", ha="left", fontsize=8, color="#333",
                 )
 
         ax.set_yticks(range(n_folds))
         ax.set_yticklabels([f"Fold {i + 1}" for i in reversed(range(n_folds))])
         ax.set_xlabel("Sample Index" if time_col is None else f"Index (sorted by {time_col})")
         ax.set_xlim(0, n_samples)
-
-        train_patch = mpatches.Patch(color="#3498db", label="Train")
-        test_patch = mpatches.Patch(color="#e74c3c", label="Test")
         ax.legend(
-            handles=[train_patch, test_patch],
-            loc="upper right",
-            bbox_to_anchor=(1.15, 1),
+            handles=[
+                mpatches.Patch(color="#3498db", label="Train"),
+                mpatches.Patch(color="#e74c3c", label="Test"),
+            ],
+            loc="upper right", bbox_to_anchor=(1.15, 1),
         )
+
+        if show_groups:
+            classes = sorted(data[ratio_col].unique())
+            n_classes = len(classes)
+            x = np.arange(n_folds)
+            w = 0.4 / n_classes
+
+            for i, cls in enumerate(classes):
+                train_r = [(tr[ratio_col] == cls).mean() for tr, _ in folds]
+                test_r = [(te[ratio_col] == cls).mean() for _, te in folds]
+                offset = (i - (n_classes - 1) / 2) * w * 2
+                ax_ratio.bar(x + offset - w / 2, train_r, w, label=f"{cls} (train)")
+                ax_ratio.bar(x + offset + w / 2, test_r, w, label=f"{cls} (test)")
+
+            ax_ratio.set_xticks(x)
+            ax_ratio.set_xticklabels([f"Fold {i + 1}" for i in range(n_folds)])
+            ax_ratio.set_ylabel("Ratio")
+            ax_ratio.set_xlabel(f"Group ({ratio_col})")
+            ax_ratio.legend(fontsize=8)
 
         plt.tight_layout()
         plt.savefig(plot_path, dpi=300)
@@ -189,11 +191,12 @@ class ReportFiller:
     @staticmethod
     def teach_model(
         context: Dict[str, Any],
-        train_data: pd.DataFrame,
-        test_data: pd.DataFrame,
+        fold: Tuple[DataFrame, DataFrame],
         target_column: str,
         alpha: float,
+        fold_type: str,
     ) -> Dict[str, Any]:
+        train_data, test_data = fold
         X_train = train_data.drop(columns=[target_column])
         y_train = train_data[target_column].to_numpy()
 
@@ -203,52 +206,19 @@ class ReportFiller:
         ridge_model = Ridge(alpha=alpha)
         ridge_model.fit(X_train, y_train)
 
-        y_pred_ridge_train = ridge_model.predict(X_train)
-        y_pred_ridge_test = ridge_model.predict(X_test)
+        key = f"fold_{fold_type}_metrics"
 
-        ridge_metrics = {
-            "train_rmse": root_mean_squared_error(y_train, y_pred_ridge_train),
-            "test_rmse": root_mean_squared_error(y_test, y_pred_ridge_test),
-            "train_r2": r2_score(y_train, y_pred_ridge_train),
-            "test_r2": r2_score(y_test, y_pred_ridge_test),
-            "train_mae": mean_absolute_error(y_train, y_pred_ridge_train),
-            "test_mae": mean_absolute_error(y_test, y_pred_ridge_test),
-        }
+        y_pred = ridge_model.predict(X_test)
 
-        lasso_model = Lasso(alpha=alpha)
-        lasso_model.fit(X_train, y_train)
+        new_context = context.copy()
+        new_context[key] = new_context.get(key, list())
+        new_context[key].append({
+            "rmse": root_mean_squared_error(y_test, y_pred),
+            "r2": r2_score(y_test, y_pred),
+            "mae": mean_absolute_error(y_test, y_pred),
+        })
 
-        y_pred_lasso_train = lasso_model.predict(X_train)
-        y_pred_lasso_test = lasso_model.predict(X_test)
-
-        lasso_metrics = {
-            "train_rmse": root_mean_squared_error(y_train, y_pred_lasso_train),
-            "test_rmse": root_mean_squared_error(y_test, y_pred_lasso_test),
-            "train_r2": r2_score(y_train, y_pred_lasso_train),
-            "test_r2": r2_score(y_test, y_pred_lasso_test),
-            "train_mae": mean_absolute_error(y_train, y_pred_lasso_train),
-            "test_mae": mean_absolute_error(y_test, y_pred_lasso_test),
-        }
-
-        context["regularization_results"] = {
-            "alpha": alpha,
-            "ridge": {
-                "model": ridge_model,
-                "metrics": ridge_metrics,
-                "coefficients": pd.Series(
-                    ridge_model.coef_.ravel(), index=X_train.columns
-                ),
-            },
-            "lasso": {
-                "model": lasso_model,
-                "metrics": lasso_metrics,
-                "coefficients": pd.Series(
-                    lasso_model.coef_.ravel(), index=X_train.columns
-                ),
-            },
-        }
-
-        return context
+        return new_context
 
     @staticmethod
     def plot_validation_comparison(

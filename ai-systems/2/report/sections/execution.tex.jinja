@@ -2,24 +2,263 @@
 
 \subsection{Random Permutation Cross Validation}
 
-\dots
+\textbf{Суть метода:} генерирует $k$ независимых разбиений обучающего и тестового наборов данных. Образцы сначала перемешиваются, а затем разбиваются на пару обучающих и тестовых наборов.
+
+Для реализации метода на языке Python используется следующий код:
+
+\begin{code}
+\begin{minted}{text}
+folds = list()
+for i in range(k):
+    train_indices, test_indices = train_test_split(
+        data.index, 
+        test_size=test_size, 
+        random_state=random_state + i,
+        shuffle=True,
+    )
+    folds.append((data.loc[train_indices], data.loc[test_indices]))
+\end{minted}
+\caption{Код для реализации Random Permutation Cross Validation.}
+\end{code}
+
+По сути, метод \texttt{train\_test\_split} является обёрткой над итератором\linebreak\textit{ShuffleSplit}.\cite{sklearn_cross_validation}
+
+Визуализация результатов:
+
+\BLOCK{ set cross_val_type = "random" }
+
+\begin{figure}[h]
+    \centering
+    \includegraphics[width=0.8\textwidth]{pics/folds_\VAR{ cross_val_type }.pdf}
+    \caption{Random Permutation Cross Validation Results.}
+\end{figure}
+
+\begin{figure}[h]
+    \centering
+    \includegraphics[width=0.8\textwidth]{pics/feature_distributions_\VAR{ cross_val_type }.pdf}
+    \caption{Feature Distributions for Random Permutation Cross Validation.}
+\end{figure}
+
+Метрики качества модели:
+
+\BLOCK{ set metrics = context["fold_" ~ cross_val_type ~ "_metrics"] }
+\BLOCK{ set n_folds = metrics | length }
+
+\begin{metricstable}[
+    caption = {Метрики качества модели для Random Permutation Cross Validation.},
+]{
+    colspec = {X[c] \BLOCK{ for _ in range(n_folds) }Q[c] \BLOCK{ endfor } Q[c]},
+}
+Метрика \BLOCK{ for i in range(1, n_folds + 1) }& \texttt{fold\_\VAR{ i }} \BLOCK{ endfor }& \texttt{avg} \\
+\texttt{RMSE} \BLOCK{ for m in metrics }& \VAR{ m["rmse"] | round(5) } \BLOCK{ endfor }& \VAR{ (metrics | map(attribute="rmse") | list | sum / n_folds) | round(5) } \\
+\texttt{MAE} \BLOCK{ for m in metrics }& \VAR{ m["mae"] | round(5) } \BLOCK{ endfor }& \VAR{ (metrics | map(attribute="mae") | list | sum / n_folds) | round(5) } \\
+\texttt{R2} \BLOCK{ for m in metrics }& \VAR{ m["r2"] | round(5) } \BLOCK{ endfor }& \VAR{ (metrics | map(attribute="r2") | list | sum / n_folds) | round(5) } \\
+\end{metricstable}
 
 \subsection{Stratified K-Fold Cross Validation}
 
-\dots
+\textbf{Суть метода:} вариация $k$-фолда, которая возвращает стратифицированные фолды: каждый набор содержит примерно такой же процент образцов каждого целевого класса, как и полный набор.\cite{sklearn_cross_validation}
+
+Для реализации метода на языке Python используется следующий код:
+
+\begin{code}
+\begin{minted}{text}
+if target_col is None:
+    raise ValueError("target_col must be provided for stratified mode.")
+
+skf = StratifiedKFold(n_splits=k, shuffle=True, random_state=random_state)
+return [
+    (data.iloc[train_indices], data.iloc[test_indices])
+    for train_indices, test_indices in skf.split(data, data[target_col])
+]
+\end{minted}
+\caption{Код для реализации Stratified K-Fold Cross Validation.}
+\end{code}
+
+Визуализация результатов:
+
+\BLOCK{ set cross_val_type = "stratified" }
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.8\textwidth]{pics/folds_\VAR{ cross_val_type }.pdf}
+    \caption{Stratified K-Fold Cross Validation Results.}
+\end{figure}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.8\textwidth]{pics/feature_distributions_\VAR{ cross_val_type }.pdf}
+    \caption{Feature Distributions for Stratified K-Fold Cross Validation.}
+\end{figure}
+
+Метрики качества модели:
+
+\BLOCK{ set metrics = context["fold_" ~ cross_val_type ~ "_metrics"] }
+\BLOCK{ set n_folds = metrics | length }
+
+\begin{metricstable}[
+    caption = {Метрики качества модели для Stratified K-Fold Cross Validation.},
+]{
+    colspec = {X[c] \BLOCK{ for _ in range(n_folds) }Q[c] \BLOCK{ endfor } Q[c]},
+}
+Метрика \BLOCK{ for i in range(1, n_folds + 1) }& \texttt{fold\_\VAR{ i }} \BLOCK{ endfor }& \texttt{avg} \\
+\texttt{RMSE} \BLOCK{ for m in metrics }& \VAR{ m["rmse"] | round(5) } \BLOCK{ endfor }& \VAR{ (metrics | map(attribute="rmse") | list | sum / n_folds) | round(5) } \\
+\texttt{MAE} \BLOCK{ for m in metrics }& \VAR{ m["mae"] | round(5) } \BLOCK{ endfor }& \VAR{ (metrics | map(attribute="mae") | list | sum / n_folds) | round(5) } \\
+\texttt{R2} \BLOCK{ for m in metrics }& \VAR{ m["r2"] | round(5) } \BLOCK{ endfor }& \VAR{ (metrics | map(attribute="r2") | list | sum / n_folds) | round(5) } \\
+\end{metricstable}
 
 \subsection{Grouped K-Fold Cross Validation}
 
-\dots
+\textbf{Суть метода:} разновидность $k$-фолда, которая гарантирует, что одна и та же группа не будет представлена ни в тестовом, ни в обучающем наборах.\cite{sklearn_cross_validation}
 
-\subsection{Grouped K-Fold - Leave One Group Out}
+Для реализации метода на языке Python используется следующий код:
 
-\dots
+\begin{code}
+\begin{minted}{text}
+if groups is None:
+    raise ValueError("groups array must be provided for grouped mode.")
+
+gkf = GroupKFold(n_splits=k)
+return [
+    (data.iloc[train_indices], data.iloc[test_indices])
+    for train_indices, test_indices in gkf.split(data, groups=groups)
+]
+\end{minted}
+\caption{Код для реализации Grouped K-Fold Cross Validation.}
+\end{code}
+
+Визуализация результатов:
+
+\BLOCK{ set cross_val_type = "grouped" }
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.8\textwidth]{pics/folds_\VAR{ cross_val_type }.pdf}
+    \caption{Grouped K-Fold Cross Validation Results.}
+\end{figure}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.8\textwidth]{pics/feature_distributions_\VAR{ cross_val_type }.pdf}
+    \caption{Feature Distributions for Grouped K-Fold Cross Validation.}
+\end{figure}
+
+Метрики качества модели:
+
+\BLOCK{ set metrics = context["fold_" ~ cross_val_type ~ "_metrics"] }
+\BLOCK{ set n_folds = metrics | length }
+
+\begin{metricstable}[
+    caption = {Метрики качества модели для Grouped K-Fold Cross Validation.},
+]{
+    colspec = {X[c] \BLOCK{ for _ in range(n_folds) }Q[c] \BLOCK{ endfor } Q[c]},
+}
+Метрика \BLOCK{ for i in range(1, n_folds + 1) }& \texttt{fold\_\VAR{ i }} \BLOCK{ endfor }& \texttt{avg} \\
+\texttt{RMSE} \BLOCK{ for m in metrics }& \VAR{ m["rmse"] | round(5) } \BLOCK{ endfor }& \VAR{ (metrics | map(attribute="rmse") | list | sum / n_folds) | round(5) } \\
+\texttt{MAE} \BLOCK{ for m in metrics }& \VAR{ m["mae"] | round(5) } \BLOCK{ endfor }& \VAR{ (metrics | map(attribute="mae") | list | sum / n_folds) | round(5) } \\
+\texttt{R2} \BLOCK{ for m in metrics }& \VAR{ m["r2"] | round(5) } \BLOCK{ endfor }& \VAR{ (metrics | map(attribute="r2") | list | sum / n_folds) | round(5) } \\
+\end{metricstable}
+
+\subsection{Grouped K-Fold --- Leave One Group Out}
+
+\textbf{Суть метода:} каждый сплит удерживает образцы, принадлежащие одной конкретной группе. Таким образом, каждое обучающее множество состоит из всех образцов, кроме тех, которые относятся к определенной группе.\cite{sklearn_cross_validation}
+
+Для реализации метода на языке Python используется следующий код:
+
+\begin{code}
+\begin{minted}{text}
+if groups is None:
+    raise ValueError("groups array must be provided for grouped mode.")
+
+gkf = GroupKFold(n_splits=k)
+return [
+    (data.iloc[train_indices], data.iloc[test_indices])
+    for train_indices, test_indices in gkf.split(data, groups=groups)
+]
+\end{minted}
+\caption{Код для реализации Grouped K-Fold Cross Validation.}
+\end{code}
+
+Визуализация результатов:
+
+\BLOCK{ set cross_val_type = "grouped_one_out" }
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.8\textwidth]{pics/folds_\VAR{ cross_val_type }.pdf}
+    \caption{Grouped K-Fold --- Leave One Group Out Results.}
+\end{figure}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.8\textwidth]{pics/feature_distributions_\VAR{ cross_val_type }.pdf}
+    \caption{Feature Distributions for Grouped K-Fold --- Leave One Group Out Cross Validation.}
+\end{figure}
+
+Метрики качества модели:
+
+\BLOCK{ set metrics = context["fold_" ~ cross_val_type ~ "_metrics"] }
+\BLOCK{ set n_folds = metrics | length }
+
+\begin{metricstable}[
+    caption = {Метрики качества модели для Grouped K-Fold --- Leave One Group Out Cross Validation.},
+]{
+    colspec = {X[c] \BLOCK{ for _ in range(n_folds) }Q[c] \BLOCK{ endfor } Q[c]},
+}
+Метрика \BLOCK{ for i in range(1, n_folds + 1) }& \texttt{fold\_\VAR{ i }} \BLOCK{ endfor }& \texttt{avg} \\
+\texttt{RMSE} \BLOCK{ for m in metrics }& \VAR{ m["rmse"] | round(5) } \BLOCK{ endfor }& \VAR{ (metrics | map(attribute="rmse") | list | sum / n_folds) | round(5) } \\
+\texttt{MAE} \BLOCK{ for m in metrics }& \VAR{ m["mae"] | round(5) } \BLOCK{ endfor }& \VAR{ (metrics | map(attribute="mae") | list | sum / n_folds) | round(5) } \\
+\texttt{R2} \BLOCK{ for m in metrics }& \VAR{ m["r2"] | round(5) } \BLOCK{ endfor }& \VAR{ (metrics | map(attribute="r2") | list | sum / n_folds) | round(5) } \\
+\end{metricstable}
 
 \subsection{Time Series Split}
 
-\dots
+\textbf{Суть метода:} модель обучается исключительно на прошлых данных, а тестируется на последующих. Обучающая выборка при этом не фиксирована, а расширяется с каждой итерацией, накапливая все предыдущие данные для предотвращения Data Leakage.
 
-\subsection{Purged Cross Validation}
+Для реализации метода на языке Python используется следующий код:
 
-\dots
+\begin{code}
+\begin{minted}{text}
+if time_col is not None:
+    data = data.sort_values(by=time_col)
+
+tscv = TimeSeriesSplit(n_splits=k)
+return [
+    (data.iloc[train_indices], data.iloc[test_indices])
+    for train_indices, test_indices in tscv.split(data)
+]
+\end{minted}
+\caption{Код для реализации Time Series Cross Validation.}
+\end{code}
+
+Визуализация результатов:
+
+\BLOCK{ set cross_val_type = "time_series" }
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.8\textwidth]{pics/folds_\VAR{ cross_val_type }.pdf}
+    \caption{Time Series Cross Validation Results.}
+\end{figure}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.8\textwidth]{pics/feature_distributions_\VAR{ cross_val_type }.pdf}
+    \caption{Feature Distributions for Time Series Cross Validation.}
+\end{figure}
+
+Метрики качества модели:
+
+\BLOCK{ set metrics = context["fold_" ~ cross_val_type ~ "_metrics"] }
+\BLOCK{ set n_folds = metrics | length }
+
+\begin{metricstable}[
+    caption = {Метрики качества модели для Grouped K-Fold --- Leave One Group Out Cross Validation.},
+]{
+    colspec = {X[c] \BLOCK{ for _ in range(n_folds) }Q[c] \BLOCK{ endfor } Q[c]},
+}
+Метрика \BLOCK{ for i in range(1, n_folds + 1) }& \texttt{fold\_\VAR{ i }} \BLOCK{ endfor }& \texttt{avg} \\
+\texttt{RMSE} \BLOCK{ for m in metrics }& \VAR{ m["rmse"] | round(5) } \BLOCK{ endfor }& \VAR{ (metrics | map(attribute="rmse") | list | sum / n_folds) | round(5) } \\
+\texttt{MAE} \BLOCK{ for m in metrics }& \VAR{ m["mae"] | round(5) } \BLOCK{ endfor }& \VAR{ (metrics | map(attribute="mae") | list | sum / n_folds) | round(5) } \\
+\texttt{R2} \BLOCK{ for m in metrics }& \VAR{ m["r2"] | round(5) } \BLOCK{ endfor }& \VAR{ (metrics | map(attribute="r2") | list | sum / n_folds) | round(5) } \\
+\end{metricstable}

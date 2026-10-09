@@ -8,6 +8,7 @@
 *.run.xml
 *.compiled.*
 
+_minted/
 temp/
 __pycache__/
 pics/

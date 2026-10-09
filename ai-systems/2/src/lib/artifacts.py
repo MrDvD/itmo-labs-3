@@ -1,6 +1,6 @@
 import os
 import re
-from typing import Dict, List
+from typing import Any, Dict, List
 from jinja2 import Environment, FileSystemLoader, meta
 
 class ArtifactsFiller:
@@ -62,7 +62,8 @@ class ArtifactsFiller:
         ast = env.parse(template_source)
         required_vars = meta.find_undeclared_variables(ast)
 
-        render_kwargs = {v: self.context.get(v, "") for v in required_vars}
+        render_kwargs: Dict[str, Any] = {v: self.context.get(v, "") for v in required_vars}
+        render_kwargs["context"] = self.context
         
         template = env.get_template(template_name)
         return template.render(**render_kwargs)

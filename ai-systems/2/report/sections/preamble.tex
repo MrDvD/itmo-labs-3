@@ -52,6 +52,24 @@
     captionpos=b
 }
 
+\usepackage{caption} % required for caption param
+\usepackage{minted}
+% Настройки для cyrillic листингов кода
+\setminted{
+    frame=single,
+    fontsize=\small,
+    linenos=true,
+    numbersep=5pt,
+    tabsize=4,
+    breaklines=true
+}
+\newenvironment{code}{\captionsetup{type=listing}}{}
+\renewcommand{\listingscaption}{Листинг}
+\captionsetup[listing]{
+    belowskip=9pt,    % space below the caption (between caption and listing, if caption on top)
+    aboveskip=0pt,    % space above the caption (between listing and caption, if caption below)
+}
+
 \usepackage{tabularray}
   \UseTblrLibrary{varwidth}
   \UseTblrLibrary{counter}
@@ -73,14 +91,14 @@
 }
 \DeclareTblrTemplate{contfoot-text}{default}{См. далее}
 
-\NewTblrEnviron{featurestable}
-\SetTblrInner[featurestable]{
+\NewTblrEnviron{metricstable}
+\SetTblrInner[metricstable]{
   rowhead = 1, hlines, vlines,
   row{1} = {font=\bfseries, bg=gray!10, halign=c},
   rowsep = 4pt,
   measure=vbox,
 }
-\SetTblrOuter[featurestable]{
+\SetTblrOuter[metricstable]{
   postsep = 9pt,
   long,
 }
