@@ -38,7 +38,9 @@ if __name__ == "__main__":
         random_state=cfg['random_seed'],
     )
 
-    for mode in ['random', 'stratified', 'grouped', 'grouped_one_out', 'time_series']:
+    modes = ['random', 'stratified', 'grouped', 'grouped_one_out', 'time_series']
+
+    for mode in modes:
         print(f"Working with mode: {mode}")
         folds = ReportFiller.split_dataset(
             train_val_df,
@@ -102,6 +104,12 @@ if __name__ == "__main__":
                 alpha=cfg['alpha'],
                 fold_type=mode,
             )
+
+    context = ReportFiller.plot_metrics_comparison(
+        context,
+        modes,
+        "metrics_comparison",
+    )
 
     artifacts = ArtifactsFiller(context, [cfg['report']['dir']])
     artifacts.compile_patterns()

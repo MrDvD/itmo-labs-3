@@ -263,3 +263,24 @@ class ReportFiller:
         fig.tight_layout()
         plt.savefig(plot_path, dpi=300)
         plt.close()
+
+    @staticmethod
+    def plot_metrics_comparison(
+        context: Dict[str, Any],
+        modes: List[str],
+        key: str
+    ) -> Dict[str, Any]:
+        all_metrics = dict()
+        for cross_val_type in modes:
+            subkey = f"fold_{cross_val_type}_metrics"
+            metrics = context[subkey]
+            n_folds = len(metrics)
+            all_metrics[subkey] = {
+                "rmse": sum([m["rmse"] for m in metrics]) / n_folds,
+                "r2": sum([m["r2"] for m in metrics]) / n_folds,
+                "mae": sum([m["mae"] for m in metrics]) / n_folds,
+            }
+
+        new_context = context.copy()
+        new_context[key] = all_metrics
+        return new_context

@@ -168,12 +168,12 @@ return [
 \begin{code}
 \begin{minted}{text}
 if groups is None:
-    raise ValueError("groups array must be provided for grouped mode.")
+    raise ValueError("groups array must be provided for grouped_one_out mode.")
 
-gkf = GroupKFold(n_splits=k)
+logo = LeaveOneGroupOut()
 return [
     (data.iloc[train_indices], data.iloc[test_indices])
-    for train_indices, test_indices in gkf.split(data, groups=groups)
+    for train_indices, test_indices in logo.split(data, groups=groups)
 ]
 \end{minted}
 \caption{Код для реализации Grouped K-Fold Cross Validation.}
@@ -253,7 +253,7 @@ return [
 \BLOCK{ set n_folds = metrics | length }
 
 \begin{metricstable}[
-    caption = {Метрики качества модели для Grouped K-Fold --- Leave One Group Out Cross Validation.},
+    caption = {Метрики качества модели для Time Series Cross Validation.},
 ]{
     colspec = {X[c] \BLOCK{ for _ in range(n_folds) }Q[c] \BLOCK{ endfor } Q[c]},
 }
@@ -261,4 +261,21 @@ return [
 \texttt{RMSE} \BLOCK{ for m in metrics }& \VAR{ m["rmse"] | round(5) } \BLOCK{ endfor }& \VAR{ (metrics | map(attribute="rmse") | list | sum / n_folds) | round(5) } \\
 \texttt{MAE} \BLOCK{ for m in metrics }& \VAR{ m["mae"] | round(5) } \BLOCK{ endfor }& \VAR{ (metrics | map(attribute="mae") | list | sum / n_folds) | round(5) } \\
 \texttt{R2} \BLOCK{ for m in metrics }& \VAR{ m["r2"] | round(5) } \BLOCK{ endfor }& \VAR{ (metrics | map(attribute="r2") | list | sum / n_folds) | round(5) } \\
+\end{metricstable}
+
+\subsection{Сравнение методов кросс-валидации}
+
+Сведём метрики для всех методов кросс-валидации в одну таблицу:
+
+\begin{metricstable}[
+    caption = {Сравнение методов кросс-валидации.},
+]{
+    colspec = {Q[c] Q[c] Q[c] Q[c] Q[c]},
+}
+Метод & RMSE & MAE & R2 \\
+\texttt{Random Permutation} & \VAR{ metrics_comparison.fold_random_metrics.rmse | round(5) } & \VAR{ metrics_comparison.fold_random_metrics.mae | round(5) } & \VAR{ metrics_comparison.fold_random_metrics.r2 | round(5) } \\
+\texttt{Stratified K-Fold} & \VAR{ metrics_comparison.fold_stratified_metrics.rmse | round(5) } & \VAR{ metrics_comparison.fold_stratified_metrics.mae | round(5) } & \VAR{ metrics_comparison.fold_stratified_metrics.r2 | round(5) } \\
+\texttt{Grouped K-Fold} & \VAR{ metrics_comparison.fold_grouped_metrics.rmse | round(5) } & \VAR{ metrics_comparison.fold_grouped_metrics.mae | round(5) } & \VAR{ metrics_comparison.fold_grouped_metrics.r2 | round(5) } \\
+\texttt{Leave One Group Out} & \VAR{ metrics_comparison.fold_grouped_one_out_metrics.rmse | round(5) } & \VAR{ metrics_comparison.fold_grouped_one_out_metrics.mae | round(5) } & \VAR{ metrics_comparison.fold_grouped_one_out_metrics.r2 | round(5) } \\
+\texttt{Time Series} & \VAR{ metrics_comparison.fold_time_series_metrics.rmse | round(5) } & \VAR{ metrics_comparison.fold_time_series_metrics.mae | round(5) } & \VAR{ metrics_comparison.fold_time_series_metrics.r2 | round(5) } \\
 \end{metricstable}
