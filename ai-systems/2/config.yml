@@ -1,0 +1,7 @@
+report:
+    dir: report
+    name: main
+random_seed: 718234
+test_size: 0.2
+alpha: 0.005
+k: 4
