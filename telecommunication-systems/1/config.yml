@@ -1,0 +1,4 @@
+report:
+    dir: report
+    name: main
+initial_message: 'ЛаМА'

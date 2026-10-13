@@ -1,0 +1,19 @@
+\subsection{Формирование сообщения}
+
+Исходное сообщение, подлежащее передаче, формируется на основе инициалов студента, выполняющего задание. Для цифрового представления сообщения используются шестнадцатеричные коды в соответствии с кодировочной таблицей (см. приложение \ref{sec:encoding-table}):
+
+\begin{table}[H]
+\centering
+\begin{tblr}{
+    colspec = {Q[r,m] Q[c,m]},
+    hlines,
+    vlines,
+    column{1} = {font=\bfseries},
+}
+    Исходное сообщение & \VAR{ encoding_message.initial_message } \\
+    Hexadecimal & \VAR{ encoding_message.hex } \\
+    Binary & \VAR{ encoding_message.binary } \\
+    Длина сообщения & \VAR{ encoding_message.length } байт (\VAR{ encoding_message.length * 8 } бит) \\
+\end{tblr}
+\caption{Результаты формирования сообщения}
+\end{table}
