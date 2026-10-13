@@ -10,8 +10,11 @@ if __name__ == "__main__":
     report_dir = cfg['report']['dir']
     pics_path = os.path.join(report_dir, 'pics')
     os.makedirs(pics_path, exist_ok=True)
+
+    m2_plot_path = os.path.join(pics_path, 'm2_plot.pdf')
     
     context: Dict[str, Any] = {
+        'm2_plot_path': os.path.relpath(m2_plot_path, 'report/'),
     }
 
     encoding_table = {
@@ -34,6 +37,8 @@ if __name__ == "__main__":
     }
 
     context = ReportFiller.encode_message(context, cfg['initial_message'], encoding_table, 'encoding_message')
+
+    ReportFiller.plot_m2(context['encoding_message']['binary'], m2_plot_path)
 
     artifacts = ArtifactsFiller(context, [cfg['report']['dir']])
     artifacts.compile_patterns()

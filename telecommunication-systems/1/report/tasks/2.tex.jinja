@@ -1,3 +1,375 @@
 \subsection{Физическое кодирование исходного сообщения}
 
-\dots
+\subsubsection{Manchester encoding (M2)}
+
+\begin{figure}[H]
+\centering
+\begin{adjustbox}{max width=\textwidth}
+\begin{tikzpicture}
+\def\bitseq{\VAR{ encoding_message.binary_list | join(',') }}
+\def\cellW{0.8}
+\def\lowY{0}
+\def\highY{1.2}
+\def\bitsPerRow{16}
+\def\rowH{2.8}
+\def\totalBits{\VAR{ encoding_message.binary_list | length }}
+\foreach \b [count=\i from 0] in \bitseq {
+    \pgfmathtruncatemacro{\row}{int(\i/\bitsPerRow)}
+    \pgfmathtruncatemacro{\col}{int(mod(\i,\bitsPerRow))}
+    \pgfmathsetmacro{\yoff}{-\row*\rowH}
+    \ifnum\b=0 \def\bitcolor{red} \else \def\bitcolor{blue} \fi
+    \node[text=\bitcolor, font=\bfseries\large]
+        at (\col*\cellW + 0.5*\cellW, \highY + 0.9 + \yoff) {\b};
+}
+\pgfmathtruncatemacro{\numRows}{int((\totalBits-1)/\bitsPerRow)+1}
+\pgfmathtruncatemacro{\lastRow}{\numRows-1}
+\foreach \r in {0,...,\lastRow} {
+    \pgfmathsetmacro{\yoff}{-\r*\rowH}
+    \pgfmathtruncatemacro{\startIdx}{\r*\bitsPerRow}
+    \pgfmathtruncatemacro{\endIdx}{min((\r+1)*\bitsPerRow, \totalBits)}
+    \pgfmathtruncatemacro{\bitsThisRow}{\endIdx - \startIdx}
+    \foreach \k in {0,...,\bitsThisRow} {
+        \draw[dashed, thin, gray!70]
+            (\k*\cellW, \lowY - 0.3 + \yoff) -- (\k*\cellW, \highY + 0.5 + \yoff);
+    }
+}
+\foreach \b [count=\i from 0] in \bitseq {
+    \pgfmathtruncatemacro{\row}{int(\i/\bitsPerRow)}
+    \pgfmathtruncatemacro{\col}{int(mod(\i,\bitsPerRow))}
+    \pgfmathsetmacro{\yoff}{-\row*\rowH}
+
+    \ifnum\col=0
+        \xdef\prevEndY{\lowY}
+    \fi
+
+    \pgfmathsetmacro{\xL}{\col*\cellW}
+    \pgfmathsetmacro{\xM}{\col*\cellW + 0.5*\cellW}
+    \pgfmathsetmacro{\xR}{\col*\cellW + \cellW}
+    \ifnum\b=0
+        \pgfmathsetmacro{\startY}{\lowY}
+        \pgfmathsetmacro{\endY}{\highY}
+        \def\segcolor{red}
+    \else
+        \pgfmathsetmacro{\startY}{\highY}
+        \pgfmathsetmacro{\endY}{\lowY}
+        \def\segcolor{blue}
+    \fi
+    \ifnum\i>0
+        \draw[thick] (\xL, \prevEndY + \yoff) -- (\xL, \startY + \yoff);
+    \fi
+    \draw[thick] (\xL, \startY + \yoff) -- (\xM, \startY + \yoff);
+    \draw[thick, \segcolor] (\xM, \startY + \yoff) -- (\xM, \endY + \yoff);
+    \draw[thick] (\xM, \endY + \yoff) -- (\xR, \endY + \yoff);
+    \xdef\prevEndY{\endY}
+}
+
+\end{tikzpicture}
+\end{adjustbox}
+\caption{Временная диаграмма для M2.}
+\end{figure}
+
+\subsubsection{Return-to-Zero (RZ)}
+
+\begin{figure}[H]
+\centering
+\begin{adjustbox}{max width=\textwidth}
+\begin{tikzpicture}
+\def\bitseq{\VAR{ encoding_message.binary_list | join(',') }}
+\def\cellW{0.8}
+\def\lowY{0}
+\def\zeroY{0.6}
+\def\highY{1.2}
+\def\bitsPerRow{16}
+\def\rowH{2.8}
+\def\totalBits{\VAR{ encoding_message.binary_list | length }}
+\foreach \b [count=\i from 0] in \bitseq {
+    \pgfmathtruncatemacro{\row}{int(\i/\bitsPerRow)}
+    \pgfmathtruncatemacro{\col}{int(mod(\i,\bitsPerRow))}
+    \pgfmathsetmacro{\yoff}{-\row*\rowH}
+    \ifnum\b=0 \def\bitcolor{red} \else \def\bitcolor{blue} \fi
+    \node[text=\bitcolor, font=\bfseries\large]
+        at (\col*\cellW + 0.5*\cellW, \highY + 0.9 + \yoff) {\b};
+}
+\pgfmathtruncatemacro{\numRows}{int((\totalBits-1)/\bitsPerRow)+1}
+\pgfmathtruncatemacro{\lastRow}{\numRows-1}
+\foreach \r in {0,...,\lastRow} {
+    \pgfmathsetmacro{\yoff}{-\r*\rowH}
+    \pgfmathtruncatemacro{\startIdx}{\r*\bitsPerRow}
+    \pgfmathtruncatemacro{\endIdxExcl}{\startIdx + \bitsPerRow}
+    \ifnum\endIdxExcl>\totalBits
+        \pgfmathtruncatemacro{\endIdxExcl}{\totalBits}
+    \fi
+    \pgfmathtruncatemacro{\bitsThisRow}{\endIdxExcl - \startIdx}
+    \foreach \k in {0,...,\bitsThisRow} {
+        \draw[dashed, thin, gray!70]
+            (\k*\cellW, \lowY - 0.3 + \yoff) -- (\k*\cellW, \highY + 0.5 + \yoff);
+    }
+}
+\foreach \b [count=\i from 0] in \bitseq {
+    \pgfmathtruncatemacro{\row}{int(\i/\bitsPerRow)}
+    \pgfmathtruncatemacro{\col}{int(mod(\i,\bitsPerRow))}
+    \pgfmathsetmacro{\yoff}{-\row*\rowH}
+    \pgfmathsetmacro{\xL}{\col*\cellW}
+    \pgfmathsetmacro{\xM}{\col*\cellW + 0.5*\cellW}
+    \pgfmathsetmacro{\xR}{\col*\cellW + \cellW}
+
+    \ifnum\b=0
+        \pgfmathsetmacro{\pulseY}{\lowY}
+        \def\segcolor{red}
+    \else
+        \pgfmathsetmacro{\pulseY}{\highY}
+        \def\segcolor{blue}
+    \fi
+
+    \draw[thick] (\xL, \zeroY + \yoff) -- (\xL, \pulseY + \yoff);
+    \draw[thick, \segcolor] (\xL, \pulseY + \yoff) -- (\xM, \pulseY + \yoff);
+    \draw[thick] (\xM, \pulseY + \yoff) -- (\xM, \zeroY + \yoff);
+    \draw[thick] (\xM, \zeroY + \yoff) -- (\xR, \zeroY + \yoff);
+}
+\end{tikzpicture}
+\end{adjustbox}
+\caption{Временная диаграмма для RZ.}
+\end{figure}
+
+\subsubsection{Differential Manchester encoding (DM)}
+
+\begin{figure}[H]
+\centering
+\begin{adjustbox}{max width=\textwidth}
+\begin{tikzpicture}
+\def\bitseq{\VAR{ encoding_message.binary_list | join(',') }}
+\def\cellW{0.8}
+\def\lowY{0}
+\def\highY{1.2}
+\def\bitsPerRow{16}
+\def\rowH{2.8}
+\def\totalBits{\VAR{ encoding_message.binary_list | length }}
+\foreach \b [count=\i from 0] in \bitseq {
+    \pgfmathtruncatemacro{\row}{int(\i/\bitsPerRow)}
+    \pgfmathtruncatemacro{\col}{int(mod(\i,\bitsPerRow))}
+    \pgfmathsetmacro{\yoff}{-\row*\rowH}
+    \ifnum\b=0 \def\bitcolor{red} \else \def\bitcolor{blue} \fi
+    \node[text=\bitcolor, font=\bfseries\large]
+        at (\col*\cellW + 0.5*\cellW, \highY + 0.9 + \yoff) {\b};
+}
+\pgfmathtruncatemacro{\numRows}{int((\totalBits-1)/\bitsPerRow)+1}
+\pgfmathtruncatemacro{\lastRow}{\numRows-1}
+\foreach \r in {0,...,\lastRow} {
+    \pgfmathsetmacro{\yoff}{-\r*\rowH}
+    \pgfmathtruncatemacro{\startIdx}{\r*\bitsPerRow}
+    \pgfmathtruncatemacro{\endIdxExcl}{\startIdx + \bitsPerRow}
+    \ifnum\endIdxExcl>\totalBits
+        \pgfmathtruncatemacro{\endIdxExcl}{\totalBits}
+    \fi
+    \pgfmathtruncatemacro{\bitsThisRow}{\endIdxExcl - \startIdx}
+    \foreach \k in {0,...,\bitsThisRow} {
+        \draw[dashed, thin, gray!70]
+            (\k*\cellW, \lowY - 0.3 + \yoff) -- (\k*\cellW, \highY + 0.5 + \yoff);
+    }
+}
+\xdef\state{0}
+\foreach \b [count=\i from 0] in \bitseq {
+    \pgfmathtruncatemacro{\row}{int(\i/\bitsPerRow)}
+    \pgfmathtruncatemacro{\col}{int(mod(\i,\bitsPerRow))}
+    \pgfmathsetmacro{\yoff}{-\row*\rowH}
+    \pgfmathsetmacro{\xL}{\col*\cellW}
+    \pgfmathsetmacro{\xM}{\col*\cellW + 0.5*\cellW}
+    \pgfmathsetmacro{\xR}{\col*\cellW + \cellW}
+    \ifnum\state=0 \def\startLevel{\lowY} \else \def\startLevel{\highY} \fi
+
+    \ifnum\b=0
+        \ifnum\state=0
+            \def\postStartLevel{\highY}
+            \def\midLevel{\lowY}
+            \xdef\state{0}
+        \else
+            \def\postStartLevel{\lowY}
+            \def\midLevel{\highY}
+            \xdef\state{1}
+        \fi
+        \draw[thick, red]  (\xL, \startLevel + \yoff) -- (\xL, \postStartLevel + \yoff);
+        \draw[thick]       (\xL, \postStartLevel + \yoff) -- (\xM, \postStartLevel + \yoff);
+        \draw[thick]  (\xM, \postStartLevel + \yoff) -- (\xM, \midLevel + \yoff);
+        \draw[thick]       (\xM, \midLevel + \yoff) -- (\xR, \midLevel + \yoff);
+    \else
+        \ifnum\state=0
+            \def\midLevel{\highY}
+            \xdef\state{1}
+        \else
+            \def\midLevel{\lowY}
+            \xdef\state{0}
+        \fi
+        \draw[thick, blue]        (\xL, \startLevel + \yoff) -- (\xM, \startLevel + \yoff);
+        \draw[thick]  (\xM, \startLevel + \yoff) -- (\xM, \midLevel + \yoff);
+        \draw[thick]        (\xM, \midLevel + \yoff) -- (\xR, \midLevel + \yoff);
+    \fi
+}
+
+\end{tikzpicture}
+\end{adjustbox}
+\caption{Временная диаграмма для DM.}
+\end{figure}
+
+\subsubsection{Bipolar Alternate Mark Inversion (AMI)}
+
+\begin{figure}[H]
+\centering
+\begin{adjustbox}{max width=\textwidth}
+\begin{tikzpicture}
+\def\bitseq{\VAR{ encoding_message.binary_list | join(',') }}
+\def\cellW{0.8}
+\def\lowY{0}
+\def\zeroY{0.6}
+\def\highY{1.2}
+\def\bitsPerRow{16}
+\def\rowH{2.8}
+\def\totalBits{\VAR{ encoding_message.binary_list | length }}
+\foreach \b [count=\i from 0] in \bitseq {
+    \pgfmathtruncatemacro{\row}{int(\i/\bitsPerRow)}
+    \pgfmathtruncatemacro{\col}{int(mod(\i,\bitsPerRow))}
+    \pgfmathsetmacro{\yoff}{-\row*\rowH}
+    \ifnum\b=0 \def\bitcolor{red} \else \def\bitcolor{blue} \fi
+    \node[text=\bitcolor, font=\bfseries\large]
+        at (\col*\cellW + 0.5*\cellW, \highY + 0.9 + \yoff) {\b};
+}
+\pgfmathtruncatemacro{\numRows}{int((\totalBits-1)/\bitsPerRow)+1}
+\pgfmathtruncatemacro{\lastRow}{\numRows-1}
+\foreach \r in {0,...,\lastRow} {
+    \pgfmathsetmacro{\yoff}{-\r*\rowH}
+    \pgfmathtruncatemacro{\startIdx}{\r*\bitsPerRow}
+    \pgfmathtruncatemacro{\endIdxExcl}{\startIdx + \bitsPerRow}
+    \ifnum\endIdxExcl>\totalBits
+        \pgfmathtruncatemacro{\endIdxExcl}{\totalBits}
+    \fi
+    \pgfmathtruncatemacro{\bitsThisRow}{\endIdxExcl - \startIdx}
+    \foreach \k in {0,...,\bitsThisRow} {
+        \draw[dashed, thin, gray!70]
+            (\k*\cellW, \lowY - 0.3 + \yoff) -- (\k*\cellW, \highY + 0.5 + \yoff);
+    }
+}
+\xdef\curLevel{0}
+\xdef\pulseSign{1}
+\foreach \b [count=\i from 0] in \bitseq {
+    \pgfmathtruncatemacro{\row}{int(\i/\bitsPerRow)}
+    \pgfmathtruncatemacro{\col}{int(mod(\i,\bitsPerRow))}
+    \pgfmathsetmacro{\yoff}{-\row*\rowH}
+    \pgfmathsetmacro{\xL}{\col*\cellW}
+    \pgfmathsetmacro{\xR}{\col*\cellW + \cellW}
+    \ifnum\curLevel=0 \def\startY{\zeroY}
+    \else\ifnum\curLevel=1 \def\startY{\highY}
+    \else \def\startY{\lowY}\fi\fi
+
+    \ifnum\b=0
+        \def\targetLevel{0}
+        \def\targetY{\zeroY}
+        \def\segcolor{red}
+    \else
+        \ifnum\pulseSign=1
+            \def\targetLevel{1}
+            \def\targetY{\highY}
+        \else
+            \def\targetLevel{-1}
+            \def\targetY{\lowY}
+        \fi
+        \pgfmathtruncatemacro{\nextPulseSign}{-\pulseSign}
+        \xdef\pulseSign{\nextPulseSign}
+        \def\segcolor{blue}
+    \fi
+    \ifnum\curLevel=\targetLevel
+    \else
+        \draw[thick] (\xL, \startY + \yoff) -- (\xL, \targetY + \yoff);
+    \fi
+    \draw[thick, \segcolor] (\xL, \targetY + \yoff) -- (\xR, \targetY + \yoff);
+
+    \xdef\curLevel{\targetLevel}
+}
+
+\end{tikzpicture}
+\end{adjustbox}
+\caption{Временная диаграмма для AMI.}
+\end{figure}
+
+AMI (Alternate Mark Inversion) itself does not embed a reliable clock for long strings of zeros; practical systems therefore add zero-substitution rules such as HDB3, B3ZS, B6ZS or B8ZS. These force artificial violations that create transitions while remaining DC-balanced.
+
+\subsubsection{Coded Mark Inversion (CMI)}
+
+\begin{figure}[H]
+\centering
+\begin{adjustbox}{max width=\textwidth}
+\begin{tikzpicture}
+\def\bitseq{\VAR{ encoding_message.binary_list | join(',') }}
+\def\cellW{0.8}
+\def\lowY{0}
+\def\highY{1.2}
+\def\bitsPerRow{16}
+\def\rowH{2.8}
+\def\totalBits{\VAR{ encoding_message.binary_list | length }}
+\foreach \b [count=\i from 0] in \bitseq {
+    \pgfmathtruncatemacro{\row}{int(\i/\bitsPerRow)}
+    \pgfmathtruncatemacro{\col}{int(mod(\i,\bitsPerRow))}
+    \pgfmathsetmacro{\yoff}{-\row*\rowH}
+    \ifnum\b=0 \def\bitcolor{red} \else \def\bitcolor{blue} \fi
+    \node[text=\bitcolor, font=\bfseries\large]
+        at (\col*\cellW + 0.5*\cellW, \highY + 0.9 + \yoff) {\b};
+}
+\pgfmathtruncatemacro{\numRows}{int((\totalBits-1)/\bitsPerRow)+1}
+\pgfmathtruncatemacro{\lastRow}{\numRows-1}
+\foreach \r in {0,...,\lastRow} {
+    \pgfmathsetmacro{\yoff}{-\r*\rowH}
+    \pgfmathtruncatemacro{\startIdx}{\r*\bitsPerRow}
+    \pgfmathtruncatemacro{\endIdxExcl}{\startIdx + \bitsPerRow}
+    \ifnum\endIdxExcl>\totalBits
+        \pgfmathtruncatemacro{\endIdxExcl}{\totalBits}
+    \fi
+    \pgfmathtruncatemacro{\bitsThisRow}{\endIdxExcl - \startIdx}
+    \foreach \k in {0,...,\bitsThisRow} {
+        \draw[dashed, thin, gray!70]
+            (\k*\cellW, \lowY - 0.3 + \yoff) -- (\k*\cellW, \highY + 0.5 + \yoff);
+    }
+}
+\xdef\oneLevel{1}
+\xdef\curLevel{0}
+
+\foreach \b [count=\i from 0] in \bitseq {
+    \pgfmathtruncatemacro{\row}{int(\i/\bitsPerRow)}
+    \pgfmathtruncatemacro{\col}{int(mod(\i,\bitsPerRow))}
+    \pgfmathsetmacro{\yoff}{-\row*\rowH}
+    \pgfmathsetmacro{\xL}{\col*\cellW}
+    \pgfmathsetmacro{\xM}{\col*\cellW + 0.5*\cellW}
+    \pgfmathsetmacro{\xR}{\col*\cellW + \cellW}
+    \ifnum\curLevel=0 \def\startY{\lowY} \else \def\startY{\highY} \fi
+
+    \ifnum\b=0
+        \ifnum\curLevel=1
+            \draw[thick] (\xL, \startY + \yoff) -- (\xL, \lowY + \yoff);
+        \fi
+        \draw[thick] (\xL, \lowY + \yoff) -- (\xM, \lowY + \yoff);
+        \draw[thick, red] (\xM, \lowY + \yoff) -- (\xM, \highY + \yoff);
+        \draw[thick]      (\xM, \highY + \yoff) -- (\xR, \highY + \yoff);
+        \xdef\curLevel{1}
+    \else
+        \ifnum\oneLevel=1
+            \def\targetY{\highY}
+            \def\targetLevel{1}
+        \else
+            \def\targetY{\lowY}
+            \def\targetLevel{0}
+        \fi
+        \ifnum\curLevel=\targetLevel
+        \else
+            \draw[thick] (\xL, \startY + \yoff) -- (\xL, \targetY + \yoff);
+        \fi
+        \draw[thick, blue] (\xL, \targetY + \yoff) -- (\xR, \targetY + \yoff);
+        \xdef\curLevel{\targetLevel}
+        \ifnum\oneLevel=1
+            \xdef\oneLevel{0}
+        \else
+            \xdef\oneLevel{1}
+        \fi
+    \fi
+}
+
+\end{tikzpicture}
+\end{adjustbox}
+\caption{Временная диаграмма для CMI.}
+\end{figure}
