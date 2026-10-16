@@ -1,4 +1,5 @@
-from typing import Any, Dict
+import json
+from typing import Any, Dict, List
 
 class ReportFiller:
     @staticmethod
@@ -26,15 +27,71 @@ class ReportFiller:
         return new_context
 
     @staticmethod
-    def plot_m2(binary_message: str, plot_path: str):
-        import matplotlib.pyplot as plt
-        import numpy as np
+    def analyze_message(msg: str, patterns: List[str]) -> Dict[str, Any]:
+        stats = dict()
+        for pattern in patterns:
+            count = 0
+            while pattern in msg:
+                msg = msg.replace(pattern, '')
+                count += 1
+            stats[pattern] = count
+        return stats
 
-        binary_list = [int(bit) for bit in binary_message.replace(' ', '')]
+    @staticmethod
+    def calc_signal_params(context: Dict[str, Any], C: float, msg: str, pattern_info: Dict[str, Any], key: str):
+        params = dict()
+        for method, body in pattern_info.items():
+            stats: Dict[str, Any] = {
+                'patterns': list(),
+            }
+            edited_msg = msg
 
-        data = np.array(binary_list).reshape(-1, 8)
+            min_freq = float('inf')
+            max_freq = 0
+            avg_freq = 0
+            N = 0
+            for pattern in body:
+                pattern_instance_info = dict()
 
-        plt.imshow(data, cmap='gray', aspect='auto')
-        plt.axis('off')
-        plt.savefig(plot_path, bbox_inches='tight', pad_inches=0)
-        plt.close()
+                calc = pattern['calc']
+                name = pattern['name']
+                freq = pattern['freq']['exec']
+
+                if 'encode' in pattern:
+                    encode = pattern['encode']
+                    edited_msg = encode(edited_msg)
+
+                pattern_instance_info['name'] = name
+                edited_msg, n_loc = calc(edited_msg)
+
+                N += n_loc
+                pattern_instance_info['occurrences'] = n_loc
+
+                freq_loc = freq(C)
+                pattern_instance_info['freq'] = {
+                    'formula': pattern['freq']['formula'],
+                    'value': freq_loc,
+                }
+                avg_freq += freq_loc * n_loc
+                min_freq = min(min_freq, freq_loc)
+                max_freq = max(max_freq, freq_loc)
+
+                stats['patterns'].append(pattern_instance_info)
+
+            spectrum = max_freq - min_freq
+            mid = min_freq + spectrum / 2
+            stats['freq'] = {
+                'low': min_freq,
+                'high': max_freq,
+                'spectrum': max_freq - min_freq,
+                'avg': avg_freq / N,
+                'bandwidth': 7 * max_freq - min_freq,
+                'mid': mid,
+                'is_high': avg_freq / N > mid,
+            }
+            params[method] = stats
+
+        new_context = context.copy()
+        new_context[key] = params
+
+        return new_context

@@ -1,7 +1,7 @@
 import os
 import lib.config as config
 from lib.artifacts import ArtifactsFiller
-from typing import Any, Dict
+from typing import Any, Dict, Callable, Tuple
 from lib.report import ReportFiller
 
 if __name__ == "__main__":
@@ -9,13 +9,14 @@ if __name__ == "__main__":
 
     report_dir = cfg['report']['dir']
     pics_path = os.path.join(report_dir, 'pics')
-    os.makedirs(pics_path, exist_ok=True)
-
-    m2_plot_path = os.path.join(pics_path, 'm2_plot.pdf')
     
     context: Dict[str, Any] = {
-        'm2_plot_path': os.path.relpath(m2_plot_path, 'report/'),
+        'list_number': cfg['list_number'],
+        'bandwidth_list': cfg['bandwidths'],
+        'bandwidth': cfg['bandwidths'][cfg['list_number'] % 2],
     }
+
+    context['bit_interval'] = 1 / context['bandwidth'] * 1e3
 
     encoding_table = {
         "А": "C0", "Р": "D0", "а": "E0", "р": "F0", " ": "20",
@@ -38,7 +39,142 @@ if __name__ == "__main__":
 
     context = ReportFiller.encode_message(context, cfg['initial_message'], encoding_table, 'encoding_message')
 
-    ReportFiller.plot_m2(context['encoding_message']['binary'], m2_plot_path)
+    def pattern_calc_1(pattern: str) -> Callable[[str], Tuple[str, int]]:
+        def inner(msg: str) -> Tuple[str, int]:
+            nonlocal pattern
+            return msg.replace(pattern, ' '), msg.count(pattern)
+        return inner
+
+    def encode_msg(msg: str) -> str:
+        is_up = True
+        encoded_msg = ''
+        for c in msg:
+            if c == '1':
+                encoded_msg += 'U' if is_up else 'D'
+                is_up = not is_up
+            else:
+                encoded_msg += '0'
+        return encoded_msg
+
+    def decode_msg(msg: str) -> str:
+        decoded_msg = ''
+        for c in msg:
+            if c in ['U', 'D']:
+                decoded_msg += '1'
+            else:
+                decoded_msg += c
+        return decoded_msg
+
+    patterns_1 = [
+        {
+            'name': '10',
+            'freq': {
+                'formula': r'C\slash 2',
+                'exec': lambda C: C / 2,
+            },
+            'calc': pattern_calc_1('10'),
+        },
+        {
+            'name': '01',
+            'freq': {
+                'formula': r'C\slash 2',
+                'exec': lambda C: C / 2,
+            },
+            'calc': pattern_calc_1('01'),
+        },
+        {
+            'name': '1',
+            'freq': {
+                'formula': r'C',
+                'exec': lambda C: float(C),
+            },
+            'calc': pattern_calc_1('1'),
+        },
+        {
+            'name': '0',
+            'freq': {
+                'formula': r'C',
+                'exec': lambda C: float(C),
+            },
+            'calc': pattern_calc_1('0'),
+        }
+    ]
+
+    pattern_info = {
+        'M2': patterns_1.copy(),
+        'RZ': patterns_1.copy(),
+        'DM': patterns_1.copy(),
+        'AMI': [
+            {
+                'name': '0101',
+                'freq': {
+                    'formula': r'C\slash 4',
+                    'exec': lambda C: C / 4,
+                },
+                'calc': pattern_calc_1('0101'),
+            },
+            {
+                'name': '11',
+                'freq': {
+                    'formula': r'C\slash 2',
+                    'exec': lambda C: C / 2,
+                },
+                'calc': pattern_calc_1('11'),
+            },
+            {
+                'name': '0',
+                'freq': {
+                    'formula': r'0',
+                    'exec': lambda _: float(0),
+                },
+                'calc': pattern_calc_1('0'),
+            }
+        ],
+        'CMI': [
+            {
+                'name': '10 («ров»)',
+                'freq': {
+                    'formula': r'C\slash 3',
+                    'exec': lambda C: C / 3,
+                },
+                'calc': pattern_calc_1('D0'),
+                'encode': encode_msg,
+            },
+            {
+                'name': '01 («холм»)',
+                'freq': {
+                    'formula': r'C\slash 3',
+                    'exec': lambda C: C / 3,
+                },
+                'calc': pattern_calc_1('0U'),
+            },
+            {
+                'name': '1',
+                'freq': {
+                    'formula': r'C\slash 2',
+                    'exec': lambda C: C / 2,
+                },
+                'calc': pattern_calc_1('1'),
+                'encode': decode_msg,
+            },
+            {
+                'name': '0',
+                'freq': {
+                    'formula': r'0',
+                    'exec': lambda _: 0,
+                },
+                'calc': pattern_calc_1('0'),
+            }
+        ],
+    }
+
+    context = ReportFiller.calc_signal_params(
+        context,
+        context['bandwidth'],
+        ''.join(context['encoding_message']['binary_list']),
+        pattern_info,
+        'signal_params',
+    )
 
     artifacts = ArtifactsFiller(context, [cfg['report']['dir']])
     artifacts.compile_patterns()

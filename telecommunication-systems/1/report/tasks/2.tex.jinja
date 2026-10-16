@@ -2,6 +2,27 @@
 
 \subsubsection{Manchester encoding (M2)}
 
+\BLOCK{ set encoding_type = 'M2' }
+
+Метод \textit{манчестерского кодирования} можно описать следующей таблицей:
+
+\begin{table}[H]
+\centering
+\begin{tblr}{
+    colspec = {| Q[c,m] | Q[l,m] |},
+    hlines,
+    vlines,
+    row{1} = {font=\bfseries, bg=gray!15},
+}
+    Бит & Сигнал \\
+    0   & переход от низкого уровня к высокому в середине битового интервала \\
+    1   & переход от высокого уровня к низкому в середине битового интервала \\
+\end{tblr}
+\caption{Таблица кодирования для M2.}
+\end{table}
+
+Если данные содержат подряд несколько единиц или нулей, то в начале каждого битового интервала происходит дополнительный служебный переход сигнала. Так получим следующий результат физического кодирования:
+
 \begin{figure}[H]
 \centering
 \begin{adjustbox}{max width=\textwidth}
@@ -18,7 +39,7 @@
     \pgfmathtruncatemacro{\col}{int(mod(\i,\bitsPerRow))}
     \pgfmathsetmacro{\yoff}{-\row*\rowH}
     \ifnum\b=0 \def\bitcolor{red} \else \def\bitcolor{blue} \fi
-    \node[text=\bitcolor, font=\bfseries\large]
+    \node[text=\bitcolor, font=\bfseries, bg=gray!15\large]
         at (\col*\cellW + 0.5*\cellW, \highY + 0.9 + \yoff) {\b};
 }
 \pgfmathtruncatemacro{\numRows}{int((\totalBits-1)/\bitsPerRow)+1}
@@ -38,7 +59,7 @@
     \pgfmathtruncatemacro{\col}{int(mod(\i,\bitsPerRow))}
     \pgfmathsetmacro{\yoff}{-\row*\rowH}
 
-    \ifnum\col=0
+    \ifnum\i=0
         \xdef\prevEndY{\lowY}
     \fi
 
@@ -68,7 +89,86 @@
 \caption{Временная диаграмма для M2.}
 \end{figure}
 
+По варианту пропускная способность канала связи $C=\VAR{ bandwidth }$ Мбит/с. Опираясь на это, составим следующую таблицу:
+\begin{table}[H]
+\centering
+\begin{tblr}{
+    colspec = {Q[c, m] Q[c, m] Q[c, m] Q[c, m]},
+    hlines,
+    vlines,
+    row{1} = {font=\bfseries, bg=gray!15},
+}
+Шаблон & Частота & МГц & Количество \\
+\BLOCK{ for pattern in signal_params[encoding_type].patterns }
+\VAR{ pattern.name } & \VAR{ pattern.freq.formula } & \VAR{ pattern.freq.value } & \VAR{ pattern.occurrences } \\
+\BLOCK{ endfor }
+\end{tblr}
+\caption{Частотный анализ сигнала с кодированием M2.}
+\end{table}
+
+Опираясь на результаты частотного анализа сигнала вычислим следующие характеристики, методика подсчёта которых указана в приложении \ref{sec:signal-parameters}:
+
+\begin{table}[H]
+\centering
+\begin{tblr}{
+    colspec = {Q[c,m] Q[l,m]},
+    hlines,
+    vlines,
+    row{1} = {font=\bfseries, bg=gray!15},
+}
+Параметр & Значение \\
+$f_{\text{н}}$ & \VAR{ signal_params[encoding_type].freq.low | round(3) } МГц \\
+$f_{\text{в}}$ & \VAR{ signal_params[encoding_type].freq.high | round(3) } МГц \\
+$S$ & \VAR{ signal_params[encoding_type].freq.spectrum | round(3) } МГц \\
+$f_{\text{ср}}$ & \VAR{ signal_params[encoding_type].freq.avg | round(3) } МГц \\
+$F$ & \VAR{ signal_params[encoding_type].freq.bandwidth | round(3) } МГц \\
+\end{tblr}
+\caption{Параметры сигнала для M2.}
+\end{table}
+
+Сигнал кодируется со смещением в сторону \textbf{\VAR{ 'высоких' if signal_params[encoding_type].freq.is_high else 'низких' }} частот:
+\[
+    f_{\text{ср}} = \VAR{ signal_params[encoding_type].freq.avg | round(3) } \VAR{ '>' if signal_params[encoding_type].freq.is_high else '<' } f_{\text{н}} + \dfrac{f_{\text{в}} - f_{\text{н}}}{2} = \VAR{ signal_params[encoding_type].freq.mid | round(3) }
+\]
+
+Сформируем следующую таблицу для выделения особенностей метода кодирования в случае передачи сформированного сообщения:
+\begin{table}[H]
+\centering
+\begin{tblr}{
+    colspec = {X[l,m] X[l,m]},
+    hlines,
+    vlines,
+    row{1} = {font=\bfseries, bg=gray!15},
+}
+Достоинства & Недостатки \\
+Сигнал часто меняется, что можно использовать для синхронизации. & Требуется широкая полоса пропускания для передачи сигнала. \\
+Сигнал обладает двумя уровнями, что снижает требования к оборудованию. & Трудно обнаружить ошибку, если сигнал будет искажён. \\
+\end{tblr}
+\caption{Анализ особенностей метода кодирования M2.}
+\end{table}
+
 \subsubsection{Return-to-Zero (RZ)}
+
+\BLOCK{ set encoding_type = 'RZ' }
+
+Метод \textit{биполярного импульсного кодирования} опишем следующей таблицей:
+
+\begin{table}[H]
+\centering
+\begin{tblr}{
+    colspec = {| Q[c,m] | Q[l,m] |},
+    hlines,
+    vlines,
+    row{1} = {font=\bfseries, bg=gray!15},
+}
+    Бит & Сигнал \\
+    0   & импульс отрицательной полярности в начале битового интервала \\
+    1   & импульс положительной полярности в начале битового интервала \\
+\end{tblr}
+\caption{Таблица кодирования для RZ.}
+\end{table}
+
+Результат физического кодирования представлен далее:
 
 \begin{figure}[H]
 \centering
@@ -87,7 +187,7 @@
     \pgfmathtruncatemacro{\col}{int(mod(\i,\bitsPerRow))}
     \pgfmathsetmacro{\yoff}{-\row*\rowH}
     \ifnum\b=0 \def\bitcolor{red} \else \def\bitcolor{blue} \fi
-    \node[text=\bitcolor, font=\bfseries\large]
+    \node[text=\bitcolor, font=\bfseries, bg=gray!15\large]
         at (\col*\cellW + 0.5*\cellW, \highY + 0.9 + \yoff) {\b};
 }
 \pgfmathtruncatemacro{\numRows}{int((\totalBits-1)/\bitsPerRow)+1}
@@ -131,7 +231,86 @@
 \caption{Временная диаграмма для RZ.}
 \end{figure}
 
+По варианту пропускная способность канала связи $C=\VAR{ bandwidth }$ Мбит/с. Опираясь на это, составим следующую таблицу:
+\begin{table}[H]
+\centering
+\begin{tblr}{
+    colspec = {Q[c, m] Q[c, m] Q[c, m] Q[c, m]},
+    hlines,
+    vlines,
+    row{1} = {font=\bfseries, bg=gray!15},
+}
+Шаблон & Частота & Мбит/с & Количество \\
+\BLOCK{ for pattern in signal_params[encoding_type].patterns }
+\VAR{ pattern.name } & \VAR{ pattern.freq.formula } & \VAR{ pattern.freq.value } & \VAR{ pattern.occurrences } \\
+\BLOCK{ endfor }
+\end{tblr}
+\caption{Частотный анализ сигнала с кодированием RZ.}
+\end{table}
+
+Опираясь на результаты частотного анализа сигнала вычислим следующие характеристики, методика подсчёта которых указана в приложении \ref{sec:signal-parameters}:
+
+\begin{table}[H]
+\centering
+\begin{tblr}{
+    colspec = {Q[c,m] Q[l,m]},
+    hlines,
+    vlines,
+    row{1} = {font=\bfseries, bg=gray!15},
+}
+Параметр & Значение \\
+$f_{\text{н}}$ & \VAR{ signal_params[encoding_type].freq.low | round(3) } МГц \\
+$f_{\text{в}}$ & \VAR{ signal_params[encoding_type].freq.high | round(3) } МГц \\
+$S$ & \VAR{ signal_params[encoding_type].freq.spectrum | round(3) } МГц \\
+$f_{\text{ср}}$ & \VAR{ signal_params[encoding_type].freq.avg | round(3) } МГц \\
+$F$ & \VAR{ signal_params[encoding_type].freq.bandwidth | round(3) } МГц \\
+\end{tblr}
+\caption{Параметры сигнала для RZ.}
+\end{table}
+
+Сигнал кодируется со смещением в сторону \textbf{\VAR{ 'высоких' if signal_params[encoding_type].freq.is_high else 'низких' }} частот:
+\[
+    f_{\text{ср}} = \VAR{ signal_params[encoding_type].freq.avg | round(3) } \VAR{ '>' if signal_params[encoding_type].freq.is_high else '<' } f_{\text{н}} + \dfrac{f_{\text{в}} - f_{\text{н}}}{2} = \VAR{ signal_params[encoding_type].freq.mid | round(3) }
+\]
+
+Сформируем следующую таблицу для выделения особенностей метода кодирования в случае передачи сформированного сообщения:
+\begin{table}[H]
+\centering
+\begin{tblr}{
+    colspec = {X[l,m] X[l,m]},
+    hlines,
+    vlines,
+    row{1} = {font=\bfseries, bg=gray!15},
+}
+Достоинства & Недостатки \\
+Сигнал часто меняется, что можно использовать для синхронизации. & Требуется широкая полоса пропускания для передачи сигнала. \\
+Легче обнаружить ошибку, если сигнал будет искажён. & Сигнал обладает тремя уровнями, что повышает требования к оборудованию. \\
+\end{tblr}
+\caption{Анализ особенностей метода кодирования RZ.}
+\end{table}
+
 \subsubsection{Differential Manchester encoding (DM)}
+
+\BLOCK{ set encoding_type = 'DM' }
+
+Метод \textit{дифференциального манчестерского кодирования} можно описать следующей таблицей:
+
+\begin{table}[H]
+\centering
+\begin{tblr}{
+    colspec = {| Q[c,m] | Q[l,m] |},
+    hlines,
+    vlines,
+    row{1} = {font=\bfseries, bg=gray!15},
+}
+    Бит & Сигнал \\
+    0   & изменение потенциала в начале битового интервала \\
+    1   & сохранение потенциала в начале битового интервала \\
+\end{tblr}
+\caption{Таблица кодирования для DM.}
+\end{table}
+
+Отметим, что в середине битового интервала всегда происходит переход потенциала. Так получим следующий результат физического кодирования:
 
 \begin{figure}[H]
 \centering
@@ -149,7 +328,7 @@
     \pgfmathtruncatemacro{\col}{int(mod(\i,\bitsPerRow))}
     \pgfmathsetmacro{\yoff}{-\row*\rowH}
     \ifnum\b=0 \def\bitcolor{red} \else \def\bitcolor{blue} \fi
-    \node[text=\bitcolor, font=\bfseries\large]
+    \node[text=\bitcolor, font=\bfseries, bg=gray!15\large]
         at (\col*\cellW + 0.5*\cellW, \highY + 0.9 + \yoff) {\b};
 }
 \pgfmathtruncatemacro{\numRows}{int((\totalBits-1)/\bitsPerRow)+1}
@@ -210,7 +389,86 @@
 \caption{Временная диаграмма для DM.}
 \end{figure}
 
+По варианту пропускная способность канала связи $C=\VAR{ bandwidth }$ Мбит/с. Опираясь на это, составим следующую таблицу:
+\begin{table}[H]
+\centering
+\begin{tblr}{
+    colspec = {Q[c, m] Q[c, m] Q[c, m] Q[c, m]},
+    hlines,
+    vlines,
+    row{1} = {font=\bfseries, bg=gray!15},
+}
+Шаблон & Частота & Мбит/с & Количество \\
+\BLOCK{ for pattern in signal_params[encoding_type].patterns }
+\VAR{ pattern.name } & \VAR{ pattern.freq.formula } & \VAR{ pattern.freq.value } & \VAR{ pattern.occurrences } \\
+\BLOCK{ endfor }
+\end{tblr}
+\caption{Частотный анализ сигнала с кодированием DM.}
+\end{table}
+
+Опираясь на результаты частотного анализа сигнала вычислим следующие характеристики, методика подсчёта которых указана в приложении \ref{sec:signal-parameters}:
+
+\begin{table}[H]
+\centering
+\begin{tblr}{
+    colspec = {Q[c,m] Q[l,m]},
+    hlines,
+    vlines,
+    row{1} = {font=\bfseries, bg=gray!15},
+}
+Параметр & Значение \\
+$f_{\text{н}}$ & \VAR{ signal_params[encoding_type].freq.low | round(3) } МГц \\
+$f_{\text{в}}$ & \VAR{ signal_params[encoding_type].freq.high | round(3) } МГц \\
+$S$ & \VAR{ signal_params[encoding_type].freq.spectrum | round(3) } МГц \\
+$f_{\text{ср}}$ & \VAR{ signal_params[encoding_type].freq.avg | round(3) } МГц \\
+$F$ & \VAR{ signal_params[encoding_type].freq.bandwidth | round(3) } МГц \\
+\end{tblr}
+\caption{Параметры сигнала для DM.}
+\end{table}
+
+Сигнал кодируется со смещением в сторону \textbf{\VAR{ 'высоких' if signal_params[encoding_type].freq.is_high else 'низких' }} частот:
+\[
+    f_{\text{ср}} = \VAR{ signal_params[encoding_type].freq.avg | round(3) } \VAR{ '>' if signal_params[encoding_type].freq.is_high else '<' } f_{\text{н}} + \dfrac{f_{\text{в}} - f_{\text{н}}}{2} = \VAR{ signal_params[encoding_type].freq.mid | round(3) }
+\]
+
+Сформируем следующую таблицу для выделения особенностей метода кодирования в случае передачи сформированного сообщения:
+\begin{table}[H]
+\centering
+\begin{tblr}{
+    colspec = {X[l,m] X[l,m]},
+    hlines,
+    vlines,
+    row{1} = {font=\bfseries, bg=gray!15},
+}
+Достоинства & Недостатки \\
+Сигнал часто меняется, что можно использовать для синхронизации. & Требуется широкая полоса пропускания для передачи сигнала. \\
+Сигнал обладает двумя уровнями, что снижает требования к оборудованию. & Трудно обнаружить ошибку, если сигнал будет искажён. \\
+\end{tblr}
+\caption{Анализ особенностей метода кодирования DM.}
+\end{table}
+
 \subsubsection{Bipolar Alternate Mark Inversion (AMI)}
+
+\BLOCK{ set encoding_type = 'AMI' }
+
+Метод \textit{биполярного кодирования с альтернативной инверсией} можно описать следующей таблицей:
+
+\begin{table}[H]
+\centering
+\begin{tblr}{
+    colspec = {| Q[c,m] | Q[l,m] |},
+    hlines,
+    vlines,
+    row{1} = {font=\bfseries, bg=gray!15},
+}
+    Бит & Сигнал \\
+    0   & нулевой потенциал \\
+    1   & положительный или отрицательный потенциал \\
+\end{tblr}
+\caption{Таблица кодирования для AMI.}
+\end{table}
+
+При этом потенциал каждой следующей единицы противоположен потенциалу предыдущей единицы. Так получим следующий результат физического кодирования:
 
 \begin{figure}[H]
 \centering
@@ -229,7 +487,7 @@
     \pgfmathtruncatemacro{\col}{int(mod(\i,\bitsPerRow))}
     \pgfmathsetmacro{\yoff}{-\row*\rowH}
     \ifnum\b=0 \def\bitcolor{red} \else \def\bitcolor{blue} \fi
-    \node[text=\bitcolor, font=\bfseries\large]
+    \node[text=\bitcolor, font=\bfseries, bg=gray!15\large]
         at (\col*\cellW + 0.5*\cellW, \highY + 0.9 + \yoff) {\b};
 }
 \pgfmathtruncatemacro{\numRows}{int((\totalBits-1)/\bitsPerRow)+1}
@@ -289,9 +547,88 @@
 \caption{Временная диаграмма для AMI.}
 \end{figure}
 
+По варианту пропускная способность канала связи $C=\VAR{ bandwidth }$ Мбит/с. Опираясь на это, составим следующую таблицу:
+\begin{table}[H]
+\centering
+\begin{tblr}{
+    colspec = {Q[c, m] Q[c, m] Q[c, m] Q[c, m]},
+    hlines,
+    vlines,
+    row{1} = {font=\bfseries, bg=gray!15},
+}
+Шаблон & Частота & Мбит/с & Количество \\
+\BLOCK{ for pattern in signal_params[encoding_type].patterns }
+\VAR{ pattern.name } & \VAR{ pattern.freq.formula } & \VAR{ pattern.freq.value } & \VAR{ pattern.occurrences } \\
+\BLOCK{ endfor }
+\end{tblr}
+\caption{Частотный анализ сигнала с кодированием AMI.}
+\end{table}
+
+Опираясь на результаты частотного анализа сигнала вычислим следующие характеристики, методика подсчёта которых указана в приложении \ref{sec:signal-parameters}:
+
+\begin{table}[H]
+\centering
+\begin{tblr}{
+    colspec = {Q[c,m] Q[l,m]},
+    hlines,
+    vlines,
+    row{1} = {font=\bfseries, bg=gray!15},
+}
+Параметр & Значение \\
+$f_{\text{н}}$ & \VAR{ signal_params[encoding_type].freq.low | round(3) } МГц \\
+$f_{\text{в}}$ & \VAR{ signal_params[encoding_type].freq.high | round(3) } МГц \\
+$S$ & \VAR{ signal_params[encoding_type].freq.spectrum | round(3) } МГц \\
+$f_{\text{ср}}$ & \VAR{ signal_params[encoding_type].freq.avg | round(3) } МГц \\
+$F$ & \VAR{ signal_params[encoding_type].freq.bandwidth | round(3) } МГц \\
+\end{tblr}
+\caption{Параметры сигнала для AMI.}
+\end{table}
+
+Сигнал кодируется со смещением в сторону \textbf{\VAR{ 'высоких' if signal_params[encoding_type].freq.is_high else 'низких' }} частот:
+\[
+    f_{\text{ср}} = \VAR{ signal_params[encoding_type].freq.avg | round(3) } \VAR{ '>' if signal_params[encoding_type].freq.is_high else '<' } f_{\text{н}} + \dfrac{f_{\text{в}} - f_{\text{н}}}{2} = \VAR{ signal_params[encoding_type].freq.mid | round(3) }
+\]
+
+Сформируем следующую таблицу для выделения особенностей метода кодирования в случае передачи сформированного сообщения:
+\begin{table}[H]
+\centering
+\begin{tblr}{
+    colspec = {X[l,m] X[l,m]},
+    hlines,
+    vlines,
+    row{1} = {font=\bfseries, bg=gray!15},
+}
+Достоинства & Недостатки \\
+Низкие требования к ширине полосы пропускания для передачи сигнала. & В сигнале закодированного сообщения есть постоянная составляющая при нуле. \\
+Легче обнаружить ошибку, если сигнал будет искажён. & Сигнал обладает тремя уровнями, что повышает требования к оборудованию. \\
+\end{tblr}
+\caption{Анализ особенностей метода кодирования AMI.}
+\end{table}
+
 AMI (Alternate Mark Inversion) itself does not embed a reliable clock for long strings of zeros; practical systems therefore add zero-substitution rules such as HDB3, B3ZS, B6ZS or B8ZS. These force artificial violations that create transitions while remaining DC-balanced.
 
 \subsubsection{Coded Mark Inversion (CMI)}
+
+\BLOCK{ set encoding_type = 'CMI' }
+
+Метод \textit{кодирования с инверсией кодовых посылок} описан таблицей:\cite{coded_mark_inversion_wikipedia}
+
+\begin{table}[H]
+\centering
+\begin{tblr}{
+    colspec = {| Q[c,m] | X[l,m] |},
+    hlines,
+    vlines,
+    row{1} = {font=\bfseries, bg=gray!15},
+}
+    Бит & Сигнал \\
+    0   & половина битового интервала отрицательной полярности, другая --- положительной \\
+    1   & постоянный уровень на протяжении всего битового интервала \\
+\end{tblr}
+\caption{Таблица кодирования для CMI.}
+\end{table}
+
+Уровень, используемый для передачи единичных битов, чередуется при кодировании каждой следующей единицы. Результат физического кодирования представлен далее:
 
 \begin{figure}[H]
 \centering
@@ -309,7 +646,7 @@ AMI (Alternate Mark Inversion) itself does not embed a reliable clock for long s
     \pgfmathtruncatemacro{\col}{int(mod(\i,\bitsPerRow))}
     \pgfmathsetmacro{\yoff}{-\row*\rowH}
     \ifnum\b=0 \def\bitcolor{red} \else \def\bitcolor{blue} \fi
-    \node[text=\bitcolor, font=\bfseries\large]
+    \node[text=\bitcolor, font=\bfseries, bg=gray!15\large]
         at (\col*\cellW + 0.5*\cellW, \highY + 0.9 + \yoff) {\b};
 }
 \pgfmathtruncatemacro{\numRows}{int((\totalBits-1)/\bitsPerRow)+1}
@@ -373,3 +710,88 @@ AMI (Alternate Mark Inversion) itself does not embed a reliable clock for long s
 \end{adjustbox}
 \caption{Временная диаграмма для CMI.}
 \end{figure}
+
+По варианту пропускная способность канала связи $C=\VAR{ bandwidth }$ Мбит/с. Опираясь на это, составим следующую таблицу:
+\begin{table}[H]
+\centering
+\begin{tblr}{
+    colspec = {Q[c, m] Q[c, m] Q[c, m] Q[c, m]},
+    hlines,
+    vlines,
+    row{1} = {font=\bfseries, bg=gray!15},
+}
+Шаблон & Частота & Мбит/с & Количество \\
+\BLOCK{ for pattern in signal_params[encoding_type].patterns }
+\VAR{ pattern.name } & \VAR{ pattern.freq.formula } & \VAR{ pattern.freq.value | round(3) } & \VAR{ pattern.occurrences } \\
+\BLOCK{ endfor }
+\end{tblr}
+\caption{Частотный анализ сигнала с кодированием CMI.}
+\end{table}
+
+Опираясь на результаты частотного анализа сигнала вычислим следующие характеристики, методика подсчёта которых указана в приложении \ref{sec:signal-parameters}:
+
+\begin{table}[H]
+\centering
+\begin{tblr}{
+    colspec = {Q[c,m] Q[l,m]},
+    hlines,
+    vlines,
+    row{1} = {font=\bfseries, bg=gray!15},
+}
+Параметр & Значение \\
+$f_{\text{н}}$ & \VAR{ signal_params[encoding_type].freq.low | round(3) } МГц \\
+$f_{\text{в}}$ & \VAR{ signal_params[encoding_type].freq.high | round(3) } МГц \\
+$S$ & \VAR{ signal_params[encoding_type].freq.spectrum | round(3) } МГц \\
+$f_{\text{ср}}$ & \VAR{ signal_params[encoding_type].freq.avg | round(3) } МГц \\
+$F$ & \VAR{ signal_params[encoding_type].freq.bandwidth | round(3) } МГц \\
+\end{tblr}
+\caption{Параметры сигнала для CMI.}
+\end{table}
+
+Сигнал кодируется со смещением в сторону \textbf{\VAR{ 'высоких' if signal_params[encoding_type].freq.is_high else 'низких' }} частот:
+\[
+    f_{\text{ср}} = \VAR{ signal_params[encoding_type].freq.avg | round(3) } \VAR{ '>' if signal_params[encoding_type].freq.is_high else '<' } f_{\text{н}} + \dfrac{f_{\text{в}} - f_{\text{н}}}{2} = \VAR{ signal_params[encoding_type].freq.mid | round(3) }
+\]
+
+Сформируем следующую таблицу для выделения особенностей метода кодирования в случае передачи сформированного сообщения:
+\begin{table}[H]
+\centering
+\begin{tblr}{
+    colspec = {X[l,m] X[l,m]},
+    hlines,
+    vlines,
+    row{1} = {font=\bfseries, bg=gray!15},
+}
+Достоинства & Недостатки \\
+Сигнал часто меняется, что можно использовать для синхронизации. & Трудно обнаружить ошибку, если сигнал будет искажён. \\
+Низкие требования к ширине полосы пропускания для передачи сигнала. & \\
+Сигнал обладает двумя уровнями, что снижает требования к оборудованию. & \\
+\end{tblr}
+\caption{Анализ особенностей метода кодирования CMI.}
+\end{table}
+
+\subsubsection{Сравнительный анализ методов кодирования}
+
+По результатам анализа методов физического кодирования сформируем сводную таблицу для ранжирования методов:
+
+\begin{table}[H]
+\centering
+\begin{tblr}{
+    width        = \textwidth,
+    colspec      = { Q[c,m] X[l,m] X[3,l,m] },
+    hlines, vlines,
+    row{1}       = {font=\bfseries, bg=gray!15},
+}
+    Категория & Метод & Обоснование \\
+    \SetCell[r=2]{c} Лучшие
+        & CMI & Относительно дешёвая реализация: сигнал двухуровневый и обладает достаточной частотой изменения для синхронизации. Основной недостаток --- нельзя обнаружить ошибки при искажении сигнала. \\
+        & RZ  & Позволяет обнаружить ошибку при искажении сигнала; сигнал часто
+                меняется, что удобно для синхронизации. Основной недостаток ---
+                требование широкой полосы пропускания и поддержки трёхуровневого сигнала, что удорожает реализацию. \\
+    Средние
+        & M2 / DM & Методы эквивалентны между собой. Оптимальны по соотношению «качество передачи --- стоимость реализации», однако не позволяют обнаружить ошибку и требуют широкой полосы пропускания. \\
+    Худший
+        & AMI & Дорогая реализация из-за трёхуровневого сигнала, при этом не даёт гарантий по синхронизации при длинных последовательностях нулей. \\
+\end{tblr}
+\caption{Сравнительный анализ методов физического кодирования}
+\end{table}
