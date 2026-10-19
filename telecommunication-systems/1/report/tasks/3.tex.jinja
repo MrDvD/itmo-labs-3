@@ -1,0 +1,131 @@
+\subsection{Логическое кодирование исходного сообщения}
+
+\BLOCK{ set encoding_type = 'RZ' }
+
+Логическое кодирование исходного сообщения произведено с использованием метода 4B/5B. В приложении \ref{sec:4b5b} приведена таблица соответствия между 4-битовыми блоками исходного сообщения и 5-битовыми кодовыми словами:
+
+\begin{table}[H]
+\centering
+\begin{tblr}{
+    colspec = {
+        Q[r,m] Q[c,m]
+    },
+    hlines,
+    vlines,
+    column{1} = {font=\bfseries, bg=gray!15},
+}
+Binary & \VAR{ b4b5_message.initial_message } \\
+4B/5B Binary & \VAR{ b4b5_message.binary } \\
+4B/5B Hexadecimal & \VAR{ b4b5_message.hex } \\
+Длина сообщения & \VAR{ b4b5_message.length } байт (\VAR{ b4b5_message.length * 4 } бит) \\
+Избыточность кода & \VAR{ b4b5_message.redundancy } \% \\
+\end{tblr}
+\caption{Результаты логического кодирования методом 4B/5B.}
+\end{table}
+
+По условию работы требуется изобразить временную диаграмму для одного из методов, отмеченных в предыдущем разделе в качестве наилучших. Заранее отметим, что было бы целесообразным попытаться улучшить сигнал метода AMI, отмеченного как худший из представленных, однако не будем искажать условие.
+
+Изобразим сигнал полученного сообщения на временной диаграмме:
+
+\begin{figure}[H]
+\centering
+\begin{adjustbox}{max width=\textwidth}
+\begin{tikzpicture}
+\def\bitseq{\VAR{ b4b5_message.binary_list | join(',') }}
+\def\cellW{0.8}
+\def\lowY{0}
+\def\zeroY{0.6}
+\def\highY{1.2}
+\def\bitsPerRow{16}
+\def\rowH{2.8}
+\def\totalBits{\VAR{ b4b5_message.binary_list | length }}
+\foreach \b [count=\i from 0] in \bitseq {
+    \pgfmathtruncatemacro{\row}{int(\i/\bitsPerRow)}
+    \pgfmathtruncatemacro{\col}{int(mod(\i,\bitsPerRow))}
+    \pgfmathsetmacro{\yoff}{-\row*\rowH}
+    \ifnum\b=0 \def\bitcolor{red} \else \def\bitcolor{blue} \fi
+    \node[text=\bitcolor, font=\bfseries, bg=gray!15\large]
+        at (\col*\cellW + 0.5*\cellW, \highY + 0.9 + \yoff) {\b};
+}
+\pgfmathtruncatemacro{\numRows}{int((\totalBits-1)/\bitsPerRow)+1}
+\pgfmathtruncatemacro{\lastRow}{\numRows-1}
+\foreach \r in {0,...,\lastRow} {
+    \pgfmathsetmacro{\yoff}{-\r*\rowH}
+    \pgfmathtruncatemacro{\startIdx}{\r*\bitsPerRow}
+    \pgfmathtruncatemacro{\endIdxExcl}{\startIdx + \bitsPerRow}
+    \ifnum\endIdxExcl>\totalBits
+        \pgfmathtruncatemacro{\endIdxExcl}{\totalBits}
+    \fi
+    \pgfmathtruncatemacro{\bitsThisRow}{\endIdxExcl - \startIdx}
+    \foreach \k in {0,...,\bitsThisRow} {
+        \draw[dashed, thin, gray!70]
+            (\k*\cellW, \lowY - 0.3 + \yoff) -- (\k*\cellW, \highY + 0.5 + \yoff);
+    }
+}
+\foreach \b [count=\i from 0] in \bitseq {
+    \pgfmathtruncatemacro{\row}{int(\i/\bitsPerRow)}
+    \pgfmathtruncatemacro{\col}{int(mod(\i,\bitsPerRow))}
+    \pgfmathsetmacro{\yoff}{-\row*\rowH}
+    \pgfmathsetmacro{\xL}{\col*\cellW}
+    \pgfmathsetmacro{\xM}{\col*\cellW + 0.5*\cellW}
+    \pgfmathsetmacro{\xR}{\col*\cellW + \cellW}
+
+    \ifnum\b=0
+        \pgfmathsetmacro{\pulseY}{\lowY}
+        \def\segcolor{red}
+    \else
+        \pgfmathsetmacro{\pulseY}{\highY}
+        \def\segcolor{blue}
+    \fi
+
+    \draw[thick] (\xL, \zeroY + \yoff) -- (\xL, \pulseY + \yoff);
+    \draw[thick, \segcolor] (\xL, \pulseY + \yoff) -- (\xM, \pulseY + \yoff);
+    \draw[thick] (\xM, \pulseY + \yoff) -- (\xM, \zeroY + \yoff);
+    \draw[thick] (\xM, \zeroY + \yoff) -- (\xR, \zeroY + \yoff);
+}
+\end{tikzpicture}
+\end{adjustbox}
+\caption{Временная диаграмма для 4B/5B+RZ.}
+\end{figure}
+
+По варианту пропускная способность канала связи $C=\VAR{ bandwidth }$ Мбит/с. Опираясь на это, составим следующую таблицу:
+\begin{table}[H]
+\centering
+\begin{tblr}{
+    colspec = {Q[c, m] Q[c, m] Q[c, m] Q[c, m]},
+    hlines,
+    vlines,
+    row{1} = {font=\bfseries, bg=gray!15},
+}
+Шаблон & Частота & Мбит/с & Количество \\
+\BLOCK{ for pattern in b4b5_signal_params[encoding_type].patterns }
+\VAR{ pattern.name } & \VAR{ pattern.freq.formula } & \VAR{ pattern.freq.value } & \VAR{ pattern.occurrences } \\
+\BLOCK{ endfor }
+\end{tblr}
+\caption{Частотный анализ сигнала с кодированием 4B/5B+RZ.}
+\end{table}
+
+Опираясь на результаты частотного анализа сигнала вычислим следующие характеристики, методика подсчёта которых указана в приложении \ref{sec:signal-parameters}:
+
+\begin{table}[H]
+\centering
+\begin{tblr}{
+    colspec = {Q[c,m] Q[l,m]},
+    hlines,
+    vlines,
+    row{1} = {font=\bfseries, bg=gray!15},
+}
+Параметр & Значение \\
+$f_{\text{н}}$ & \VAR{ b4b5_signal_params[encoding_type].freq.low | round(3) } МГц \\
+$f_{\text{в}}$ & \VAR{ b4b5_signal_params[encoding_type].freq.high | round(3) } МГц \\
+$S$ & \VAR{ b4b5_signal_params[encoding_type].freq.spectrum | round(3) } МГц \\
+$f_{\text{ср}}$ & \VAR{ b4b5_signal_params[encoding_type].freq.avg | round(3) } МГц \\
+$F$ & \VAR{ b4b5_signal_params[encoding_type].freq.bandwidth | round(3) } МГц \\
+\end{tblr}
+\caption{Параметры сигнала для DM.}
+\end{table}
+
+Сигнал кодируется со смещением в сторону \textbf{\VAR{ 'высоких' if b4b5_signal_params[encoding_type].freq.is_high else 'низких' }} частот:
+\[
+    f_{\text{ср}} = \VAR{ b4b5_signal_params[encoding_type].freq.avg | round(3) } \VAR{ '>' if b4b5_signal_params[encoding_type].freq.is_high else '<' } f_{\text{н}} + \dfrac{f_{\text{в}} - f_{\text{н}}}{2} = \VAR{ b4b5_signal_params[encoding_type].freq.mid | round(3) }
+\]

@@ -1,0 +1,8 @@
+report:
+    dir: report
+    name: main
+initial_message: 'ЛаМА'
+bandwidths:
+- 10
+- 100
+list_number: 12
