@@ -37,6 +37,13 @@ if __name__ == "__main__":
         "П": "CF", "Я": "DF", "п": "EF", "я": "FF",
     }
 
+    b4b5_table = {
+        "0000": "11110", "0001": "01001", "0010": "10100", "0011": "10101",
+        "0100": "01010", "0101": "01011", "0110": "01110", "0111": "01111",
+        "1000": "10010", "1001": "10011", "1010": "10110", "1011": "10111",
+        "1100": "11010", "1101": "11011", "1110": "11100", "1111": "11101",
+    }
+
     context = ReportFiller.encode_message(context, cfg['initial_message'], encoding_table, 'encoding_message')
 
     def pattern_calc_1(pattern: str) -> Callable[[str], Tuple[str, int]]:
@@ -160,8 +167,8 @@ if __name__ == "__main__":
             {
                 'name': '0',
                 'freq': {
-                    'formula': r'0',
-                    'exec': lambda _: 0,
+                    'formula': r'C',
+                    'exec': lambda C: C,
                 },
                 'calc': pattern_calc_1('0'),
             }
@@ -174,6 +181,65 @@ if __name__ == "__main__":
         ''.join(context['encoding_message']['binary_list']),
         pattern_info,
         'signal_params',
+    )
+
+    context = ReportFiller.encode_b4b5(
+        context,
+        context['encoding_message']['binary'],
+        b4b5_table,
+        'b4b5_message',
+    )
+
+    b4b5_pattern_info = {
+        'RZ': patterns_1.copy(),
+    }
+
+    context = ReportFiller.calc_signal_params(
+        context,
+        context['bandwidth'],
+        ''.join(context['b4b5_message']['binary_list']),
+        b4b5_pattern_info,
+        'b4b5_signal_params',
+    )
+
+    def scrambler_1(msg: str, i: int) -> str:
+        if i < 3:
+            return msg[i]
+        if i < 5:
+            return str(int(msg[i]) ^ int(msg[i - 3]))
+        return str(int(msg[i]) ^ int(msg[i - 3]) ^ int(msg[i - 5]))
+
+    def scrambler_2(msg: str, i: int) -> str:
+        if i < 5:
+            return msg[i]
+        if i < 7:
+            return str(int(msg[i]) ^ int(msg[i - 5]))
+        return str(int(msg[i]) ^ int(msg[i - 5]) ^ int(msg[i - 7]))
+
+    def scrambler_3(msg: str, i: int) -> str:
+        if i < 6:
+            return msg[i]
+        if i < 7:
+            return str(int(msg[i]) ^ int(msg[i - 6]))
+        return str(int(msg[i]) ^ int(msg[i - 6]) ^ int(msg[i - 7]))
+
+    context = ReportFiller.encode_scramble(
+        context,
+        context['encoding_message']['binary'],
+        scrambler_3,
+        'scrambled_message',
+    )
+
+    scrambled_pattern_info = {
+        'DM': patterns_1.copy(),
+    }
+
+    context = ReportFiller.calc_signal_params(
+        context,
+        context['bandwidth'],
+        ''.join(context['scrambled_message']['binary_list']),
+        scrambled_pattern_info,
+        'scrambled_signal_params',
     )
 
     artifacts = ArtifactsFiller(context, [cfg['report']['dir']])

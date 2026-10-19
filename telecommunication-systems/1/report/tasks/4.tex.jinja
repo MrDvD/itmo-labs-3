@@ -1,3 +1,156 @@
 \subsection{Скремблирование исходного сообщения}
 
-\dots
+\BLOCK{ set encoding_type = 'DM' }
+
+Скремблирование исходного сообщения произведено по формуле:
+\[
+    B_i=A_i \oplus B_{i-6} \oplus B_{i-7},
+\]
+
+где:
+\begin{itemize}
+    \item $A$ --- исходное сообщение;
+    \item $B$ --- скремблированное сообщение.
+\end{itemize}
+
+Этот многочлен не указан в методических материалах и используется в стандарте V.27 ter.\cite{itu_t_v27ter} Он был выбран, потому что для данного сообщения сокращает число повторяющихся нулей и единиц:
+
+\begin{table}[H]
+\centering
+\begin{tblr}{
+    colspec = {
+        Q[r,m] Q[c,m]
+    },
+    hlines,
+    vlines,
+    column{1} = {font=\bfseries, bg=gray!15},
+}
+Binary & \VAR{ scrambled_message.initial_message } \\
+Scrambled Binary & \VAR{ scrambled_message.binary } \\
+Scrambled Hexadecimal & \VAR{ scrambled_message.hex } \\
+\end{tblr}
+\caption{Результаты скремблирования исходного сообщения.}
+\end{table}
+
+Повторно отметим, что было бы целесообразным попытаться улучшить сигнал метода AMI, но условие работы требует закодировать сообщение лучшим из выбранных ранее способов.
+
+Изобразим сигнал полученного сообщения на временной диаграмме:
+
+\begin{figure}[H]
+\centering
+\begin{adjustbox}{max width=\textwidth}
+\begin{tikzpicture}
+\def\bitseq{\VAR{ scrambled_message.binary_list | join(',') }}
+\def\cellW{0.8}
+\def\lowY{0}
+\def\highY{1.2}
+\def\bitsPerRow{16}
+\def\rowH{2.8}
+\def\totalBits{\VAR{ scrambled_message.binary_list | length }}
+\foreach \b [count=\i from 0] in \bitseq {
+    \pgfmathtruncatemacro{\row}{int(\i/\bitsPerRow)}
+    \pgfmathtruncatemacro{\col}{int(mod(\i,\bitsPerRow))}
+    \pgfmathsetmacro{\yoff}{-\row*\rowH}
+    \ifnum\b=0 \def\bitcolor{red} \else \def\bitcolor{blue} \fi
+    \node[text=\bitcolor, font=\bfseries, bg=gray!15\large]
+        at (\col*\cellW + 0.5*\cellW, \highY + 0.9 + \yoff) {\b};
+}
+\pgfmathtruncatemacro{\numRows}{int((\totalBits-1)/\bitsPerRow)+1}
+\pgfmathtruncatemacro{\lastRow}{\numRows-1}
+\foreach \r in {0,...,\lastRow} {
+    \pgfmathsetmacro{\yoff}{-\r*\rowH}
+    \pgfmathtruncatemacro{\startIdx}{\r*\bitsPerRow}
+    \pgfmathtruncatemacro{\endIdxExcl}{\startIdx + \bitsPerRow}
+    \ifnum\endIdxExcl>\totalBits
+        \pgfmathtruncatemacro{\endIdxExcl}{\totalBits}
+    \fi
+    \pgfmathtruncatemacro{\bitsThisRow}{\endIdxExcl - \startIdx}
+    \foreach \k in {0,...,\bitsThisRow} {
+        \draw[dashed, thin, gray!70]
+            (\k*\cellW, \lowY - 0.3 + \yoff) -- (\k*\cellW, \highY + 0.5 + \yoff);
+    }
+}
+\xdef\state{0}
+\foreach \b [count=\i from 0] in \bitseq {
+    \pgfmathtruncatemacro{\row}{int(\i/\bitsPerRow)}
+    \pgfmathtruncatemacro{\col}{int(mod(\i,\bitsPerRow))}
+    \pgfmathsetmacro{\yoff}{-\row*\rowH}
+    \pgfmathsetmacro{\xL}{\col*\cellW}
+    \pgfmathsetmacro{\xM}{\col*\cellW + 0.5*\cellW}
+    \pgfmathsetmacro{\xR}{\col*\cellW + \cellW}
+    \ifnum\state=0 \def\startLevel{\lowY} \else \def\startLevel{\highY} \fi
+
+    \ifnum\b=0
+        \ifnum\state=0
+            \def\postStartLevel{\highY}
+            \def\midLevel{\lowY}
+            \xdef\state{0}
+        \else
+            \def\postStartLevel{\lowY}
+            \def\midLevel{\highY}
+            \xdef\state{1}
+        \fi
+        \draw[thick, red]  (\xL, \startLevel + \yoff) -- (\xL, \postStartLevel + \yoff);
+        \draw[thick]       (\xL, \postStartLevel + \yoff) -- (\xM, \postStartLevel + \yoff);
+        \draw[thick]  (\xM, \postStartLevel + \yoff) -- (\xM, \midLevel + \yoff);
+        \draw[thick]       (\xM, \midLevel + \yoff) -- (\xR, \midLevel + \yoff);
+    \else
+        \ifnum\state=0
+            \def\midLevel{\highY}
+            \xdef\state{1}
+        \else
+            \def\midLevel{\lowY}
+            \xdef\state{0}
+        \fi
+        \draw[thick, blue]        (\xL, \startLevel + \yoff) -- (\xM, \startLevel + \yoff);
+        \draw[thick]  (\xM, \startLevel + \yoff) -- (\xM, \midLevel + \yoff);
+        \draw[thick]        (\xM, \midLevel + \yoff) -- (\xR, \midLevel + \yoff);
+    \fi
+}
+
+\end{tikzpicture}
+\end{adjustbox}
+\caption{Временная диаграмма для V.27 ter+DM.}
+\end{figure}
+
+По варианту пропускная способность канала связи $C=\VAR{ bandwidth }$ Мбит/с. Опираясь на это, составим следующую таблицу:
+\begin{table}[H]
+\centering
+\begin{tblr}{
+    colspec = {Q[c, m] Q[c, m] Q[c, m] Q[c, m]},
+    hlines,
+    vlines,
+    row{1} = {font=\bfseries, bg=gray!15},
+}
+Шаблон & Частота & Мбит/с & Количество \\
+\BLOCK{ for pattern in scrambled_signal_params[encoding_type].patterns }
+\VAR{ pattern.name } & \VAR{ pattern.freq.formula } & \VAR{ pattern.freq.value } & \VAR{ pattern.occurrences } \\
+\BLOCK{ endfor }
+\end{tblr}
+\caption{Частотный анализ сигнала с кодированием V.27 ter+DM.}
+\end{table}
+
+Опираясь на результаты частотного анализа сигнала вычислим следующие характеристики, методика подсчёта которых указана в приложении \ref{sec:signal-parameters}:
+
+\begin{table}[H]
+\centering
+\begin{tblr}{
+    colspec = {Q[c,m] Q[l,m]},
+    hlines,
+    vlines,
+    row{1} = {font=\bfseries, bg=gray!15},
+}
+Параметр & Значение \\
+$f_{\text{н}}$ & \VAR{ scrambled_signal_params[encoding_type].freq.low | round(3) } МГц \\
+$f_{\text{в}}$ & \VAR{ scrambled_signal_params[encoding_type].freq.high | round(3) } МГц \\
+$S$ & \VAR{ scrambled_signal_params[encoding_type].freq.spectrum | round(3) } МГц \\
+$f_{\text{ср}}$ & \VAR{ scrambled_signal_params[encoding_type].freq.avg | round(3) } МГц \\
+$F$ & \VAR{ scrambled_signal_params[encoding_type].freq.bandwidth | round(3) } МГц \\
+\end{tblr}
+\caption{Параметры сигнала для DM.}
+\end{table}
+
+Сигнал кодируется со смещением в сторону \textbf{\VAR{ 'высоких' if scrambled_signal_params[encoding_type].freq.is_high else 'низких' }} частот:
+\[
+    f_{\text{ср}} = \VAR{ scrambled_signal_params[encoding_type].freq.avg | round(3) } \VAR{ '>' if scrambled_signal_params[encoding_type].freq.is_high else '<' } f_{\text{н}} + \dfrac{f_{\text{в}} - f_{\text{н}}}{2} = \VAR{ scrambled_signal_params[encoding_type].freq.mid | round(3) }
+\]
