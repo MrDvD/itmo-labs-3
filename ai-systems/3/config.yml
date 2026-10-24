@@ -1,3 +1,7 @@
 report:
     dir: report
     name: main
+experiment:
+    test_size: 0.2
+    random_state: 123124
+    C: 1.0
