@@ -1,0 +1,13 @@
+*.log
+*.aux
+*.toc
+*.out
+*.bcf
+*.bbl
+*.blg
+*.run.xml
+*.compiled.*
+
+temp/
+__pycache__/
+pics/
