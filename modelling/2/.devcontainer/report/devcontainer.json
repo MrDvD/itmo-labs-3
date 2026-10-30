@@ -1,0 +1,19 @@
+{
+  "name": "Report Local Container",
+  "dockerComposeFile": "./compose.yml",
+  "service": "report",
+  "workspaceFolder": "/app",
+  "customizations": {
+    "vscode": {
+      "extensions": [
+        "ms-python.vscode-pylance",
+        "ms-python.python",
+        "ms-python.debugpy",
+        "ms-python.vscode-python-envs"
+      ],
+      "settings": {
+        "dev.containers.dockerComposePath": "/usr/local/bin/pkexec-podman-compose"
+      }
+    }
+  }
+}

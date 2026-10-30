@@ -1,0 +1,77 @@
+FROM docker.io/ubuntu:24.04
+
+# 1. Install system dependencies
+RUN apt-get update && \
+    apt-get install -y \
+        curl \
+        gpg \
+        libvulkan1 \
+        locales \
+        xvfb \
+        && \
+    apt-get clean && \
+    rm -rf /var/lib/apt/lists/*
+
+# 2. Generate Russian locale support (CP1251 / UTF-8)
+RUN sed -i '/ru_RU.CP1251/s/^# //' /etc/locale.gen && \
+    locale-gen
+
+ENV LANG=ru_RU.UTF-8
+ENV LC_ALL=ru_RU.UTF-8
+ENV XDG_RUNTIME_DIR=/tmp/runtime-root
+
+# 3. Prepare WineHQ repository & install Wine stable + winetricks
+RUN curl https://dl.winehq.org/wine-builds/winehq.key | gpg --dearmor -o /etc/apt/keyrings/winehq-archive.key - && \
+    dpkg --add-architecture i386 && \
+    curl -fsSL -o /etc/apt/sources.list.d/winehq-noble.sources https://dl.winehq.org/wine-builds/ubuntu/dists/noble/winehq-noble.sources && \
+    apt-get update && \
+    apt-get install -y --install-recommends \
+        winehq-stable \
+        winetricks \
+        && \
+    apt-get clean && \
+    rm -rf /var/lib/apt/lists/*
+
+# 4. Download Wine-Mono and Wine-Gecko MSI packages
+RUN curl -L https://github.com/wine-mono/wine-mono/releases/download/wine-mono-11.3.0/wine-mono-11.3.0-x86.msi -o /tmp/wine-mono.msi && \
+    curl -L https://dl.winehq.org/wine/wine-gecko/2.47.4/wine-gecko-2.47.4-x86.msi -o /tmp/wine-gecko-x86.msi && \
+    curl -L https://dl.winehq.org/wine/wine-gecko/2.47.4/wine-gecko-2.47.4-x86_64.msi -o /tmp/wine-gecko-x86_64.msi
+
+# 5. Initialize Wine prefix (prevents auto-install hang)
+RUN WINEDLLOVERRIDES="mscoree,mshtml=" xvfb-run sh -c "wineboot --init && wineserver -w"
+
+# 5.1. Manually and silently install Mono & Gecko
+RUN bash -c "rm -f /tmp/.X99-lock && \
+    xvfb-run -a sh -c 'msiexec /i /tmp/wine-mono.msi /quiet && \
+    msiexec /i /tmp/wine-gecko-x86.msi /quiet && \
+    msiexec /i /tmp/wine-gecko-x86_64.msi /quiet && \
+    wineserver -w'" && \
+    rm /tmp/wine-mono.msi /tmp/wine-gecko-x86.msi /tmp/wine-gecko-x86_64.msi
+
+# 6. Install mfc42 runtime via winetricks
+RUN xvfb-run -a winetricks -q --optout mfc42
+
+# 7. Register mshtml.dll to fix "Internet Explorer" error on first run
+RUN wine reg delete 'HKCU\Software\Wine\DllOverrides' /v mshtml /f || true && \
+    wine regsvr32 -i mshtml && \
+    wineserver -k && \
+    before=$(stat -c '%Y' /root/.wine/user.reg) && \
+    wine reg add 'HKCU\Software\Wine' /v FlushMarker /d 1 /f && \
+    while [ "$(stat -c '%Y' /root/.wine/user.reg)" = "$before" ]; do sleep 1; done
+
+# 7.1. Install Microsoft core fonts for proper Cyrillic glyphs
+RUN echo "ttf-mscorefonts-installer msttcorefonts/accepted-mscorefonts-eula select true" | debconf-set-selections && \
+    apt-get update && \
+    apt-get install -y ttf-mscorefonts-installer fontconfig && \
+    fc-cache -f -v && \
+    apt-get clean && rm -rf /var/lib/apt/lists/*
+
+# 7.2. Register fonts inside Wine and map them to Cyrillic charset (204)
+RUN winetricks -q --optout corefonts && \
+    wineserver -k || true && \
+    wine reg add 'HKLM\SOFTWARE\Microsoft\Windows NT\CurrentVersion\FontSubstitutes' /v 'Arial,0' /t REG_SZ /d 'Arial,204' /f && \
+    wine reg add 'HKCU\Software\Wine\Fonts\Replacements' /v 'Microsoft Sans Serif' /t REG_SZ /d 'Tahoma' /f && \
+    wine reg add 'HKCU\Software\Wine\Uniscribe\Fallback' /v '0x6c727963' /t REG_SZ /d 'Microsoft Sans Serif' /f && \
+    wineserver -k
+
+WORKDIR /exe

@@ -1,6 +1,12 @@
 report:
-    dir: ./
+    dir: ./report/
     tasks_dir: tasks
     name: main
+variant:
+    N_1: 50
+    N_2: 50
+    N_3: 31
+    ISU: 466449
+    GROUP: 3331
 variant_num: 108
 random_seed: 475878

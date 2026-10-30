@@ -1,0 +1,88 @@
+\subsection{Определение варианта}
+
+Вариант второй учебно-исследовательской работы имеет следующий вид:
+\[
+    N_1\slash N_2\slash N_3=\VAR{ variant.N_1 }\slash \VAR{ variant.N_2 }\slash \VAR{ variant.N_3 },
+\]
+
+где:
+\begin{itemize}
+    \item $N_1$ --- номер варианта, определяемый по формуле:
+    \[
+        N_1 = (ISU\ \textrm{mod}\,50) + 1=(\VAR{ variant.ISU }\ \textrm{mod}\,50) + 1= \VAR{ variant.N_1 },
+    \]
+    где $ISU$ --- номер студенческого билета;
+    \item $N_2$ --- номер варианта, определяемый по формуле:
+    \[
+        N_2 = (ISU\ \textrm{mod}\,10) + 1=(\VAR{ variant.ISU }\ \textrm{mod}\,50) + 1=\VAR{ variant.N_2 };
+    \]
+    \item $N_3$ --- номер варианта, определяемый по формуле:
+    \[
+        N_3 = GROUP\ \textrm{mod}\,100=\VAR{ variant.GROUP }\ \textrm{mod}\,100 = \VAR{ variant.N_3 },
+    \]
+    где $GROUP$ --- номер группы студента.
+\end{itemize}
+
+Варианты \( N_1\slash N_2 \) соответствует следующему набору параметров:
+
+\begin{table}[H]
+    \centering
+    \caption{Параметры структурной и функциональной организации}
+    \begin{tblr}{
+        colspec = {c c c c c},
+        hlines,
+        vlines,
+        row{1,2} = {font=\bfseries, bg=gray!20},
+        rowsep = 3pt,
+        stretch = 1.2,
+    }
+        % Header Row 1
+        \SetCell[c=2]{c} СИСТЕМА$_1$ & & \SetCell[c=2]{c} СИСТЕМА$_2$ & & \SetCell[r=2]{c} \begin{tabular}{@{}c@{}}Критерий\\эффект.\end{tabular} \\
+        
+        % Header Row 2
+        П & ЕН & П & ЕН & \\
+        
+        % Data Rows
+        2 & 5 & 3 (\(H_{1,5}\)) & 0/1/0 & (д) \\
+    \end{tblr}
+\end{table}
+
+где:
+\begin{itemize}
+    \item П --- число обслуживающих \textit{приборов} в системе;
+    \item $H_v$ --- в одном из приборов (любом) длительность обслуживания распределена по гиперэкспоненциальному закону с коэффициентом вариации, равным $v$;
+    \item ЕН --- ёмкости накопителей:
+    \begin{itemize}
+        \item $X$ --- ёмкость общего накопителя перед всеми приборами;
+        \item $X/Y/Z$:
+        \begin{itemize}
+            \item $X$ --- ёмкость накопителя перед первым прибором;
+            \item $Y$ --- ёмкость накопителя перед вторым прибором;
+            \item $Z$ --- ёмкость накопителя перед третьим прибором.
+        \end{itemize}
+    \end{itemize}
+    \item (д) --- минимальная суммарная длина очередей заявок.
+\end{itemize}
+
+Вариант \( N_3 \) определяет следующий набор параметров:
+
+\begin{table}[H]
+    \centering
+    \caption{Параметры нагрузки}
+    \begin{tblr}{
+        colspec = {c c c c c},
+        hlines,
+        vlines,
+        row{1} = {bg=gray!20},
+    }        
+        \(\lambda\), $1\slash\text{с}$ & $b$, с & $\Pi 1$ & $\Pi 2$ & $\Pi 3$ \\
+        0,6 & 10 & 0,75 & 0,15 & 0,1 \\
+    \end{tblr}
+\end{table}
+
+где:
+\begin{itemize}
+    \item $\lambda$ --- интенсивность потока;
+    \item $b$ --- средняя длительность обслуживания;
+    \item $\Pi i$ --- вероятность занятия \(i\)-го прибора.
+\end{itemize}

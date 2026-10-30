@@ -9,7 +9,9 @@ if __name__ == "__main__":
 
     pics_path = os.path.join(cfg['report']['dir'], 'pics')
     
-    context: Dict[str, Any] = {}
+    context: Dict[str, Any] = {
+        'variant': cfg['variant'],
+    }
 
     artifacts = ArtifactsFiller(context, [cfg['report']['dir']])
     artifacts.compile_patterns()
