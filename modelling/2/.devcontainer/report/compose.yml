@@ -1,0 +1,13 @@
+x-podman:
+  in_pod: false
+
+services:
+  report:
+    build:
+      context: .
+      dockerfile: Containerfile
+    command: sleep infinity
+    extra_hosts:
+      - "host.containers.internal:host-gateway"
+    volumes:
+      - ../..:/app
