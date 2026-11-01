@@ -36,4 +36,17 @@
 ]{biblatex}
 \addbibresource{refs.bib}
 
+\usepackage{tikz}  
+  \usetikzlibrary{calc, positioning, arrows.meta, shapes.misc, shapes.geometric, fit, backgrounds}
+\usepackage{adjustbox}
+
+\tikzset{
+    dot/.style = {
+    fill, 
+    circle, 
+    inner sep=0pt, 
+    minimum size=3pt
+  },
+}
+
 \newcommand{\abs}[1]{\left|#1\right|}

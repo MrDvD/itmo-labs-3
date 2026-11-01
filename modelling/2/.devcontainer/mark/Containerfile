@@ -75,3 +75,6 @@ RUN winetricks -q --optout corefonts && \
     wineserver -k
 
 WORKDIR /exe
+
+ENV LANG=ru_RU.CP1251
+ENV LC_ALL=ru_RU.CP1251
