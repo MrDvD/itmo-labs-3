@@ -31,6 +31,10 @@
         \draw[-{Stealth}] (server1.east) -- ++(.5,0) |- (sink.west) node[pos=0.5, dot, anchor=center] {};
         \draw (server2.east) -- ++(.5,0) |- (sink.west);
         \draw (server3.east) -- ++(.5,0) |- (sink.west);
+
+        \node[xshift=-1.9cm, yshift=2pt] at (server1.north west) {$p_1$};
+        \node[xshift=-1.9cm, yshift=2pt] at (server2.north west) {$p_2$};
+        \node[xshift=-1.9cm, yshift=2pt] at (server3.north west) {$p_3$};
     \end{tikzpicture}
     \caption{Структура второй системы.}
 \end{figure}
@@ -38,7 +42,7 @@
 Её можно описать следующим образом:
 \begin{itemize}
     \item система \textbf{трёхканальная} --- содержит три обслуживающих прибора;
-    \item в систему поступает \textbf{однородный} поток заявок с интенсивностью \(\lambda\);
+    \item в систему поступает \textbf{однородный} поток заявок с интенсивностью \(\lambda\), который распределяется между приборами в соответствии с вероятностями \(p_1\), \(p_2\) и \(p_3\);
     \item приборы \textbf{различные}, то есть первые два прибора распределены по экспоненциальному закону, а третий прибор --- по гиперэкспоненциальному закону $H_{1.5}$;
     \item перед вторым прибором имеется \textbf{накопитель} заявок ёмкостью \(r=1\);
     \item дисциплина буферизации --- \textbf{с потерями}: заявка, которая поступила в систему и застала заполненными приборы с накопителями, теряется;
@@ -115,18 +119,18 @@
         \node[anchor=east, xshift=-15pt] at ($(s12.west)!0.5!(s8.west)$) {$n_1=1$};
         \node[anchor=east, xshift=-15pt] at ($(s4.west)!0.5!(s0.west)$) {$n_1=0$};
 
-        \draw (s0) edge[-{Stealth}, bend right=43] node[midway, above] {\(\lambda\)} (s2);
-        \draw[-{Stealth}] (s0) -- (s4) node[midway, left] {\(\lambda\)};
-        \draw (s0) edge[-{Stealth}, bend left=43] node[midway, right] {\(\lambda\)} (s8);
+        \draw (s0) edge[-{Stealth}, bend right=43] node[midway, above] {\(p_3\lambda\)} (s2);
+        \draw[-{Stealth}] (s0) -- (s4) node[midway, fill=white, fill opacity=0.8] {\(p_2\lambda\)};
+        \draw (s0) edge[-{Stealth}, bend left=43] node[midway, fill=white, fill opacity=0.8] {\(p_1\lambda\)} (s8);
 
-        \draw[-{Stealth}] (s8) -- (s12) node[midway, left] {\(\lambda\)};
-        \draw (s8) edge[-{Stealth}, bend right=43] node[midway, above] {\(\lambda\)} (s10);
+        \draw[-{Stealth}] (s8) -- (s12) node[midway, fill=white, fill opacity=0.8] {\(\lambda p_{21}\)};
+        \draw (s8) edge[-{Stealth}, bend right=43] node[midway, above] {\(\lambda p_{31}\)} (s10);
 
-        \draw (s4) edge[-{Stealth}, bend left=43] node[midway, right] {\(\lambda\)} (s12);
-        \draw (s4) edge[-{Stealth}, bend right=43] node[midway, above] {\(\lambda\)} (s6);
+        \draw (s4) edge[-{Stealth}, bend left=43] node[midway, fill=white, fill opacity=0.8] {\(\lambda p_{12}\)} (s12);
+        \draw (s4) edge[-{Stealth}, bend right=43] node[midway, above] {\(\lambda p_{32}\)} (s6);
 
-        \draw (s2) edge[-{Stealth}, bend left=43] node[midway, right] {\(\lambda\)} (s10);
-        \draw[-{Stealth}] (s2) -- (s6) node[pos=.2, left] {\(\lambda\)};
+        \draw (s2) edge[-{Stealth}, bend left=43] node[midway, fill=white, fill opacity=0.8] {\(\lambda p_{13}\)} (s10);
+        \draw[-{Stealth}] (s2) -- (s6) node[pos=.2, fill=white, fill opacity=0.8] {\(\lambda p_{23}\)};
 
         \draw (s12) edge[-{Stealth}, bend right=43] node[midway, above] {\(\lambda\)} (s14);
         \draw (s6) edge[-{Stealth}, bend left=43] node[midway, right] {\(\lambda\)} (s14);
@@ -134,8 +138,8 @@
 
         \draw[-{Stealth}] (s14) -- (s15) node[midway, above] {\(\lambda\)};
 
-        \draw (s5) edge[-{Stealth}, bend left=43] node[midway, right] {\(\lambda\)} (s13);
-        \draw (s5) edge[-{Stealth}, bend right=43] node[pos=.1, above] {\(\lambda\)} (s7);
+        \draw (s5) edge[-{Stealth}, bend left=43] node[pos=.7, right] {\(\lambda p_{12}\)} (s13);
+        \draw (s5) edge[-{Stealth}, bend right=43] node[pos=.75, right, fill=white, fill opacity=0.8] {\(\lambda p_{32}\)} (s7);
 
         \draw (s7) edge[-{Stealth}, bend left=43] node[midway, right] {\(\lambda\)} (s15);
         \draw (s13) edge[-{Stealth}, bend right=43] node[pos=.2, above] {\(\lambda\)} (s15);
@@ -154,7 +158,7 @@
         \draw (s12) edge[-{Stealth}, bend left=43] node[midway, left] {\(\mu\)} (s4);
         \draw (s12) edge[-{Stealth}, bend left=25] node[midway, right] {\(\mu\)} (s8);
 
-        \draw (s10) edge[-{Stealth}, bend right=43] node[midway, below] {\(\nu\)} (s8);
+        \draw (s10) edge[-{Stealth}, bend right=43] node[pos=.4, below] {\(\nu\)} (s8);
         \draw (s10) edge[-{Stealth}, bend left=43] node[pos=.4, left] {\(\mu\)} (s2);
 
         \draw (s8) edge[-{Stealth}, bend left=43] node[pos=.4, left] {\(\mu\)} (s0);
@@ -174,7 +178,12 @@
     \label{graph_2}
 \end{figure}
 
-На основании графа переходов можно построить матрицу интенсивностей переходов. Она приведена в таблице \ref{intensity-matrix-1}.
+Вспомним, что в случае наличия свободных приборов заявка должна обслуживаться в одном из них. Заявка не может быть отброшена по причине случайного выбора ветки с занятым прибором, она обязана быть направлена к свободному прибору. Поэтому вероятность выбора прибора нормируется на сумму вероятностей выбора свободных приборов. Введём обозначение:
+\[
+    p_{ij} = \frac{p_i}{p_i + p_k},\quad i,j,k\in\{1,2,3\},\ i\neq j,\ i\neq k,\ j\neq k
+\]
+
+На основании графа переходов можно построить матрицу интенсивностей переходов. Она приведена в таблице \ref{intensity-matrix-1}. Заметим, что в матрице пропущены нулевые столбцы и строки, поскольку программа WinMark не поддерживает их ввод. Это не критично, потому что эти состояния фиктивны и не влияют на стационарные вероятности и характеристики системы.
 \begin{table}
     \centering
     \caption{Матрица интенсивностей переходов второй системы.}
@@ -183,12 +192,14 @@
         \begin{adjustbox}{max width=.95\textheight}
         \begin{tblr}{
             colspec = {c c c c c c c c c c c c c c c c c c c c},
+            hline{2} = {solid},
+            vline{2} = {solid},
         }
-        \BLOCK{ for i in range(16) }
-            \BLOCK{ for j in range(15) }
+        \BLOCK{ for i in range(graph_2 | length) }
+            \BLOCK{ for j in range((graph_2[i] | length) - 1) }
                 \VAR{ graph_2[i][j] } & 
             \BLOCK{ endfor }
-            \VAR{ graph_2[i][15] }
+            \VAR{ graph_2[i][graph_2[i] | length - 1] }
             \\
         \BLOCK{ endfor }
         \end{tblr}

@@ -7,10 +7,10 @@
     \centering
     \begin{tikzpicture}
         \node (source) {$\lambda$};
-        \node[draw, minimum width=2.4cm, minimum height=0.4cm, xshift=1cm, anchor=west] at (source) (buffer) {};
-        \node[above=2pt] at (buffer.north) {$r=4$};
+        \node[draw, minimum width=3cm, minimum height=0.4cm, xshift=1cm, anchor=west] at (source) (buffer) {};
+        \node[above=2pt] at (buffer.north) {$r=5$};
 
-        \foreach \i in {1,2,3} {
+        \foreach \i in {1,2,3,4} {
             \draw ([xshift=\i*0.6cm]buffer.south west) -- ([xshift=\i*0.6cm]buffer.north west);
         }
         \node[draw, square, xshift=1cm, yshift=1cm, anchor=west] at (buffer.east) (server1) {$\Pi 1$};
@@ -22,8 +22,8 @@
 
         \draw[-{Stealth}] (source) -- (buffer);
         \draw[dashed, -{Stealth}] (buffer.west) -- ++(-1,-1) node[right] {$\lambda''$};
-        \draw[-{Stealth}] (buffer.east) -- ++(.5,0) node[dot] {} |- (server1);
-        \draw[-{Stealth}] (buffer.east) -- ++(.5,0) |- (server2);
+        \draw[-{Stealth}] (buffer.east) -- ++(.5,0) node[dot] {} |- (server1) node[midway, left] {$p_1$};
+        \draw[-{Stealth}] (buffer.east) -- ++(.5,0) |- (server2) node[midway, left] {$p_2$};
         \draw[-{Stealth}] (server1.east) -- ++(.5,0) |- (sink.west) node[pos=0.5, dot, anchor=center] {};
         \draw (server2.east) -- ++(.5,0) |- (sink.west);
     \end{tikzpicture}
@@ -33,9 +33,9 @@
 Её можно описать следующим образом:
 \begin{itemize}
     \item система \textbf{двухканальная} --- содержит два обслуживающих прибора;
-    \item в систему поступает \textbf{однородный} поток заявок с интенсивностью \(\lambda\);
+    \item в систему поступает \textbf{однородный} поток заявок с интенсивностью \(\lambda\), который распределяется между приборами в соответствии с вероятностями \(p_1\) и \(p_2\);
     \item приборы \textbf{идентичные}, то есть время обслуживания заявок в приборах одинаково распределено по экспоненциальному закону;
-    \item перед приборами имеется \textbf{общий накопитель} заявок ёмкостью \(r=4\);
+    \item перед приборами имеется \textbf{общий накопитель} заявок ёмкостью \(r=5\);
     \item дисциплина буферизации --- \textbf{с потерями}: заявка, которая поступила в систему и застала накопитель заполненным, теряется;
     \item дисциплина обслуживания --- \textbf{FIFO} --- заявки обслуживаются в порядке их поступления в систему.
 \end{itemize}
@@ -51,20 +51,20 @@
 \begin{itemize}
     \item \(n_1\in\{0,1\}\) --- число заявок в первом приборе;
     \item \(n_2\in\{0,1\}\) --- число заявок во втором приборе;
-    \item \(n_3\in\{0,1,2,3,4\}\) --- число заявок в накопителе.
+    \item \(n_3\in\{0,1,2,3,4,5\}\) --- число заявок в накопителе.
 \end{itemize}
 
-Всего состояний в системе \(2\cdot 2\cdot 5=20\), их можно закодировать формулой:
+Всего состояний в системе \(2\cdot 2\cdot 6=24\), их можно закодировать формулой:
 \[
-    S(\vec{n}) = n_1\cdot 10 + 5\cdot n_2 + n_3
+    S(\vec{n}) = n_1\cdot 12 + 6\cdot n_2 + n_3
 \]
 
 Для декодирования состояния используются формулы:
 \[
 \begin{aligned}
-    n_1 &= S(\vec{n})\ \textrm{div}\, 10 \\
-    n_2 &= (S(\vec{n})\ \textrm{mod}\, 10)\ \textrm{div}\,5 \\
-    n_3 &= S(\vec{n})\ \textrm{mod}\, 5
+    n_1 &= S(\vec{n})\ \textrm{div}\, 12 \\
+    n_2 &= (S(\vec{n})\ \textrm{mod}\, 12)\ \textrm{div}\,6 \\
+    n_3 &= S(\vec{n})\ \textrm{mod}\, 6
 \end{aligned}
 \]
 
@@ -80,76 +80,84 @@
         \node[circle, draw, minimum size=1cm, dashed] (s2) at (4,0) {$2$};
         \node[circle, draw, minimum size=1cm, dashed] (s3) at (6,0) {$3$};
         \node[circle, draw, minimum size=1cm, dashed] (s4) at (8,0) {$4$};
-        \node[circle, draw, minimum size=1cm] (s5) at (0,2) {$5$};
-        \node[circle, draw, minimum size=1cm, dashed] (s6) at (2,2) {$6$};
-        \node[circle, draw, minimum size=1cm, dashed] (s7) at (4,2) {$7$};
-        \node[circle, draw, minimum size=1cm, dashed] (s8) at (6,2) {$8$};
-        \node[circle, draw, minimum size=1cm, dashed] (s9) at (8,2) {$9$};
-        \node[circle, draw, minimum size=1cm] (s10) at (0,4) {$10$};
-        \node[circle, draw, minimum size=1cm, dashed] (s11) at (2,4) {$11$};
-        \node[circle, draw, minimum size=1cm, dashed] (s12) at (4,4) {$12$};
-        \node[circle, draw, minimum size=1cm, dashed] (s13) at (6,4) {$13$};
-        \node[circle, draw, minimum size=1cm, dashed] (s14) at (8,4) {$14$};
-        \node[circle, draw, minimum size=1cm] (s15) at (0,6) {$15$};
-        \node[circle, draw, minimum size=1cm] (s16) at (2,6) {$16$};
-        \node[circle, draw, minimum size=1cm] (s17) at (4,6) {$17$};
-        \node[circle, draw, minimum size=1cm] (s18) at (6,6) {$18$};
-        \node[circle, draw, minimum size=1cm] (s19) at (8,6) {$19$};
+        \node[circle, draw, minimum size=1cm, dashed] (s5) at (10,0) {$5$};
+        \node[circle, draw, minimum size=1cm] (s6) at (0,2) {$6$};
+        \node[circle, draw, minimum size=1cm, dashed] (s7) at (2,2) {$7$};
+        \node[circle, draw, minimum size=1cm, dashed] (s8) at (4,2) {$8$};
+        \node[circle, draw, minimum size=1cm, dashed] (s9) at (6,2) {$9$};
+        \node[circle, draw, minimum size=1cm, dashed] (s10) at (8,2) {$10$};
+        \node[circle, draw, minimum size=1cm, dashed] (s11) at (10,2) {$11$};
+        \node[circle, draw, minimum size=1cm] (s12) at (0,4) {$12$};
+        \node[circle, draw, minimum size=1cm, dashed] (s13) at (2,4) {$13$};
+        \node[circle, draw, minimum size=1cm, dashed] (s14) at (4,4) {$14$};
+        \node[circle, draw, minimum size=1cm, dashed] (s15) at (6,4) {$15$};
+        \node[circle, draw, minimum size=1cm, dashed] (s16) at (8,4) {$16$};
+        \node[circle, draw, minimum size=1cm, dashed] (s17) at (10,4) {$17$};
+        \node[circle, draw, minimum size=1cm] (s18) at (0,6) {$18$};
+        \node[circle, draw, minimum size=1cm] (s19) at (2,6) {$19$};
+        \node[circle, draw, minimum size=1cm] (s20) at (4,6) {$20$};
+        \node[circle, draw, minimum size=1cm] (s21) at (6,6) {$21$};
+        \node[circle, draw, minimum size=1cm] (s22) at (8,6) {$22$};
+        \node[circle, draw, minimum size=1cm] (s23) at (10,6) {$23$};
 
-        \node[anchor=south, yshift=5pt] at (s15.north) {$n_3=0$};
-        \node[anchor=south, yshift=5pt] at (s16.north) {$n_3=1$};
-        \node[anchor=south, yshift=5pt] at (s17.north) {$n_3=2$};
-        \node[anchor=south, yshift=5pt] at (s18.north) {$n_3=3$};
-        \node[anchor=south, yshift=5pt] at (s19.north) {$n_3=4$};
+        \node[anchor=south, yshift=5pt] at (s18.north) {$n_3=0$};
+        \node[anchor=south, yshift=5pt] at (s19.north) {$n_3=1$};
+        \node[anchor=south, yshift=5pt] at (s20.north) {$n_3=2$};
+        \node[anchor=south, yshift=5pt] at (s21.north) {$n_3=3$};
+        \node[anchor=south, yshift=5pt] at (s22.north) {$n_3=4$};
+        \node[anchor=south, yshift=5pt] at (s23.north) {$n_3=5$};
 
-        \node[anchor=east, xshift=-15pt] at (s0.west) {$(n_1,n_2)=(0,0)$};
-        \node[anchor=east, xshift=-15pt] at (s5.west) {$(n_1,n_2)=(0,1)$};
-        \node[anchor=east, xshift=-15pt] at (s10.west) {$(n_1,n_2)=(1,0)$};
-        \node[anchor=east, xshift=-15pt] at (s15.west) {$(n_1,n_2)=(1,1)$};
+        \node[anchor=east, xshift=-30pt] at (s0.west) {$(n_1,n_2)=(0,0)$};
+        \node[anchor=east, xshift=-30pt] at (s6.west) {$(n_1,n_2)=(0,1)$};
+        \node[anchor=east, xshift=-30pt] at (s12.west) {$(n_1,n_2)=(1,0)$};
+        \node[anchor=east, xshift=-30pt] at (s18.west) {$(n_1,n_2)=(1,1)$};
 
-        \draw[-{Stealth}] (s0) -- (s5) node[midway, right] {$\lambda$};
-        \draw (s0) edge[-{Stealth}, bend left=45] node[midway, right] {\(\lambda\)} (s10);
-        \draw (s5) edge[-{Stealth}, bend left=45] node[midway, right] {\(\lambda\)} (s15);
+        \draw[-{Stealth}] (s0) -- (s6) node[midway, right] {$p_2\lambda$};
+        \draw (s0) edge[-{Stealth}, bend left=45] node[midway, fill=white, fill opacity=0.8] {\(p_1\lambda\)} (s12);
+        \draw (s6) edge[-{Stealth}, bend left=45] node[midway, right] {\(\lambda\)} (s18);
 
-        \draw[-{Stealth}] (s10) -- (s15) node[midway, left] {$\lambda$};
-        \draw[-{Stealth}] (s15) -- (s16) node[midway, above] {$\lambda$};
-        \draw[-{Stealth}] (s16) -- (s17) node[midway, above] {$\lambda$};
-        \draw[-{Stealth}] (s17) -- (s18) node[midway, above] {$\lambda$};
+        \draw[-{Stealth}] (s12) -- (s18) node[midway, left] {$\lambda$};
         \draw[-{Stealth}] (s18) -- (s19) node[midway, above] {$\lambda$};
+        \draw[-{Stealth}] (s19) -- (s20) node[midway, above] {$\lambda$};
+        \draw[-{Stealth}] (s20) -- (s21) node[midway, above] {$\lambda$};
+        \draw[-{Stealth}] (s21) -- (s22) node[midway, above] {$\lambda$};
+        \draw[-{Stealth}] (s22) -- (s23) node[midway, above] {$\lambda$};
 
         \draw (s19) edge[-{Stealth}, bend left=25] node[midway, below] {\(2\mu\)} (s18);
-        \draw (s18) edge[-{Stealth}, bend left=25] node[midway, below] {\(2\mu\)} (s17);
-        \draw (s17) edge[-{Stealth}, bend left=25] node[midway, below] {\(2\mu\)} (s16);
-        \draw (s16) edge[-{Stealth}, bend left=25] node[midway, below] {\(2\mu\)} (s15);
-        \draw (s15) edge[-{Stealth}, bend left=25] node[pos=.6, right] {\(\mu\)} (s10);
-        \draw (s15) edge[-{Stealth}, bend left=45] node[midway, left] {\(\mu\)} (s5);
-        \draw (s5) edge[-{Stealth}, bend right=25] node[pos=.4, left] {\(\mu\)} (s0);
-        \draw (s10) edge[-{Stealth}, bend left=45] node[midway, left] {\(\mu\)} (s0);
+        \draw (s20) edge[-{Stealth}, bend left=25] node[midway, below] {\(2\mu\)} (s19);
+        \draw (s21) edge[-{Stealth}, bend left=25] node[midway, below] {\(2\mu\)} (s20);
+        \draw (s22) edge[-{Stealth}, bend left=25] node[midway, below] {\(2\mu\)} (s21);
+        \draw (s23) edge[-{Stealth}, bend left=25] node[midway, below] {\(2\mu\)} (s22);
+
+        \draw (s18) edge[-{Stealth}, bend left=25] node[pos=.6, right] {\(\mu\)} (s12);
+        \draw (s18) edge[-{Stealth}, bend left=45] node[midway, left] {\(\mu\)} (s6);
+        \draw (s6) edge[-{Stealth}, bend right=25] node[pos=.4, left] {\(\mu\)} (s0);
+        \draw (s12) edge[-{Stealth}, bend left=45] node[midway, left] {\(\mu\)} (s0);
     \end{tikzpicture}
     \caption{Размеченный граф переходов первой системы.}
     \label{graph_1}
 \end{figure}
 
-На основании графа переходов можно построить матрицу интенсивностей переходов. Она приведена в таблице \ref{intensity-matrix-1}.
+На основании графа переходов можно построить матрицу интенсивностей переходов. Она приведена в таблице \ref{intensity-matrix-1}. Заметим, что в матрице пропущены нулевые столбцы и строки, поскольку программа WinMark не поддерживает их ввод. Это не критично, потому что эти состояния фиктивны и не влияют на стационарные вероятности и характеристики системы.
 \begin{table}
     \centering
     \caption{Матрица интенсивностей переходов первой системы.}
     \label{intensity-matrix-1}
-    \rotatebox{90}{
-        \begin{adjustbox}{max width=.95\textheight}
+        \begin{adjustbox}{max width=.95\textwidth}
         \begin{tblr}{
             colspec = {c c c c c c c c c c c c c c c c c c c c},
+            hline{2} = {solid},
+            vline{2} = {solid},
         }
-        \BLOCK{ for i in range(20) }
-            \BLOCK{ for j in range(19) }
+        \BLOCK{ for i in range(graph_1 | length) }
+            \BLOCK{ for j in range((graph_1[i] | length) - 1) }
                 \VAR{ graph_1[i][j] } & 
             \BLOCK{ endfor }
-            \VAR{ graph_1[i][19] }
+            \VAR{ graph_1[i][graph_1[i] | length - 1] }
             \\
         \BLOCK{ endfor }
         \end{tblr}
         \end{adjustbox}
-    }
 \end{table}
 
 \subsubsection{Значения стационарных вероятностей}
