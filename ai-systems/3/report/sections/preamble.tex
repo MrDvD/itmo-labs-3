@@ -33,24 +33,6 @@
 ]{biblatex}
 \addbibresource{refs.bib}
 
-\usepackage{listings}
-% Настройки для листингов кода
-\lstset{
-    language=Python,
-    basicstyle=\ttfamily\small,
-    keywordstyle=\color{blue},
-    commentstyle=\color{green!60!black},
-    stringstyle=\color{red},
-    numbers=left,
-    numberstyle=\tiny,
-    stepnumber=1,
-    numbersep=5pt,
-    frame=single,
-    tabsize=4,
-    breaklines=true,
-    showstringspaces=false,
-    captionpos=b
-}
 
 \usepackage{caption} % required for caption param
 \usepackage{minted}
@@ -61,13 +43,14 @@
     linenos=true,
     numbersep=5pt,
     tabsize=4,
-    breaklines=true
+    breaklines=true,
+    vspace=0,
 }
 \newenvironment{code}{\captionsetup{type=listing}}{}
 \renewcommand{\listingscaption}{Листинг}
 \captionsetup[listing]{
-    belowskip=9pt,    % space below the caption (between caption and listing, if caption on top)
-    aboveskip=0pt,    % space above the caption (between listing and caption, if caption below)
+    aboveskip=9pt,    % space above the caption (between listing and caption, if caption below)
+    belowskip=0pt,    % space below the caption (between caption and listing, if caption on top)
 }
 
 \usepackage{tabularray}
@@ -106,3 +89,21 @@
 \definecolor{DarkOrange}{RGB}{255,140,0}
 
 \newcommand{\abs}[1]{\left|#1\right|}
+
+\usepackage{titlesec}
+
+% 1. Set depth to include level 4 (paragraph) in text and ToC
+\setcounter{secnumdepth}{4}
+\setcounter{tocdepth}{4}
+
+% 2. Define numbering format for paragraph
+\renewcommand\theparagraph{\thesubsubsection.\arabic{paragraph}}
+
+% 3. Style paragraph using titlesec
+\titleformat{\paragraph}
+  {\normalfont\normalsize\bfseries}{\theparagraph}{1em}{}
+\titlespacing*{\paragraph}
+  {0pt}{3.25ex plus 1ex minus .2ex}{1.5ex plus .2ex}
+
+% 4. Create a convenient command alias so you can still type \subsubsubsection{...}
+\newcommand{\subsubsubsection}[1]{\paragraph{#1}}

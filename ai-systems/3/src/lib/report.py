@@ -1,265 +1,137 @@
-from typing import Dict, Any, Tuple, Optional, List
-import matplotlib.pyplot as plt
-import matplotlib.patches as mpatches
-import numpy as np
-import pandas as pd
-import seaborn as sns
-from pandas import DataFrame
-from sklearn.preprocessing import StandardScaler
-from sklearn.linear_model import Ridge
-from sklearn.metrics import mean_absolute_error, root_mean_squared_error, r2_score
-from sklearn.model_selection import (
-    train_test_split, 
-    StratifiedKFold, 
-    GroupKFold, 
-    LeaveOneGroupOut, 
-    TimeSeriesSplit
-)
+from typing import Dict, Any, List
+from sklearn.compose import ColumnTransformer
+from sklearn.linear_model import LogisticRegression
+from sklearn.metrics import accuracy_score, f1_score, precision_score, recall_score
+from sklearn.pipeline import Pipeline, clone
+from sklearn.preprocessing import OneHotEncoder, StandardScaler
+from sklearn.svm import SVC
 
 class ReportFiller:
     @staticmethod
-    def split_dataset(
-        data: DataFrame, 
-        test_size: float,
-        random_state: int,
-        mode: str,
-        k: int,
-        target_col: Optional[str] = None,
-        groups: Optional[np.ndarray] = None,
-        time_col: Optional[str] = None,
-        purge_gap: int = 0
-    ) -> List[Tuple[DataFrame, DataFrame]]:
-        match mode:
-            case "random":
-                folds = list()
-                for i in range(k):
-                    train_indices, test_indices = train_test_split(
-                        data.index, 
-                        test_size=test_size, 
-                        random_state=random_state + i,
-                        shuffle=True,
-                    )
-                    folds.append((data.loc[train_indices], data.loc[test_indices]))
-                return folds
-
-            case "stratified":
-                if target_col is None:
-                    raise ValueError("target_col must be provided for stratified mode.")
-                
-                skf = StratifiedKFold(n_splits=k, shuffle=True, random_state=random_state)
-                return [
-                    (data.iloc[train_indices], data.iloc[test_indices])
-                    for train_indices, test_indices in skf.split(data, data[target_col])
-                ]
-
-            case "grouped":
-                if groups is None:
-                    raise ValueError("groups array must be provided for grouped mode.")
-                
-                gkf = GroupKFold(n_splits=k)
-                return [
-                    (data.iloc[train_indices], data.iloc[test_indices])
-                    for train_indices, test_indices in gkf.split(data, groups=groups)
-                ]
-
-            case "grouped_one_out":
-                if groups is None:
-                    raise ValueError("groups array must be provided for grouped_one_out mode.")
-                
-                logo = LeaveOneGroupOut()
-                return [
-                    (data.iloc[train_indices], data.iloc[test_indices])
-                    for train_indices, test_indices in logo.split(data, groups=groups)
-                ]
-
-            case "time_series":
-                if time_col is not None:
-                    data = data.sort_values(by=time_col)
-                
-                tscv = TimeSeriesSplit(n_splits=k)
-                return [
-                    (data.iloc[train_indices], data.iloc[test_indices])
-                    for train_indices, test_indices in tscv.split(data)
-                ]
-
-            case _:
-                raise ValueError(f"Invalid mode: {mode}.")
-
-    @staticmethod
-    def plot_folds(
-        data: DataFrame,
-        folds: List[Tuple[DataFrame, DataFrame]],
-        mode: str,
-        plot_path: str,
-        time_col: Optional[str] = None,
-        target_col: Optional[str] = None,
-        group_col: Optional[str] = None,
-    ) -> None:
-        if time_col is not None:
-            data = data.sort_values(by=time_col)
-
-        n_samples = len(data)
-        n_folds = len(folds)
-        show_groups = mode in ("stratified", "grouped", "grouped_one_out") and (target_col is not None or group_col is not None)
-        ratio_col = group_col if mode in ["grouped","grouped_one_out"] else target_col
-
-        if show_groups:
-            fig, (ax, ax_ratio) = plt.subplots(
-                2, 1, figsize=(12, max(3, n_folds * 0.6) + 3),
-                gridspec_kw={"height_ratios": [max(3, n_folds * 0.6), 3]},
-            )
-        else:
-            fig, ax = plt.subplots(figsize=(12, max(3, n_folds * 0.6)))
-
-        for fold_num, (train_df, test_df) in enumerate(folds):
-            y_pos = n_folds - 1 - fold_num
-            train_positions = data.index.get_indexer(train_df.index)
-            test_positions = data.index.get_indexer(test_df.index)
-
-            if len(train_positions) > 0:
-                ax.barh(y_pos, 1.0, left=train_positions, color="#3498db", height=0.6)
-            if len(test_positions) > 0:
-                ax.barh(y_pos, 1.0, left=test_positions, color="#e74c3c", height=0.6)
-
-            # Annotate the group used by this fold (for grouped mode)
-            if mode in ["grouped", "grouped_one_out"] and group_col is not None and len(test_df) > 0:
-                grp = test_df[group_col].mode().iloc[0]
-                ax.text(
-                    n_samples * 1.01, y_pos, f"grp={grp}",
-                    va="center", ha="left", fontsize=8, color="#333",
-                )
-
-        ax.set_yticks(range(n_folds))
-        ax.set_yticklabels([f"Fold {i + 1}" for i in reversed(range(n_folds))])
-        ax.set_xlabel("Sample Index" if time_col is None else f"Index (sorted by {time_col})")
-        ax.set_xlim(0, n_samples)
-        ax.legend(
-            handles=[
-                mpatches.Patch(color="#3498db", label="Train"),
-                mpatches.Patch(color="#e74c3c", label="Test"),
-            ],
-            loc="upper right", bbox_to_anchor=(1.15, 1),
-        )
-
-        if show_groups:
-            classes = sorted(data[ratio_col].unique())
-            n_classes = len(classes)
-            x = np.arange(n_folds)
-            w = 0.4 / n_classes
-
-            for i, cls in enumerate(classes):
-                train_r = [(tr[ratio_col] == cls).mean() for tr, _ in folds]
-                test_r = [(te[ratio_col] == cls).mean() for _, te in folds]
-                offset = (i - (n_classes - 1) / 2) * w * 2
-                ax_ratio.bar(x + offset - w / 2, train_r, w, label=f"{cls} (train)")
-                ax_ratio.bar(x + offset + w / 2, test_r, w, label=f"{cls} (test)")
-
-            ax_ratio.set_xticks(x)
-            ax_ratio.set_xticklabels([f"Fold {i + 1}" for i in range(n_folds)])
-            ax_ratio.set_ylabel("Ratio")
-            ax_ratio.set_xlabel(f"Group ({ratio_col})")
-            ax_ratio.legend(fontsize=8)
-
-        plt.tight_layout()
-        plt.savefig(plot_path, dpi=300)
-        plt.close()
-
-    @staticmethod
-    def prepare_features(
-        data: DataFrame,
-        categorical_columns: list,
-        numerical_columns: list,
-        target_column: str,
-        is_train: bool = False,
-        scaler: StandardScaler | None = None
-    ) -> Tuple[StandardScaler, DataFrame]:
-        data = pd.get_dummies(data, columns=categorical_columns, drop_first=False)
-        if scaler is None:
-            scaler = StandardScaler()
-        if is_train:
-            mask = pd.Series(True, index=data.index)
-            for col in numerical_columns:
-                Q1 = data[col].quantile(0.25)
-                Q3 = data[col].quantile(0.75)
-                IQR = Q3 - Q1
-                mask &= (data[col] >= Q1 - 1.5 * IQR) & (data[col] <= Q3 + 1.5 * IQR)
-            data = data[mask].reset_index(drop=True)
-            scaler = scaler.fit(data[numerical_columns + [target_column]])
-        data[numerical_columns + [target_column]] = scaler.transform(data[numerical_columns + [target_column]])
-        return scaler, data
-
-    @staticmethod
-    def teach_model(
+    def teach_models(
         context: Dict[str, Any],
-        fold: Tuple[DataFrame, DataFrame],
+        C: float,
+        categorical_columns: List[str],
+        numeric_columns: List[str],
+        predictors: List[str],
         target_column: str,
-        alpha: float,
-        fold_type: str,
+        train: Any,
+        test: Any,
     ) -> Dict[str, Any]:
-        train_data, test_data = fold
-        X_train = train_data.drop(columns=[target_column])
-        y_train = train_data[target_column].to_numpy()
+        new_context = dict()
+        
+        logistic_regression_metrics = dict()
+        
+        reg_log = LogisticRegression()
+    
+        preprocessor = ColumnTransformer(
+            transformers=[
+                (
+                    'cat',
+                    OneHotEncoder(sparse_output=False),
+                    categorical_columns,
+                ),
+                (
+                    'num',
+                    StandardScaler(),
+                    numeric_columns,
+                ),
+            ],
+            remainder='drop',
+        )
+    
+        pipe_log = Pipeline(steps=[
+            ("preprocessor", clone(preprocessor)), 
+            ("logistic", reg_log)
+        ])
+    
+        pipe_log.fit(train[predictors], train[target_column])
+    
+        y_pred_log = pipe_log.predict(test[predictors])
+    
+        logistic_regression_metrics['accuracy'] = accuracy_score(test[target_column], y_pred_log)
+        logistic_regression_metrics['precision'] = precision_score(test[target_column], y_pred_log, pos_label='yes')
+        logistic_regression_metrics['recall'] = recall_score(test[target_column], y_pred_log, pos_label='yes')
+        logistic_regression_metrics['f1'] = f1_score(test[target_column], y_pred_log, pos_label='yes')
+    
+        new_context['logistic_regression'] = logistic_regression_metrics
+    
+        support_vector_machine_metrics: Dict[str, Any] = {
+            'C': C,
+        }
+    
+        reg_svc = SVC(
+            kernel='linear',
+            C=C,
+        )
+    
+        pipe_svc = Pipeline(steps=[
+            ("preprocessor", clone(preprocessor)), 
+            ("svc", reg_svc)
+        ])
+    
+        pipe_svc.fit(train[predictors], train[target_column])
+    
+        y_pred_svc = pipe_svc.predict(test[predictors])
+    
+        support_vector_machine_metrics['accuracy'] = accuracy_score(test[target_column], y_pred_svc)
+        support_vector_machine_metrics['precision'] = precision_score(test[target_column], y_pred_svc, pos_label='yes')
+        support_vector_machine_metrics['recall'] = recall_score(test[target_column], y_pred_svc, pos_label='yes')
+        support_vector_machine_metrics['f1'] = f1_score(test[target_column], y_pred_svc, pos_label='yes')
+    
+        new_context['support_vector_machine'] = support_vector_machine_metrics
 
-        X_test = test_data.drop(columns=[target_column])
-        y_test = test_data[target_column].to_numpy()
-
-        ridge_model = Ridge(alpha=alpha)
-        ridge_model.fit(X_train, y_train)
-
-        key = f"fold_{fold_type}_metrics"
-
-        y_pred = ridge_model.predict(X_test)
-
-        new_context = context.copy()
-        new_context[key] = new_context.get(key, list())
-        new_context[key].append({
-            "rmse": root_mean_squared_error(y_test, y_pred),
-            "r2": r2_score(y_test, y_pred),
-            "mae": mean_absolute_error(y_test, y_pred),
-        })
-
-        return new_context
+        return context | new_context
 
     @staticmethod
-    def plot_validation_comparison(
-        folds: List[Tuple[pd.DataFrame, pd.DataFrame]],
-        test: pd.DataFrame,
-        plot_path: str,
-        target_col: str,
-    ) -> None:
-        fig, ax = plt.subplots(figsize=(8, 5))
+    def calc_auc_roc(
+        context: Dict[str, Any],
+        Y_matrix: List[List[int]],
+        P_matrix: List[List[float]],
+    ) -> Dict[str, Any]:
+        auc_roc = {
+            'Y_matrix': Y_matrix,
+            'P_matrix': P_matrix,
+        }
+        N_classes = len(Y_matrix[0])
+        N_positive = [sum(x[i] for x in Y_matrix) for i in range(N_classes)]
+        auc_roc['N_positive'] = N_positive
 
-        for i, (_, val_df) in enumerate(folds):
-            min_val = int(np.floor(min(val_df[target_col].min(), test[target_col].min())))
-            max_val = int(np.ceil(max(val_df[target_col].max(), test[target_col].max())))
-    
-            bins = np.arange(min_val, max_val + 1, 1)
-            sns.histplot(
-                val_df[target_col],
-                color="#db6521",
-                kde=True,
-                stat="density",
-                alpha=0.35,
-                ax=ax,
-                label="Fold validation" if i == 0 else None,
-                bins=bins,
-            )
+        def calc_auc(Y: List[int], P: List[float]) -> float:
+            objects = sorted(zip(P, Y), reverse=True)
+            N = len(Y)
 
-        sns.histplot(
-            test[target_col],
-            color="#2680c9",
-            kde=True,
-            stat="density",
-            alpha=0.55,
-            ax=ax,
-            label="Actual test",
-            bins=bins,
-        )
+            numerator = 0
+            denominator = 0
 
-        ax.set_xlabel(target_col)
-        ax.set_ylabel("Density")
-        ax.legend()
+            def I_scores(a: float, b: float) -> float:
+                if a < b:
+                    return 1
+                elif a == b:
+                    return 0.5
+                else:
+                    return 0
 
-        fig.tight_layout()
-        plt.savefig(plot_path, dpi=300)
-        plt.close()
+            def I_classes(a: float, b: float) -> float:
+                return 1 if a < b else 0
+
+            for i in range(N):
+                for j in range(N):
+                    numerator += I_scores(objects[i][0], objects[j][0]) * I_classes(objects[i][1], objects[j][1])
+                    denominator += I_classes(objects[i][1], objects[j][1])
+            
+            auc = numerator / denominator if denominator != 0 else 0
+            return auc
+
+        auc_roc['auc_values'] = [calc_auc([a[i] for a in Y_matrix], [a[i] for a in P_matrix]) for i in range(N_classes)]
+        auc_roc['auc_macro'] = sum(auc_roc['auc_values']) / len(auc_roc['auc_values']) if auc_roc['auc_values'] else 0
+        auc_roc['auc_weighted'] = sum([auc_roc['auc_values'][i] * N_positive[i] / sum(N_positive) for i in range(N_classes)])
+        auc_roc['auc_micro'] = calc_auc([b for a in Y_matrix for b in a], [b for a in P_matrix for b in a])
+        auc_roc['auc_values_object'] = [calc_auc(Y_matrix[r], P_matrix[r]) for r in range(len(Y_matrix))]
+        auc_roc['auc_samples'] = sum(auc_roc['auc_values_object']) / len(Y_matrix)
+
+        new_context = {
+            'auc_roc': auc_roc,
+        }
+
+        return context | new_context

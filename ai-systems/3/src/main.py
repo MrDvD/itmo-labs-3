@@ -1,16 +1,12 @@
 import os
 
-from sklearn.compose import ColumnTransformer
-from sklearn.linear_model import LogisticRegression
 from sklearn.model_selection import train_test_split
-from sklearn.pipeline import Pipeline
-from sklearn.preprocessing import OneHotEncoder, StandardScaler
-from sklearn.svm import SVC
 import lib.config as config
 import pandas as pd
 from lib.artifacts import ArtifactsFiller
 from typing import Any, Dict
-from sklearn.metrics import accuracy_score, precision_score, recall_score, f1_score, roc_auc_score, confusion_matrix, classification_report
+
+from lib.report import ReportFiller
 
 if __name__ == "__main__":
     cfg = config.load('config.yml')
@@ -36,58 +32,37 @@ if __name__ == "__main__":
     categorical_columns = ['famsup', 'schoolsup']
     numeric_columns = ['age', 'Medu', 'Fedu', 'absences', 'failures', 'G3', 'studytime']
     predictors = categorical_columns + numeric_columns
-    # features = predictors + [target_column]
 
-    reg = LogisticRegression()
-
-    preprocessor = ColumnTransformer(
-        transformers=[
-            (
-                'cat',
-                OneHotEncoder(handle_unknown='ignore', sparse_output=False),
-                categorical_columns,
-            ),
-            (
-                'num',
-                StandardScaler(),
-                numeric_columns,
-            ),
-        ],
-        remainder='drop',
+    context = ReportFiller.teach_models(
+        context,
+        cfg['experiment']['C'],
+        categorical_columns,
+        numeric_columns,
+        predictors,
+        target_column,
+        train,
+        test
     )
 
-    pipe = Pipeline(steps=[
-        ("preprocessor", preprocessor), 
-        ("logistic", reg)
-    ])
+    Y_matrix = [
+        [1, 1, 0],
+        [0, 1, 1],
+        [0, 1, 0],
+        [1, 0, 0],
+    ]
 
-    pipe.fit(train[predictors], train[target_column])
+    P_matrix = [
+        [0.7, 0.6, 0.5],
+        [0.3, 0.4, 0.6],
+        [0.5, 0.9, 0.2],
+        [0.4, 0.5, 0.1],
+    ]
 
-    y_pred = pipe.predict(test[predictors])
-
-    print(f"Accuracy:  {accuracy_score(test[target_column], y_pred):.4f}")
-    print(f"Precision: {precision_score(test[target_column], y_pred, pos_label='yes'):.4f}")
-    print(f"Recall:    {recall_score(test[target_column], y_pred, pos_label='yes'):.4f}")
-    print(f"F1 Score:  {f1_score(test[target_column], y_pred, pos_label='yes'):.4f}")
-
-    reg = SVC(
-        kernel='linear',
-        C=cfg['experiment']['C'],
+    context = ReportFiller.calc_auc_roc(
+        context,
+        Y_matrix,
+        P_matrix
     )
-
-    pipe = Pipeline(steps=[
-        ("preprocessor", preprocessor), 
-        ("logistic", reg)
-    ])
-
-    pipe.fit(train[predictors], train[target_column])
-
-    y_pred = pipe.predict(test[predictors])
-
-    print(f"Accuracy:  {accuracy_score(test[target_column], y_pred):.4f}")
-    print(f"Precision: {precision_score(test[target_column], y_pred, pos_label='yes'):.4f}")
-    print(f"Recall:    {recall_score(test[target_column], y_pred, pos_label='yes'):.4f}")
-    print(f"F1 Score:  {f1_score(test[target_column], y_pred, pos_label='yes'):.4f}")
 
     artifacts = ArtifactsFiller(context, [cfg['report']['dir']])
     artifacts.compile_patterns()

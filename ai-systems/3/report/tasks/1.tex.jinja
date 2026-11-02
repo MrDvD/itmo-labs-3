@@ -33,8 +33,115 @@
 
 \subsubsection{Обучение LogisticRegression}
 
-\dots
+Для обучения модели логистической регрессии воспользуемся следующим скриптом, который указан в листинге \ref{lst:logistic_regression_training}.
+\begin{code}
+\caption{Обучение модели логистической регрессии.}
+\label{lst:logistic_regression_training}
+\begin{minted}{Python}
+logistic_regression_metrics = dict()
+
+reg_log = LogisticRegression()
+
+preprocessor = ColumnTransformer(
+    transformers=[
+        (
+            'cat',
+            OneHotEncoder(sparse_output=False),
+            categorical_columns,
+        ),
+        (
+            'num',
+            StandardScaler(),
+            numeric_columns,
+        ),
+    ],
+    remainder='drop',
+)
+
+pipe_log = Pipeline(steps=[
+    ("preprocessor", clone(preprocessor)), 
+    ("logistic", reg_log)
+])
+
+pipe_log.fit(train[predictors], train[target_column])
+
+y_pred_log = pipe_log.predict(test[predictors])
+
+logistic_regression_metrics['accuracy'] = accuracy_score(test[target_column], y_pred_log)
+logistic_regression_metrics['precision'] = precision_score(test[target_column], y_pred_log, pos_label='yes')
+logistic_regression_metrics['recall'] = recall_score(test[target_column], y_pred_log, pos_label='yes')
+logistic_regression_metrics['f1'] = f1_score(test[target_column], y_pred_log, pos_label='yes')
+\end{minted}
+\end{code}
+
+В результате обучения модели логистической регрессии были получены следующие метрики, которые представлены в таблице \ref{tab:logistic_regression_metrics}.
+\begin{table}
+\centering
+\caption{Метрики модели логистической регрессии.}
+\label{tab:logistic_regression_metrics}
+\begin{tblr}{
+    colspec = {Q[c, m] c},
+    vlines,
+    hlines,
+    row{1} = {font=\bfseries, bg=gray!15},
+}
+    Метрика & Значение \\
+    Accuracy & \VAR{ logistic_regression.accuracy | round(5) } \\
+    Precision & \VAR{ logistic_regression.precision | round(5) } \\
+    Recall & \VAR{ logistic_regression.recall | round(5) } \\
+    F1"~score & \VAR{ logistic_regression.f1 | round(5) }
+\end{tblr}
+\end{table}
 
 \subsubsection{Обучение SVM}
 
-\dots
+Для обучения модели SVM воспользуемся следующим скриптом, который указан в листинге \ref{lst:svm_training}.
+\begin{code}
+\caption{Обучение модели SVM.}
+\label{lst:svm_training}
+\begin{minted}{Python}
+support_vector_machine_metrics = dict()
+
+reg_svc = SVC(
+    kernel='linear',
+    C=C,
+)
+
+pipe_svc = Pipeline(steps=[
+    ("preprocessor", clone(preprocessor)), 
+    ("svc", reg_svc)
+])
+
+pipe_svc.fit(train[predictors], train[target_column])
+
+y_pred_svc = pipe_svc.predict(test[predictors])
+
+support_vector_machine_metrics['accuracy'] = accuracy_score(test[target_column], y_pred_svc)
+support_vector_machine_metrics['precision'] = precision_score(test[target_column], y_pred_svc, pos_label='yes')
+support_vector_machine_metrics['recall'] = recall_score(test[target_column], y_pred_svc, pos_label='yes')
+support_vector_machine_metrics['f1'] = f1_score(test[target_column], y_pred_svc, pos_label='yes')
+\end{minted}
+\end{code}
+
+В результате обучения модели SVM были получены следующие метрики, которые представлены в таблице \ref{tab:support_vector_machine_metrics}.
+\begin{table}
+\centering
+\caption{Метрики модели SVM для C = \VAR{ support_vector_machine.C }.}
+\label{tab:support_vector_machine_metrics}
+\begin{tblr}{
+    colspec = {Q[c, m] c},
+    vlines,
+    hlines,
+    row{1} = {font=\bfseries, bg=gray!15},
+}
+    Метрика & Значение \\
+    Accuracy & \VAR{ support_vector_machine.accuracy | round(5) } \\
+    Precision & \VAR{ support_vector_machine.precision | round(5) } \\
+    Recall & \VAR{ support_vector_machine.recall | round(5) } \\
+    F1"~score & \VAR{ support_vector_machine.f1 | round(5) }
+\end{tblr}
+\end{table}
+
+\textbf{Как подбирал параметр C...}
+
+\textbf{Ответ на вопрос, может ли SVM ...}
