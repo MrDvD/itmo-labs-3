@@ -15,7 +15,11 @@
 
         \node[xshift=6pt, yshift=2pt] at (server1.north east) {$\mu$};
         \node[xshift=6pt, yshift=2pt] at (server2.north east) {$\mu$};
-        \node[xshift=6pt, yshift=2pt] at (server3.north east) {$\nu$};
+        \node[xshift=6pt, yshift=2pt] at (server3.north east) {$\mu_1$};
+        \node[xshift=6pt, yshift=2pt] at (server3.south east) {$\mu_2$};
+
+        \node[yshift=2pt, anchor=east] at (server3.north west) {$q_1$};
+        \node[yshift=2pt, anchor=east] at (server3.south west) {$q_2$};
         
         \draw[-{Stealth}] (source) -- ++(1,0) coordinate (branch) |- (server1);
         \node[dot] at (branch) {};
@@ -58,20 +62,16 @@
 
 где:
 \begin{itemize}
-    \item \(n_0\in\{0,1\}\) --- состояние гиперэкспоненциального прибора:
-    \begin{itemize}
-        \item \(n_0=0\) --- прибор находится в состоянии со средним временем обслуживания \(\nu_1\);
-        \item \(n_0=1\) --- прибор находится в состоянии со средним временем обслуживания \(\nu_2\).
-    \end{itemize}
+    \item \(n_0\in\{0,1\}\) --- число заявок в третьем приборе, находится в состоянии со средним временем обслуживания \(b_1\) и вероятностью перехода в это состояние \(q_1\);
     \item \(n_1\in\{0,1\}\) --- число заявок в первом приборе;
     \item \(n_2\in\{0,1\}\) --- число заявок во втором приборе;
-    \item \(n_3\in\{0,1\}\) --- число заявок в третьем приборе;
+    \item \(n_3\in\{0,1\}\) --- число заявок в третьем приборе, который находится в состоянии со средним временем обслуживания \(b_2\) и вероятностью перехода в это состояние \(q_2\);
     \item \(n_4\in\{0,1\}\) --- число заявок в накопителе;
 \end{itemize}
 
-Всего состояний в системе \(2\cdot 2\cdot 2\cdot 2\cdot 2=32\), их можно закодировать формулой:
+Всего формальных состояний в системе \(2\cdot 2\cdot 2\cdot 2\cdot 2=32\), их можно закодировать формулой:
 \[
-    S(\vec{n}) = n_5\cdot 16 + n_1\cdot 8 + n_2\cdot 4 + n_3\cdot 2 + n_4
+    S(\vec{n}) = n_0\cdot 16 + n_1\cdot 8 + n_2\cdot 4 + n_3\cdot 2 + n_4
 \]
 
 Для декодирования состояния используются формулы:
@@ -87,7 +87,31 @@
 
 \subsubsection{Граф переходов марковского процесса}
 
-Построим размеченный граф переходов марковского процесса на основании описания второй системы и способа кодирования состояний. Заметим, что система в исходном виде не является марковской из-за наличия гиперэкспоненциального прибора --- последний требует хранения информации о фазе. Чтобы это исправить, был введён дополнительный параметр \(n_0\) для кодирования отдельных состояний. Результат представлен на рисунке \ref{graph_2}. Отметим, что отсутствие стрелки между состояниями \(i\) и \(j\) означает, что переход из состояния \(i\) в состояние \(j\) невозможен.
+Построим размеченный граф переходов марковского процесса на основании описания второй системы и способа кодирования состояний. Заметим, что система в исходном виде не является марковской из-за наличия гиперэкспоненциального прибора --- последний требует хранения информации о фазе. Чтобы это исправить, был введён дополнительный параметр \(n_0\) для кодирования двух параллельных состояний.
+
+Поскольку в методических указаниях отсутствует подробное описание гиперэкспоненциального прибора, для построения графа переходов были сделаны следующие допущения:
+\begin{itemize}
+    \item гиперэкспоненциальный прибор имеет два состояния, которые различаются средним временем обслуживания;
+    \item вероятности перехода в одну из фаз определяются коэффициентом вариации \textit{по канонической схеме равной нагрузки фаз}:
+    \begin{align*}
+        q_1 &= \dfrac{1}{2}\left( 1-\sqrt{\dfrac{v^2-1}{v^2+1}} \right)\\
+        q_2 &= 1 - q_1
+    \end{align*}
+    \item среднее время обслуживания в каждой из фаз удовлетворяет ограничению на среднее время обслуживания всего прибора и равно:
+    \[
+        \begin{cases}
+            b=q_1b_1 + q_2b_2\\
+            q_1b_1=q_2b_2=\dfrac{b}{2}
+        \end{cases}
+        \implies
+        \begin{cases}
+            b_1 = \dfrac{b}{2q_1}\\
+            b_2 = \dfrac{b}{2q_2}
+        \end{cases}
+    \]
+\end{itemize}
+
+Результирующий граф представлен на рисунке \ref{graph_2}. Отметим, что отсутствие стрелки между состояниями \(i\) и \(j\) означает, что переход из состояния \(i\) в состояние \(j\) невозможен.
 
 \begin{figure}
     \centering
@@ -110,21 +134,21 @@
         \node[circle, draw, minimum size=1cm] (s15) at (6,6) {$15$};
 
         \node[circle, draw, minimum size=1cm] (s16) at (0,10) {$16$};
-        \node[circle, draw, minimum size=1cm] (s17) at (2,10) {$17$};
-        \node[circle, draw, minimum size=1cm] (s18) at (4,10) {$18$};
-        \node[circle, draw, minimum size=1cm] (s19) at (6,10) {$19$};
+        \node[circle, draw, minimum size=1cm, dashed] (s17) at (2,10) {$17$};
+        \node[circle, draw, minimum size=1cm, dashed] (s18) at (4,10) {$18$};
+        \node[circle, draw, minimum size=1cm, dashed] (s19) at (6,10) {$19$};
         \node[circle, draw, minimum size=1cm] (s20) at (0,12) {$20$};
         \node[circle, draw, minimum size=1cm] (s21) at (2,12) {$21$};
-        \node[circle, draw, minimum size=1cm] (s22) at (4,12) {$22$};
-        \node[circle, draw, minimum size=1cm] (s23) at (6,12) {$23$};
+        \node[circle, draw, minimum size=1cm, dashed] (s22) at (4,12) {$22$};
+        \node[circle, draw, minimum size=1cm, dashed] (s23) at (6,12) {$23$};
         \node[circle, draw, minimum size=1cm] (s24) at (0,14) {$24$};
-        \node[circle, draw, minimum size=1cm] (s25) at (2,14) {$25$};
-        \node[circle, draw, minimum size=1cm] (s26) at (4,14) {$26$};
-        \node[circle, draw, minimum size=1cm] (s27) at (6,14) {$27$};
+        \node[circle, draw, minimum size=1cm, dashed] (s25) at (2,14) {$25$};
+        \node[circle, draw, minimum size=1cm, dashed] (s26) at (4,14) {$26$};
+        \node[circle, draw, minimum size=1cm, dashed] (s27) at (6,14) {$27$};
         \node[circle, draw, minimum size=1cm] (s28) at (0,16) {$28$};
         \node[circle, draw, minimum size=1cm] (s29) at (2,16) {$29$};
-        \node[circle, draw, minimum size=1cm] (s30) at (4,16) {$30$};
-        \node[circle, draw, minimum size=1cm] (s31) at (6,16) {$31$};
+        \node[circle, draw, minimum size=1cm, dashed] (s30) at (4,16) {$30$};
+        \node[circle, draw, minimum size=1cm, dashed] (s31) at (6,16) {$31$};
 
         \node[anchor=south, yshift=30pt] at (s12.north) {$n_4=0$};
         \node[anchor=south, yshift=30pt] at (s13.north) {$n_4=1$};
@@ -147,69 +171,103 @@
         \node[anchor=south, yshift=15pt] at ($(s28.north)!0.5!(s29.north)$) {$n_3=0$};
         \node[anchor=south, yshift=15pt] at ($(s30.north)!0.5!(s31.north)$) {$n_3=1$};
 
-        \node[anchor=east, xshift=-15pt] at ($(s12.west)!0.5!(s8.west)$) {$n_1=1$};
-        \node[anchor=east, xshift=-15pt] at ($(s4.west)!0.5!(s0.west)$) {$n_1=0$};
+        \node[anchor=west, xshift=50pt] at ($(s11.east)!0.5!(s15.east)$) {$n_1=1$};
+        \node[anchor=west, xshift=50pt] at ($(s3.east)!0.5!(s7.east)$) {$n_1=0$};
 
-        \node[anchor=east, xshift=-15pt] at ($(s28.west)!0.5!(s24.west)$) {$n_1=1$};
-        \node[anchor=east, xshift=-15pt] at ($(s20.west)!0.5!(s16.west)$) {$n_1=0$};
+        \node[anchor=west, xshift=50pt] at ($(s27.east)!0.5!(s31.east)$) {$n_1=1$};
+        \node[anchor=west, xshift=50pt] at ($(s19.east)!0.5!(s23.east)$) {$n_1=0$};
 
         \node[anchor=east, xshift=-50pt] at ($(s24.west)!0.5!(s20.west)$) {$n_0=1$};
         \node[anchor=east, xshift=-50pt] at ($(s4.west)!0.5!(s8.west)$) {$n_0=0$};
 
-        \draw (s0) edge[-{Stealth}, bend right=43] node[midway, above] {\(p_3\lambda\)} (s2);
-        \draw[-{Stealth}] (s0) -- (s4) node[midway, fill=white, fill opacity=0.8] {\(p_2\lambda\)};
-        \draw (s0) edge[-{Stealth}, bend left=43] node[midway, fill=white, fill opacity=0.8] {\(p_1\lambda\)} (s8);
+        \draw (s0) edge[-{Stealth}, bend right=43] node[midway, above] {\(\lambda p_3q_2\)} (s2);
+        \draw[-{Stealth}] (s0) -- (s4) node[midway, fill=white, fill opacity=0.8] {\(\lambda p_2\)};
+        \draw (s0) edge[-{Stealth}, bend left=43] node[midway, fill=white, fill opacity=0.8] {\(\lambda p_1\)} (s8);
+        \draw (s0) edge[-{Stealth}, bend left=43] node[midway, fill=white, fill opacity=0.8] {\(\lambda p_3q_1\)} (s16);
 
         \draw[-{Stealth}] (s8) -- (s12) node[midway, fill=white, fill opacity=0.8] {\(\lambda p_{21}\)};
-        \draw (s8) edge[-{Stealth}, bend right=43] node[midway, above] {\(\lambda p_{31}\)} (s10);
+        \draw (s8) edge[-{Stealth}, bend right=43] node[midway, above] {\(\lambda p_{31}q_2\)} (s10);
+        \draw (s8) edge[-{Stealth}, bend left=43] node[midway, fill=white, fill opacity=0.8] {\(\lambda p_{31}q_1\)} (s24);
 
         \draw (s4) edge[-{Stealth}, bend left=43] node[midway, fill=white, fill opacity=0.8] {\(\lambda p_{12}\)} (s12);
-        \draw (s4) edge[-{Stealth}, bend right=43] node[midway, above] {\(\lambda p_{32}\)} (s6);
+        \draw (s4) edge[-{Stealth}, bend right=43] node[midway, above] {\(\lambda p_{32}q_2\)} (s6);
+        \draw (s4) edge[-{Stealth}, bend left=43] node[midway, fill=white, fill opacity=0.8] {\(\lambda p_{32}q_1\)} (s20);
 
         \draw (s2) edge[-{Stealth}, bend left=43] node[midway, fill=white, fill opacity=0.8] {\(\lambda p_{13}\)} (s10);
         \draw[-{Stealth}] (s2) -- (s6) node[pos=.2, fill=white, fill opacity=0.8] {\(\lambda p_{23}\)};
 
-        \draw (s12) edge[-{Stealth}, bend right=43] node[midway, above] {\(\lambda\)} (s14);
+        \draw (s12) edge[-{Stealth}, bend right=43] node[midway, above] {\(\lambda q_2\)} (s14);
+        \draw (s12) edge[-{Stealth}, bend left=43] node[midway, fill=white, fill opacity=0.8] {\(\lambda q_1\)} (s28);
         \draw (s6) edge[-{Stealth}, bend left=43] node[midway, right] {\(\lambda\)} (s14);
         \draw[-{Stealth}] (s10) -- (s14) node[pos=.2, left] {\(\lambda\)};
 
         \draw[-{Stealth}] (s14) -- (s15) node[midway, above] {\(\lambda\)};
 
         \draw (s5) edge[-{Stealth}, bend left=43] node[pos=.7, right] {\(\lambda p_{12}\)} (s13);
-        \draw (s5) edge[-{Stealth}, bend right=43] node[pos=.75, right, fill=white, fill opacity=0.8] {\(\lambda p_{32}\)} (s7);
+        \draw (s5) edge[-{Stealth}, bend right=43] node[pos=.75, right, fill=white, fill opacity=0.8] {\(\lambda p_{32}q_2\)} (s7);
+        \draw (s5) edge[-{Stealth}, bend left=25] node[midway, fill=white, fill opacity=0.8] {\(\lambda p_{32}q_1\)} (s21);
 
         \draw (s7) edge[-{Stealth}, bend left=43] node[midway, right] {\(\lambda\)} (s15);
-        \draw (s13) edge[-{Stealth}, bend right=43] node[pos=.2, above] {\(\lambda\)} (s15);
+        \draw (s13) edge[-{Stealth}, bend right=43] node[pos=.2, above] {\(\lambda q_2\)} (s15);
+        \draw (s13) edge[-{Stealth}, bend left=25] node[pos=.92, right] {\(\lambda q_1\)} (s29);
+
+        \draw (s16) edge[-{Stealth}, bend left=45] node[midway, fill=white, fill opacity=0.8] {\(\lambda p_{13}\)} (s24);
+        \draw[-{Stealth}] (s16) -- (s20) node[midway, fill=white, fill opacity=0.8] {\(\lambda p_{23}\)};
+        \draw (s20) edge[-{Stealth}, bend left=43] node[midway, right] {\(\lambda\)} (s28);
+
+        \draw[-{Stealth}] (s24) -- (s28) node[midway, fill=white, fill opacity=0.8] {\(\lambda\)};
+        \draw[-{Stealth}] (s28) -- (s29) node[midway, above] {\(\lambda\)};
+
+        \draw (s21) edge[-{Stealth}, bend left=43] node[pos=.2, right] {\(\lambda\)} (s29);
 
         \draw (s15) edge[-{Stealth}, bend left=25] node[midway, below] {\(\mu\)} (s14);
-        \draw (s15) edge[-{Stealth}, bend right=43] node[midway, below] {\(\nu\)} (s13);
+        \draw (s15) edge[-{Stealth}, bend right=43] node[midway, below] {\(\mu_2\)} (s13);
         \draw (s15) edge[-{Stealth}, bend left=43] node[midway, left] {\(\mu\)} (s7);
 
-        \draw (s14) edge[-{Stealth}, bend right=43] node[midway, below] {\(\nu\)} (s12);
+        \draw (s14) edge[-{Stealth}, bend right=43] node[midway, below] {\(\mu_2\)} (s12);
         \draw (s14) edge[-{Stealth}, bend left=43] node[midway, left] {\(\mu\)} (s6);
         \draw (s14) edge[-{Stealth}, bend left=25] node[pos=.8, right] {\(\mu\)} (s10);
 
         \draw (s13) edge[-{Stealth}, bend left=43] node[midway, left] {\(\mu\)} (s5);
-        \draw[-{Stealth}] (s13) -- node[midway, above] {\(\mu\)} (s12);
+        \draw[-{Stealth}] (s13) -- node[midway, below] {\(\mu\)} (s12);
 
         \draw (s12) edge[-{Stealth}, bend left=43] node[midway, left] {\(\mu\)} (s4);
         \draw (s12) edge[-{Stealth}, bend left=25] node[midway, right] {\(\mu\)} (s8);
 
-        \draw (s10) edge[-{Stealth}, bend right=43] node[pos=.4, below] {\(\nu\)} (s8);
+        \draw (s10) edge[-{Stealth}, bend right=43] node[pos=.4, below] {\(\mu_2\)} (s8);
         \draw (s10) edge[-{Stealth}, bend left=43] node[pos=.4, left] {\(\mu\)} (s2);
 
         \draw (s8) edge[-{Stealth}, bend left=43] node[pos=.4, left] {\(\mu\)} (s0);
 
-        \draw (s7) edge[-{Stealth}, bend right=43] node[midway, below] {\(\nu\)} (s5);
+        \draw (s7) edge[-{Stealth}, bend right=43] node[midway, below] {\(\mu_2\)} (s5);
         \draw[-{Stealth}] (s7) -- (s6) node[pos=.2, above] {\(\mu\)};
 
-        \draw (s6) edge[-{Stealth}, bend right=43] node[midway, below] {\(\nu\)} (s4);
+        \draw (s6) edge[-{Stealth}, bend right=43] node[midway, below] {\(\mu_2\)} (s4);
         \draw (s6) edge[-{Stealth}, bend left=25] node[pos=.2, right] {\(\mu\)} (s2);
 
         \draw[-{Stealth}] (s5) -- node[pos=.2, above] {\(\mu\)} (s4);
         \draw (s4) edge[-{Stealth}, bend left=25] node[midway, right] {\(\mu\)} (s0);
 
-        \draw (s2) edge[-{Stealth}, bend right=43] node[midway, below] {\(\nu\)} (s0);
+        \draw (s2) edge[-{Stealth}, bend right=43] node[midway, below] {\(\mu_2\)} (s0);
+
+        \draw (s16) edge[-{Stealth}, bend left=25] node[pos=.05, left] {\(\mu_1\)} (s0);
+
+        \draw (s20) edge[-{Stealth}, bend left=25] node[pos=.95, left] {\(\mu_1\)} (s4);
+        \draw (s20) edge[-{Stealth}, bend right=25] node[midway, left] {\(\mu\)} (s16);
+
+        \draw[-{Stealth}] (s21) -- node[pos=.4, above] {\(\mu\)} (s20);
+        \draw (s21) edge[-{Stealth}, bend left=25] node[pos=.35, right] {\(\mu_1\)} (s5);
+
+        \draw (s24) edge[-{Stealth}, bend left=25] node[midway, fill=white, fill opacity=0.8] {\(\mu_1\)} (s8);
+        \draw (s24) edge[-{Stealth}, bend left=43] node[pos=.1, fill=white, fill opacity=0.8] {\(\mu\)} (s16);
+
+        \draw (s28) edge[-{Stealth}, bend right=25] node[midway, left] {\(\mu\)} (s24);
+        \draw (s28) edge[-{Stealth}, bend left=43] node[midway, left] {\(\mu\)} (s20);
+        \draw (s28) edge[-{Stealth}, bend left=25] node[midway, fill=white, fill opacity=0.8] {\(\mu_1\)} (s12);
+
+        \draw (s29) edge[-{Stealth}, bend left=25] node[midway, below] {\(\mu\)} (s28);
+        \draw (s29) edge[-{Stealth}, bend left=43] node[pos=.8, left] {\(\mu\)} (s21);
+        \draw (s29) edge[-{Stealth}, bend left=25] node[midway, fill=white, fill opacity=0.8] {\(\mu_1\)} (s13);
     \end{tikzpicture}
     \caption{Размеченный граф переходов второй системы.}
     \label{graph_2}
