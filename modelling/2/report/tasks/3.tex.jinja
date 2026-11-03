@@ -53,26 +53,32 @@
 
 В качестве набора параметров, который определяет состояние системы, выдвигается следующий вектор:
 \[
-    \vec{n} = (n_1, n_2, n_3, n_4),
+    \vec{n} = (n_0, n_1, n_2, n_3, n_4),
 \]
 
 где:
 \begin{itemize}
+    \item \(n_0\in\{0,1\}\) --- состояние гиперэкспоненциального прибора:
+    \begin{itemize}
+        \item \(n_0=0\) --- прибор находится в состоянии со средним временем обслуживания \(\nu_1\);
+        \item \(n_0=1\) --- прибор находится в состоянии со средним временем обслуживания \(\nu_2\).
+    \end{itemize}
     \item \(n_1\in\{0,1\}\) --- число заявок в первом приборе;
     \item \(n_2\in\{0,1\}\) --- число заявок во втором приборе;
     \item \(n_3\in\{0,1\}\) --- число заявок в третьем приборе;
-    \item \(n_4\in\{0,1\}\) --- число заявок в накопителе.
+    \item \(n_4\in\{0,1\}\) --- число заявок в накопителе;
 \end{itemize}
 
-Всего состояний в системе \(2\cdot 2\cdot 2\cdot 2=16\), их можно закодировать формулой:
+Всего состояний в системе \(2\cdot 2\cdot 2\cdot 2\cdot 2=32\), их можно закодировать формулой:
 \[
-    S(\vec{n}) = n_1\cdot 8 + n_2\cdot 4 + n_3\cdot 2 + n_4
+    S(\vec{n}) = n_5\cdot 16 + n_1\cdot 8 + n_2\cdot 4 + n_3\cdot 2 + n_4
 \]
 
 Для декодирования состояния используются формулы:
 \[
 \begin{aligned}
-    n_1 &= S(\vec{n})\ \textrm{div}\, 8 \\
+    n_0 &= S(\vec{n})\ \textrm{div}\, 16 \\
+    n_1 &= (S(\vec{n})\ \textrm{mod}\, 16)\ \textrm{div}\, 8 \\
     n_2 &= (S(\vec{n})\ \textrm{mod}\, 8)\ \textrm{div}\,4 \\
     n_3 &= (S(\vec{n})\ \textrm{mod}\, 4)\ \textrm{div}\,2 \\
     n_4 &= S(\vec{n})\ \textrm{mod}\, 2
@@ -81,7 +87,7 @@
 
 \subsubsection{Граф переходов марковского процесса}
 
-Построим размеченный граф переходов марковского процесса на основании описания второй системы и способа кодирования состояний. Результат представлен на рисунке \ref{graph_2}. Отметим, что отсутствие стрелки между состояниями \(i\) и \(j\) означает, что переход из состояния \(i\) в состояние \(j\) невозможен.
+Построим размеченный граф переходов марковского процесса на основании описания второй системы и способа кодирования состояний. Заметим, что система в исходном виде не является марковской из-за наличия гиперэкспоненциального прибора --- последний требует хранения информации о фазе. Чтобы это исправить, был введён дополнительный параметр \(n_0\) для кодирования отдельных состояний. Результат представлен на рисунке \ref{graph_2}. Отметим, что отсутствие стрелки между состояниями \(i\) и \(j\) означает, что переход из состояния \(i\) в состояние \(j\) невозможен.
 
 \begin{figure}
     \centering
@@ -103,21 +109,52 @@
         \node[circle, draw, minimum size=1cm] (s14) at (4,6) {$14$};
         \node[circle, draw, minimum size=1cm] (s15) at (6,6) {$15$};
 
-        \node[anchor=south, yshift=15pt] at (s12.north) {$n_4=0$};
-        \node[anchor=south, yshift=15pt] at (s13.north) {$n_4=1$};
-        \node[anchor=south, yshift=15pt] at (s14.north) {$n_4=0$};
-        \node[anchor=south, yshift=15pt] at (s15.north) {$n_4=1$};
+        \node[circle, draw, minimum size=1cm] (s16) at (0,10) {$16$};
+        \node[circle, draw, minimum size=1cm] (s17) at (2,10) {$17$};
+        \node[circle, draw, minimum size=1cm] (s18) at (4,10) {$18$};
+        \node[circle, draw, minimum size=1cm] (s19) at (6,10) {$19$};
+        \node[circle, draw, minimum size=1cm] (s20) at (0,12) {$20$};
+        \node[circle, draw, minimum size=1cm] (s21) at (2,12) {$21$};
+        \node[circle, draw, minimum size=1cm] (s22) at (4,12) {$22$};
+        \node[circle, draw, minimum size=1cm] (s23) at (6,12) {$23$};
+        \node[circle, draw, minimum size=1cm] (s24) at (0,14) {$24$};
+        \node[circle, draw, minimum size=1cm] (s25) at (2,14) {$25$};
+        \node[circle, draw, minimum size=1cm] (s26) at (4,14) {$26$};
+        \node[circle, draw, minimum size=1cm] (s27) at (6,14) {$27$};
+        \node[circle, draw, minimum size=1cm] (s28) at (0,16) {$28$};
+        \node[circle, draw, minimum size=1cm] (s29) at (2,16) {$29$};
+        \node[circle, draw, minimum size=1cm] (s30) at (4,16) {$30$};
+        \node[circle, draw, minimum size=1cm] (s31) at (6,16) {$31$};
+
+        \node[anchor=south, yshift=30pt] at (s12.north) {$n_4=0$};
+        \node[anchor=south, yshift=30pt] at (s13.north) {$n_4=1$};
+        \node[anchor=south, yshift=30pt] at (s14.north) {$n_4=0$};
+        \node[anchor=south, yshift=30pt] at (s15.north) {$n_4=1$};
 
         \node[anchor=west, xshift=15pt] at (s15.east) {$n_2=1$};
         \node[anchor=west, xshift=15pt] at (s11.east) {$n_2=0$};
         \node[anchor=west, xshift=15pt] at (s7.east) {$n_2=1$};
         \node[anchor=west, xshift=15pt] at (s3.east) {$n_2=0$};
 
+        \node[anchor=west, xshift=15pt] at (s31.east) {$n_2=1$};
+        \node[anchor=west, xshift=15pt] at (s27.east) {$n_2=0$};
+        \node[anchor=west, xshift=15pt] at (s23.east) {$n_2=1$};
+        \node[anchor=west, xshift=15pt] at (s19.east) {$n_2=0$};
+
         \node[anchor=north, yshift=-15pt] at ($(s0.south)!0.5!(s1.south)$) {$n_3=0$};
         \node[anchor=north, yshift=-15pt] at ($(s2.south)!0.5!(s3.south)$) {$n_3=1$};
 
+        \node[anchor=south, yshift=15pt] at ($(s28.north)!0.5!(s29.north)$) {$n_3=0$};
+        \node[anchor=south, yshift=15pt] at ($(s30.north)!0.5!(s31.north)$) {$n_3=1$};
+
         \node[anchor=east, xshift=-15pt] at ($(s12.west)!0.5!(s8.west)$) {$n_1=1$};
         \node[anchor=east, xshift=-15pt] at ($(s4.west)!0.5!(s0.west)$) {$n_1=0$};
+
+        \node[anchor=east, xshift=-15pt] at ($(s28.west)!0.5!(s24.west)$) {$n_1=1$};
+        \node[anchor=east, xshift=-15pt] at ($(s20.west)!0.5!(s16.west)$) {$n_1=0$};
+
+        \node[anchor=east, xshift=-50pt] at ($(s24.west)!0.5!(s20.west)$) {$n_0=1$};
+        \node[anchor=east, xshift=-50pt] at ($(s4.west)!0.5!(s8.west)$) {$n_0=0$};
 
         \draw (s0) edge[-{Stealth}, bend right=43] node[midway, above] {\(p_3\lambda\)} (s2);
         \draw[-{Stealth}] (s0) -- (s4) node[midway, fill=white, fill opacity=0.8] {\(p_2\lambda\)};
