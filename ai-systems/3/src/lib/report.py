@@ -243,7 +243,7 @@ class ReportFiller:
                     FN += 1
 
             precision_lst.append(TP / (TP + FP) if (TP + FP) != 0 else 0)
-            recall_lst.append(FN / (FN + TP) if (FN + TP) != 0 else 0)
+            recall_lst.append(TP / (FN + TP) if (FN + TP) != 0 else 0)
             accuracy_lst.append((TP + TN) / (TP + TN + FP + FN) if (TP + TN + FP + FN) != 0 else 0)
         new_context = {
             key: pr_metrics,
@@ -293,3 +293,60 @@ class ReportFiller:
         with PdfPages(plot_path) as pdf:
             pdf.savefig(fig, bbox_inches="tight")
         plt.close(fig)
+
+    @staticmethod
+    def visualize_pr_calculation(
+        context: Dict[str, Any],
+        Y: List[int],
+        P: List[float],
+        threshold: float,
+        key: str,
+        colors: List[str],
+    ) -> Dict[str, Any]:
+        PP = [1 if p >= threshold else 0 for p in P]
+
+        TP, FP, FN = list(), list(), list()
+        visualization_metrics = {
+            'Y': Y,
+            'P': P,
+            'PP': PP,
+            'TP': TP,
+            'FP': FP,
+            'FN': FN,
+            'threshold': threshold,
+            'colors': colors,
+        }
+
+        color_tp, color_fp, color_fn = colors[0], colors[1], colors[2]
+
+        tp_char = f"\\textcolor{{{color_tp}}}{{\\blacksquare}}"
+        fp_char = f"\\textcolor{{{color_fp}}}{{\\blacksquare}}"
+        fn_char = f"\\textcolor{{{color_fn}}}{{\\blacksquare}}"
+        no_char = "$\\square$"
+
+        tp_count, fp_count, fn_count = 0, 0, 0
+        
+        for j in range(len(Y)):
+            if (Y[j], PP[j]) == (1, 1):
+                tp_count += 1
+                TP.append(tp_char)
+            else:
+                TP.append(no_char)
+            if (Y[j], PP[j]) == (0, 1):
+                fp_count += 1
+                FP.append(fp_char)
+            else:
+                FP.append(no_char)
+            if (Y[j], PP[j]) == (1, 0):
+                fn_count += 1
+                FN.append(fn_char)
+            else:
+                FN.append(no_char)
+
+        visualization_metrics['precision'] = f"\\dfrac{{\\textcolor{{{color_tp}}}{{{tp_count}}}}}{{\\textcolor{{{color_tp}}}{{{tp_count}}} + \\textcolor{{{color_fp}}}{{{fp_count}}}}}"
+        visualization_metrics['recall'] = f"\\dfrac{{\\textcolor{{{color_tp}}}{{{tp_count}}}}}{{\\textcolor{{{color_tp}}}{{{tp_count}}} + \\textcolor{{{color_fn}}}{{{fn_count}}}}}"
+
+        new_context = {
+            key: visualization_metrics,
+        }
+        return context | new_context

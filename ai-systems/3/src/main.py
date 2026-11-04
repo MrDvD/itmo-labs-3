@@ -91,5 +91,14 @@ if __name__ == "__main__":
         pr_path,
     )
 
+    context = ReportFiller.visualize_pr_calculation(
+        context,
+        [x[1] for x in Y_matrix],
+        [x[1] for x in P_matrix],
+        cfg['experiment']['binary_thresholds'][1],
+        'pr_visualization',
+        colors=['green', 'red', 'orange'],
+    )
+
     artifacts = ArtifactsFiller(context, [cfg['report']['dir']])
     artifacts.compile_patterns()
