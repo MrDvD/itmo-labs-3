@@ -1,0 +1,263 @@
+\subsection{Метрики многоклассовой классификации}
+
+\subsubsection{AUC-ROC}
+
+\subsubsubsection{Определения}
+\label{sec:auc-roc-definitions}
+
+\textbf{AUROC} (Area Under the Receiver Operating Characteristic Curve), также известная как \textbf{AUC-ROC}, --- это метрика качества бинарной классификации, которая оценивает способность модели классифицировать объекты независимо от выбранного порога отсечения. 
+
+По сути, AUC показывает вероятность того, что случайно выбранный положительный объект получит от модели более высокую оценку вероятности, чем случайно выбранный отрицательный:\cite{pandey_nonparametric_tests}
+\begin{equation}
+    \text{AUC}(Y,P) = \frac{\sum\limits_{i=1}^{N} \sum\limits_{j=1}^{N} \mathbb{I}[Y_i < Y_j] \mathbb{I}[P_i < P_j]}{\sum\limits_{i=1}^{N} \sum\limits_{j=1}^{N} \mathbb{I}[Y_i < Y_j]},
+    \label{eq:auc_formula}
+\end{equation}
+
+где:
+\begin{itemize}
+    \item \(Y\) --- массив истинных меток классов (\(0\) для отрицательного, \(1\) для положительного);
+    \item \(P\) --- массив предсказанных вероятностей принадлежности к положительному классу;
+    \item \(N\) --- общее количество объектов в выборке;
+    \item \(\mathbb{I}\) --- индикаторная функция. В данной формуле она используется в двух вариантах:
+    \begin{itemize}
+        \item \(\mathbb{I}[Y_i < Y_j]\) --- стандартный строгий индикатор (равен \(1\), если \(Y_i < Y_j\), и \(0\) в противном случае).
+        
+        \item \(\mathbb{I}[P_i < P_j]\) --- индикатор сравнения вероятностей, который учитывает их возможное совпадение:
+        \[
+            \mathbb{I}[P_i < P_j] = 
+            \begin{cases} 
+                1, & P_i < P_j, \\
+                1/2, & P_i = P_j, \\
+                0, & P_i > P_j.
+            \end{cases}
+        \]
+    \end{itemize}
+    Такое дробное значение вводится, чтобы при равных выходных данных модель не получала ни преимущества, ни штрафа, что соответствует площади трапеции на ROC-кривой.
+\end{itemize}
+
+Обозначим \(N_+\) --- количество положительных объектов, а \(N_-\) --- количество отрицательных объектов в выборке. 
+
+\textbf{ROC-кривая} представляет собой график зависимости True Positive Rate от False Positive Rate при всех возможных порогах отсечения \(t\): начинаем с \(t = +\infty\), когда все предсказания равны \(0\), и двигаемся к \(t = -\infty\). Поэтому мы сортируем все объекты по убыванию вероятности и последовательно двигаем порог:
+\begin{itemize}
+    \item если встречаем положительный объект, то True Positive Rate увеличивается на \(1/N_+\);
+    \item если встречаем отрицательный объект, то False Positive Rate увеличивается на \(1/N_-\).
+\end{itemize}
+
+AUC --- это площадь под этой кривой, которая вычисляется как сумма площадей прямоугольников (или трапеций, при совпадении вероятностей), образованных шагами вправо. 
+
+Каждый раз, когда мы встречаем отрицательный объект \(i\), мы делаем шаг вправо шириной \(1/N_-\). Высота текущей ступеньки (TPR) в этот момент равна доле положительных объектов \(j\), которые мы уже прошли (то есть тех, чей скор выше: \(P_j > P_i\)). Таким образом, вклад одного отрицательного объекта \(i\) в общую площадь равен:
+\[
+    \Delta \text{AUC}_i = \frac{1}{N_-} \cdot \frac{\sum\limits_{j: Y_j = 1} \mathbb{I}[P_j > P_i]}{N_+}.
+\]
+
+Если просуммировать это по всем отрицательным объектам \(i\) (у которых \(Y_i = 0\)), мы получим:
+\[
+    \text{AUC} = \sum_{i: Y_i=0} \Delta \text{AUC}_i = \frac{1}{N_+ \cdot N_-} \sum_{i: Y_i=0} \sum_{j: Y_j=1} \mathbb{I}[P_j > P_i].
+\]
+
+Поскольку индикатор \(\mathbb{I}[Y_i < Y_j]\) равен \(1\) только в случае, когда \(Y_i = 0\) и \(Y_j = 1\), мы можем переписать это в виде двойной суммы по всем объектам:
+\[
+    \text{AUC} = \frac{\sum\limits_{i=1}^{N} \sum\limits_{j=1}^{N} \mathbb{I}[Y_i < Y_j] \mathbb{I}[P_j > P_i]}{N_+ \cdot N_-}.
+\]
+
+Заметим, что знаменатель \(N_+ \cdot N_-\) в точности равен количеству всех возможных пар «отрицательный-положительный»:
+\[
+    N_+ \cdot N_- = \sum_{i=1}^{N} \sum_{j=1}^{N} \mathbb{I}[Y_i < Y_j]
+\]
+Подставляя это в выражение, мы получаем в точности формулу \eqref{eq:auc_formula}. 
+
+Изначально метрика разработана для двух классов, поэтому её нельзя применять в многоклассовой классификации напрямую. Пусть \(C\) --- общее количество классов, \(n_i\) --- количество истинных экземпляров в классе \(i\), а \(N = \sum_{i=1}^{C} n_i\) --- общее количество экземпляров в выборке. Тогда:
+
+\begin{itemize}
+    \item \textbf{Macro-average} --- простое среднее арифметическое AUC, посчитанных для каждого класса. Подходит для оценки того, насколько хорошо модель справляется с редкими классами, потому что каждый класс вносит одинаковый вклад в итоговую метрику:
+    \begin{equation}
+        \text{AUC}_{\text{macro}} = \frac{1}{C} \sum_{i=1}^{C} \text{AUC}_i
+        \label{eq:macro_average_auc}
+    \end{equation}
+    
+    \item \textbf{Weighted-average} --- среднее значение AUC по всем классам, взвешенное по количеству истинных экземпляров в каждом классе. Этот подход учитывает дисбаланс классов: классы с б\'ольшим количеством примеров вносят больший вклад в итоговую метрику:
+    \begin{equation}
+        \text{AUC}_{\text{weighted}} = \sum_{i=1}^{C} \frac{n_i}{N} \text{AUC}_i
+        \label{eq:weighted_average_auc}
+    \end{equation}
+    
+    \item \textbf{Micro-average} --- агрегирует вклад каждого отдельного объекта данных, а не класса. Математически для AUC в многоклассовой постановке это сводится к вычислению единой бинарной ROC-кривой на основе преобразования матриц предсказаний всех классов в вектор.
+    
+    Если обозначить через \(Y_{\text{flat}}\) и \(P_{\text{flat}}\) развёрнутые массивы истинных меток и предсказанных вероятностей размерности \((N \times C)\), то:
+    \begin{equation}
+        \text{AUC}_{\text{micro}} = \text{AUC}(Y_{\text{flat}}, P_{\text{flat}})
+        \label{eq:micro_average_auc}
+    \end{equation}
+
+    \item \textbf{Samples-average} --- вычисляет метрику AUC отдельно для каждого объекта и затем усредняет полученные значения. 
+    
+    Если транспонировать матрицы \(Y\) и \(P\), то их столбцы станут строками. Тогда метрика вычисляется как среднее бинарных AUC для каждого объекта:
+    \begin{equation}
+        \text{AUC}_{\text{samples}} = \frac{1}{N} \sum_{r=1}^{N} \text{AUC}(Y^T_r, P^T_r),
+        \label{eq:samples_average_auc}
+    \end{equation}
+    где \(Y^T_r\) и \(P^T_r\) --- \(r\)-е столбцы транспонированных матриц (или $r$-е строки исходных матриц). Это полезно, если важно оценить, насколько хорошо модель ранжирует классы именно для каждого отдельного объекта \textit{(например, в рекомендательных системах)}.
+\end{itemize}
+
+\subsubsubsection{Ручной расчёт характеристик}
+
+На слайде 43 приведены следующие матрицы для трёх классов:
+\[
+    Y=\begin{bmatrix}
+        \BLOCK{ for i in range(auc_roc.Y_matrix | length) }
+            \BLOCK{ for j in range(auc_roc.Y_matrix[0] | length) }
+                \VAR{ auc_roc.Y_matrix[i][j] } \BLOCK{ if not loop.last } & \BLOCK{ endif }
+            \BLOCK{ endfor }
+            \BLOCK{ if not loop.last } \\ \BLOCK{ endif }
+        \BLOCK{ endfor }
+    \end{bmatrix}, \quad
+    P=\begin{bmatrix}
+        \BLOCK{ for i in range(auc_roc.P_matrix | length) }
+            \BLOCK{ for j in range(auc_roc.P_matrix[0] | length) }
+                \VAR{ auc_roc.P_matrix[i][j] } \BLOCK{ if not loop.last } & \BLOCK{ endif }
+            \BLOCK{ endfor }
+            \BLOCK{ if not loop.last } \\ \BLOCK{ endif }
+        \BLOCK{ endfor }
+    \end{bmatrix}
+\]
+
+\textit{Macro-average AUC} вычисляется по формуле \eqref{eq:macro_average_auc}. Для этого сначала нужно рассчитать AUC для каждого класса по формуле \eqref{eq:auc_formula}. Результаты вычислений представлены в таблице \ref{tab:per_class_auc}.
+
+\begin{table}
+\centering
+\caption{Результаты вычисления AUC$_{\text{macro}}$ для каждого класса.}
+\label{tab:per_class_auc}
+\begin{tblr}{
+    colspec = {Q[c, m] c},
+    vlines,
+    hlines,
+    row{1} = {font=\bfseries, bg=gray!15},
+}
+    Class $i$ & AUC$_i$($Y_i$, $P_i$) & AUC$_{\text{macro}}$ \\
+    0 & \VAR{ auc_roc.auc_values[0] | round(5) } & \SetCell[r=3]{c} \VAR{ auc_roc.auc_macro | round(5) } \\
+    1 & \VAR{ auc_roc.auc_values[1] | round(5) } & \\
+    2 & \VAR{ auc_roc.auc_values[2] | round(5) } &
+\end{tblr}
+\end{table}
+
+\textit{Weighted-average AUC} вычисляется по формуле \eqref{eq:weighted_average_auc}. Для этого воспользуемся рассчитанными на предыдущем шаге AUC для каждого класса. Результаты вычислений представлены в таблице \ref{tab:weighted_auc}.
+
+\begin{table}
+\centering
+\caption{Результаты вычисления AUC$_{\text{weighted}}$ для каждого класса.}
+\label{tab:weighted_auc}
+\begin{tblr}{
+    colspec = {Q[c, m] c},
+    vlines,
+    hlines,
+    row{1} = {font=\bfseries, bg=gray!15},
+}
+    Class $i$ & AUC$_i$($Y_i$, $P_i$) & $n_i$ & AUC$_{\text{weighted}}$ \\
+    0 & \VAR{ auc_roc.auc_values[0] | round(5) } & \VAR{ auc_roc.N_positive[0] } & \SetCell[r=3]{c} \VAR{ auc_roc.auc_weighted | round(5) } \\
+    1 & \VAR{ auc_roc.auc_values[1] | round(5) } & \VAR{ auc_roc.N_positive[1] } & \\
+    2 & \VAR{ auc_roc.auc_values[2] | round(5) } & \VAR{ auc_roc.N_positive[2] } &
+\end{tblr}
+\end{table}
+
+\textit{Micro-average AUC} вычисляется по формуле \eqref{eq:micro_average_auc}:
+\[
+    \text{AUC}_{\text{micro}}=\VAR{ auc_roc.auc_micro | round(5) }
+\]
+
+\textit{Samples-average AUC} вычисляется по формуле \eqref{eq:samples_average_auc}. Для этого сначала нужно рассчитать AUC для каждого объекта по формуле \eqref{eq:auc_formula}. Результаты вычислений представлены в таблице \ref{tab:samples_auc}.
+
+\begin{table}
+\centering
+\caption{Результаты вычисления AUC$_{\text{samples}}$ для каждого объекта.}
+\label{tab:samples_auc}
+\begin{tblr}{
+    colspec = {Q[c, m] c},
+    vlines,
+    hlines,
+    row{1} = {font=\bfseries, bg=gray!15},
+}
+    Object $r$ & AUC$_r$($Y^T_r$, $P^T_r$) & AUC$_{\text{samples}}$ \\
+    0 & \VAR{ auc_roc.auc_values_object[0] | round(5) } & \SetCell[r=4]{c} \VAR{ auc_roc.auc_samples | round(5) } \\
+    1 & \VAR{ auc_roc.auc_values_object[1] | round(5) } & \\
+    2 & \VAR{ auc_roc.auc_values_object[2] | round(5) } & \\
+    3 & \VAR{ auc_roc.auc_values_object[3] | round(5) } & \\
+\end{tblr}
+\end{table}
+
+\subsubsubsection{Визуализация ROC}
+
+В рамках детализации также рекомендуется визуализировать кривую ROC. Способ её построения подробно описан в разделе \ref{sec:auc-roc-definitions}. Это выполнено при помощи пакета \texttt{matplotlib} на языке Python, полученный артефакт можно наблюдать на рисунке \ref{fig:roc-plot}.
+
+\begin{figure}
+    \centering
+    \includegraphics[width=0.8\textwidth]{\VAR{ roc_path }}
+    \caption{Визуализация кривых ROC для трёх классов.}
+    \label{fig:roc-plot}
+\end{figure}
+
+\subsubsection{PR-кривая}
+
+\subsubsubsection{Определения}
+
+\textbf{Accuracy} --- метрика, которая показывает долю верно классифицированных объектов относительно всех объектов:
+\begin{equation}
+    \text{Accuracy}=\dfrac{\text{TP}+\text{TN}}{\text{TP}+\text{FN}+\text{FP}+\text{TN}},
+    \label{eq:accuracy}
+\end{equation}
+
+где:
+\begin{itemize}
+    \item \textbf{TP} (True Positive) --- количество верно классифицированных объектов положительного класса;
+    \item \textbf{TN} (True Negative) --- количество верно классифицированных объектов отрицательного класса;
+    \item \textbf{FP} (False Positive) --- количество неверно классифицированных объектов отрицательного класса как положительные;
+    \item \textbf{FN} (False Negative) --- количество неверно классифицированных объектов положительного класса как отрицательные.
+\end{itemize}
+
+\textbf{Recall} \textit{(True Positive Rate)} --- метрика, которая показывает долю верно классифицированных объектов положительного класса относительно всех объектов положительного класса:
+\begin{equation}
+    \text{TPR}=\text{R}=\dfrac{\text{TP}}{\text{TP}+\text{FN}},
+    \label{eq:recall}
+\end{equation}
+
+\textbf{Precision} \textit{(Positive Predictive Value)} --- метрика, которая показывает долю верно классифицированных объектов положительного класса относительно всех модельных объектов положительного класса:
+\begin{equation}
+    \text{PPV}=\text{P}=\dfrac{\text{TP}}{\text{TP}+\text{FP}},
+    \label{eq:precision}
+\end{equation}
+
+\subsubsubsection{Ручной расчёт характеристик}
+
+Для проведения расчётов сфокусируемся на первом классе. Введём следующие пороги бинаризации (binary thresholds):
+\[
+    \textrm{bt}=\{ \VAR{ pr_curve.binary_thresholds | join(',\ ') } \}
+\]
+
+В результате ручных вычислений по формулам \eqref{eq:accuracy}, \eqref{eq:recall} и \eqref{eq:precision} были получены значения метрик, которые представлены в таблице \ref{tab:pr_metrics}. Их можно визуализировать на эскизе PR-кривой, который представлен на рисунке \ref{fig:pr-plot}.
+
+\begin{table}
+\centering
+\caption{Результаты вычисления метрик PR-кривой для первого класса.}
+\label{tab:pr_metrics}
+\begin{tblr}{
+    colspec = {Q[c, m] c c c},
+    vlines,
+    hlines,
+    row{1} = {font=\bfseries, bg=gray!15},
+}
+    Binary Threshold & Accuracy & Recall & Precision \\
+    \BLOCK{ for i in range(pr_curve.binary_thresholds | length) }
+        \VAR{ pr_curve.binary_thresholds[i] } & \VAR{ pr_curve.accuracy[i] | round(5) } & \VAR{ pr_curve.recall[i] | round(5) } & \VAR{ pr_curve.precision[i] | round(5) } \\
+    \BLOCK{ endfor }
+\end{tblr}
+\end{table}
+
+\begin{figure}
+    \centering
+    \includegraphics[width=0.8\textwidth]{\VAR{ pr_path }}
+    \caption{Визуализация эскиза PR-кривой для первого класса.}
+    \label{fig:pr-plot}
+\end{figure}
+
+\subsubsection{Выводы}
+
+\dots

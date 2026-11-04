@@ -1,0 +1,11 @@
+report:
+    dir: report
+    name: main
+experiment:
+    test_size: 0.2
+    random_state: 123124
+    C: 1.0
+    binary_thresholds:
+        - 0.7
+        - 0.45
+        - 0.1
