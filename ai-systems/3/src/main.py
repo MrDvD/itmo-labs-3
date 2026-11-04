@@ -4,7 +4,7 @@ from sklearn.model_selection import train_test_split
 import lib.config as config
 import pandas as pd
 from lib.artifacts import ArtifactsFiller
-from typing import Any, Dict
+from typing import Any, Dict, List, Tuple
 
 from lib.report import ReportFiller
 
@@ -15,10 +15,16 @@ if __name__ == "__main__":
     pics_path = os.path.join(report_dir, 'pics')
     os.makedirs(pics_path, exist_ok=True)
 
+    roc_path = os.path.join(pics_path, 'roc.pdf')
+    pr_path = os.path.join(pics_path, 'pr.pdf')
+
     student_mat = pd.read_csv('/lab/student-mat.csv', sep=';')
     student_por = pd.read_csv('/lab/student-por.csv', sep=';')
     
-    context: Dict[str, Any] = {}
+    context: Dict[str, Any] = {
+        'roc_path': os.path.relpath(roc_path, 'report'),
+        'pr_path': os.path.relpath(pr_path, 'report'),
+    }
 
     df = pd.concat([student_mat, student_por], ignore_index=True)
 
@@ -62,6 +68,27 @@ if __name__ == "__main__":
         context,
         Y_matrix,
         P_matrix
+    )
+
+    ReportFiller.plot_roc(
+        Y_matrix,
+        P_matrix,
+        roc_path,
+    )
+
+    context = ReportFiller.calc_pr(
+        context,
+        [x[1] for x in Y_matrix],
+        [x[1] for x in P_matrix],
+        cfg['experiment']['binary_thresholds'],
+        'pr_curve',
+    )
+
+    precision_recall_pairs: List[Tuple[float, float]] = list(zip(context['pr_curve']['precision'], context['pr_curve']['recall']))
+
+    ReportFiller.plot_pr_sketch(
+        precision_recall_pairs,
+        pr_path,
     )
 
     artifacts = ArtifactsFiller(context, [cfg['report']['dir']])

@@ -37,7 +37,7 @@
 
 Обозначим \(N_+\) --- количество положительных объектов, а \(N_-\) --- количество отрицательных объектов в выборке. 
 
-ROC-кривая представляет собой график зависимости True Positive Rate (TPR) от False Positive Rate (FPR) при всех возможных порогах отсечения \(t\): начинаем с \(t = +\infty\), когда все предсказания равны \(0\), и двигаемся к \(t = -\infty\). Поэтому мы сортируем все объекты по убыванию вероятности и последовательно двигаем порог:
+\textbf{ROC-кривая} представляет собой график зависимости True Positive Rate от False Positive Rate при всех возможных порогах отсечения \(t\): начинаем с \(t = +\infty\), когда все предсказания равны \(0\), и двигаемся к \(t = -\infty\). Поэтому мы сортируем все объекты по убыванию вероятности и последовательно двигаем порог:
 \begin{itemize}
     \item если встречаем положительный объект, то True Positive Rate увеличивается на \(1/N_+\);
     \item если встречаем отрицательный объект, то False Positive Rate увеличивается на \(1/N_-\).
@@ -186,18 +186,77 @@ AUC --- это площадь под этой кривой, которая вы�
 
 \subsubsubsection{Визуализация ROC}
 
-В рамках детализации также рекомендуется визуализировать кривую ROC. Это выполнено при помощи пакета \texttt{matplotlib} на языке Python. Способ построения подробно описан в разделе \ref{sec:auc-roc-definitions}. Полученный артефакт можно наблюдать на рисунке \ref{fig:roc-plot}.
+В рамках детализации также рекомендуется визуализировать кривую ROC. Способ её построения подробно описан в разделе \ref{sec:auc-roc-definitions}. Это выполнено при помощи пакета \texttt{matplotlib} на языке Python, полученный артефакт можно наблюдать на рисунке \ref{fig:roc-plot}.
 
 \begin{figure}
     \centering
-    \dots
+    \includegraphics[width=0.8\textwidth]{\VAR{ roc_path }}
     \caption{Визуализация кривых ROC для трёх классов.}
     \label{fig:roc-plot}
 \end{figure}
 
 \subsubsection{PR-кривая}
 
-\dots
+\subsubsubsection{Определения}
+
+\textbf{Accuracy} --- метрика, которая показывает долю верно классифицированных объектов относительно всех объектов:
+\begin{equation}
+    \text{Accuracy}=\dfrac{\text{TP}+\text{TN}}{\text{TP}+\text{FN}+\text{FP}+\text{TN}},
+    \label{eq:accuracy}
+\end{equation}
+
+где:
+\begin{itemize}
+    \item \textbf{TP} (True Positive) --- количество верно классифицированных объектов положительного класса;
+    \item \textbf{TN} (True Negative) --- количество верно классифицированных объектов отрицательного класса;
+    \item \textbf{FP} (False Positive) --- количество неверно классифицированных объектов отрицательного класса как положительные;
+    \item \textbf{FN} (False Negative) --- количество неверно классифицированных объектов положительного класса как отрицательные.
+\end{itemize}
+
+\textbf{Recall} \textit{(True Positive Rate)} --- метрика, которая показывает долю верно классифицированных объектов положительного класса относительно всех объектов положительного класса:
+\begin{equation}
+    \text{TPR}=\text{R}=\dfrac{\text{TP}}{\text{TP}+\text{FN}},
+    \label{eq:recall}
+\end{equation}
+
+\textbf{Precision} \textit{(Positive Predictive Value)} --- метрика, которая показывает долю верно классифицированных объектов положительного класса относительно всех модельных объектов положительного класса:
+\begin{equation}
+    \text{PPV}=\text{P}=\dfrac{\text{TP}}{\text{TP}+\text{FP}},
+    \label{eq:precision}
+\end{equation}
+
+\subsubsubsection{Ручной расчёт характеристик}
+
+Для проведения расчётов сфокусируемся на первом классе. Введём следующие пороги бинаризации (binary thresholds):
+\[
+    \textrm{bt}=\{ \VAR{ pr_curve.binary_thresholds | join(',\ ') } \}
+\]
+
+В результате ручных вычислений по формулам \eqref{eq:accuracy}, \eqref{eq:recall} и \eqref{eq:precision} были получены значения метрик, которые представлены в таблице \ref{tab:pr_metrics}. Их можно визуализировать на эскизе PR-кривой, который представлен на рисунке \ref{fig:pr-plot}.
+
+\begin{table}
+\centering
+\caption{Результаты вычисления метрик PR-кривой для первого класса.}
+\label{tab:pr_metrics}
+\begin{tblr}{
+    colspec = {Q[c, m] c c c},
+    vlines,
+    hlines,
+    row{1} = {font=\bfseries, bg=gray!15},
+}
+    Binary Threshold & Accuracy & Recall & Precision \\
+    \BLOCK{ for i in range(pr_curve.binary_thresholds | length) }
+        \VAR{ pr_curve.binary_thresholds[i] } & \VAR{ pr_curve.accuracy[i] | round(5) } & \VAR{ pr_curve.recall[i] | round(5) } & \VAR{ pr_curve.precision[i] | round(5) } \\
+    \BLOCK{ endfor }
+\end{tblr}
+\end{table}
+
+\begin{figure}
+    \centering
+    \includegraphics[width=0.8\textwidth]{\VAR{ pr_path }}
+    \caption{Визуализация эскиза PR-кривой для первого класса.}
+    \label{fig:pr-plot}
+\end{figure}
 
 \subsubsection{Выводы}
 
