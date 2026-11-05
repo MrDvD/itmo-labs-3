@@ -157,5 +157,138 @@ if __name__ == "__main__":
         'graph_2': matrix_2,
     }
 
+    stationary_probabilities = [
+        [
+            {'name': '0', 'value': 0},
+            {'name': '6', 'value': 0},
+            {'name': '12', 'value': 0},
+            {'name': '18', 'value': 0},
+            {'name': '19', 'value': 0},
+            {'name': '20', 'value': 0},
+            {'name': '21', 'value': 0},
+            {'name': '22', 'value': 0},
+            {'name': '23', 'value': 0},
+        ],
+        [
+            {'name': '3', 'value': 0},
+            {'name': '3', 'value': 0},
+            {'name': '3', 'value': 0},
+            {'name': '3', 'value': 0},
+            {'name': '3', 'value': 0},
+            {'name': '3', 'value': 0},
+            {'name': '3', 'value': 0},
+            {'name': '3', 'value': 0},
+            {'name': '3', 'value': 0},
+            {'name': '3', 'value': 0},
+            {'name': '3', 'value': 0},
+            {'name': '3', 'value': 0},
+            {'name': '3', 'value': 0},
+            {'name': '3', 'value': 0},
+            {'name': '3', 'value': 0},
+            {'name': '3', 'value': 0},
+            {'name': '3', 'value': 0},
+            {'name': '3', 'value': 0},
+        ],
+    ]
+
+    context['stationary_probabilities'] = stationary_probabilities
+
+    other_characteristics = [
+        {
+            'load': {
+                'P1': 0,
+                'P2': 1,
+                'sum': 2,
+            },
+            'utilization': {
+                'P1': 0,
+                'P2': 1,
+                'sum': 2,
+            },
+            'queue': {
+                'P1': 0,
+                'P2': 1,
+                'sum': 2,
+            },
+            'requests': {
+                'P1': 0,
+                'P2': 1,
+                'sum': 2,
+            },
+            'wait': {
+                'P1': 0,
+                'P2': 1,
+                'sum': 2,
+            },
+            'response': {
+                'P1': 0,
+                'P2': 1,
+                'sum': 2,
+            },
+            'loss': {
+                'P1': 0,
+                'P2': 1,
+                'sum': 2,
+            },
+            'throughput': {
+                'P1': 0,
+                'P2': 1,
+                'sum': 2,
+            },
+        },
+        {
+            'load': {
+                'P1': 0,
+                'P2': 1,
+                'P3': 1,
+                'sum': 2,
+            },
+            'utilization': {
+                'P1': 0,
+                'P2': 1,
+                'P3': 1,
+                'sum': 2,
+            },
+            'queue': {
+                'P1': 0,
+                'P2': 1,
+                'P3': 1,
+                'sum': 2,
+            },
+            'requests': {
+                'P1': 0,
+                'P2': 1,
+                'P3': 1,
+                'sum': 2,
+            },
+            'wait': {
+                'P1': 0,
+                'P2': 1,
+                'P3': 1,
+                'sum': 2,
+            },
+            'response': {
+                'P1': 0,
+                'P2': 1,
+                'P3': 1,
+                'sum': 2,
+            },
+            'loss': {
+                'P1': 0,
+                'P2': 1,
+                'P3': 1,
+                'sum': 2,
+            },
+            'throughput': {
+                'P1': 0,
+                'P2': 1,
+                'P3': 1,
+                'sum': 2,
+            },
+        },
+    ]
+
+    context['other_characteristics'] = other_characteristics
+
     artifacts = ArtifactsFiller(context, [cfg['report']['dir']])
     artifacts.compile_patterns()

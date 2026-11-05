@@ -304,8 +304,74 @@
 
 \subsubsection{Значения стационарных вероятностей}
 
-\dots
+С использованием программы MARK были рассчитаны стационарные вероятности для второй системы. Результаты представлены в таблице \ref{stationary-probabilities-2}.
+\begin{table}
+    \centering
+    \caption{Стационарные вероятности второй системы.}
+    \label{stationary-probabilities-2}
+    \begin{tblr}{
+        colspec = {Q[c, m] Q[c, m] Q[c, m]},
+        vlines,
+        hlines,
+        row{1} = {font=\bfseries, bg=gray!15},
+    }
+    {Номер\\ состояния} & Обозначение & Вероятность \\
+    \BLOCK{ for i in range(stationary_probabilities[1] | length) }
+        \VAR{ i+1 } & 
+        \VAR{ stationary_probabilities[1][i].name } & 
+        \VAR{ stationary_probabilities[1][i].value } \\
+    \BLOCK{ endfor }
+    \end{tblr}
+\end{table}
 
 \subsubsection{Характеристики системы}
 
-\dots
+\BLOCK{ set sys_num = 1 }
+
+Для расчёта прочих характеристик второй системы были использованы формулы из источника.\cite{aliev_discrete_systems} Результаты расчёта прочих характеристик представлены в таблице \ref{other-characteristics-2}.
+
+\begin{table}
+    \centering
+    \caption{Прочие характеристики второй системы.}
+    \label{other-characteristics-2}
+    \begin{tblr}{
+        colspec = {Q[c, m] Q[c, m] Q[c, m] Q[c, m]},
+        vlines,
+        hlines,
+        row{1} = {font=\bfseries, bg=gray!15},
+    }
+    Характеристика & \(\Pi i\) & Формула & Значение \\
+    \SetCell[r=4]{c} {Нагрузка\\ ($A$)} & \(\Pi 1\) & \(\lambda p_1b\) & \VAR{ other_characteristics[sys_num].load.P1 | round(5) } \\
+    & \(\Pi 2\) & \(\lambda p_2b\) & \VAR{ other_characteristics[sys_num].load.P2 | round(5) } \\
+    & \(\Pi 3\) & \(\lambda p_3b\) & \VAR{ other_characteristics[sys_num].load.P3 | round(5) } \\
+    & \(\Sigma\) & \(A_1+A_2+A_3\) & \VAR{ other_characteristics[sys_num].load.sum | round(5) } \\
+    \SetCell[r=4]{c} {Загрузка\\ ($\rho$)} & \(\Pi 1\) & \(\lambda'_1b\) & \VAR{ other_characteristics[sys_num].utilization.P1 | round(5) } \\
+    & \(\Pi 2\) & \(\lambda'_2b\) & \VAR{ other_characteristics[sys_num].utilization.P2 | round(5) } \\
+    & \(\Pi 3\) & \(\lambda'_3b\) & \VAR{ other_characteristics[sys_num].utilization.P3 | round(5) } \\
+    & \(\Sigma\) & \(\lambda'b\slash 3\) & \VAR{ other_characteristics[sys_num].utilization.sum | round(5) } \\
+    \SetCell[r=4]{c} {Длина\\ очереди\\ ($l$)} & $\Pi 1$ & $0$ & \VAR{ other_characteristics[sys_num].queue.P1 | round(5) } \\
+    & $\Pi 2$ & $p_5+p_7+p_{13}+p_{15}+p_{21}+p_{29}$ & \VAR{ other_characteristics[sys_num].queue.P2 | round(5) } \\
+    & $\Pi 3$ & $0$ & \VAR{ other_characteristics[sys_num].queue.P3 | round(5) } \\
+    & \(\Sigma\) & $l_1+l_2+l_3$ & \VAR{ other_characteristics[sys_num].queue.sum | round(5) } \\
+    \SetCell[r=4]{c} {Число\\ заявок\\ ($m$)} & $\Pi 1$ & $\displaystyle\sum_{k\in\{8,10,12,13,14,15,24,28,29\}}p_k$ & \VAR{ other_characteristics[sys_num].requests.P1 | round(5) } \\
+    & $\Pi 2$ & $\displaystyle\sum_{k\in\{4,5,6,7,12,13,14,15,20,21,28,29\}}p_k$ & \VAR{ other_characteristics[sys_num].requests.P2 | round(5) } \\
+    & $\Pi 3$ & $\displaystyle\sum_{k\in\{2,6,7,10,14,15,16,20,21,24,28,29\}}p_k$ & \VAR{ other_characteristics[sys_num].requests.P3 | round(5) } \\
+    & \(\Sigma\) & $m_1+m_2+m_3+l$ & \VAR{ other_characteristics[sys_num].requests.sum | round(5) } \\
+    \SetCell[r=4]{c} {Время\\ ожидания\\ ($w$)} & $\Pi 1$ & $0$ & \VAR{ other_characteristics[sys_num].wait.P1 | round(5) } \\
+    & $\Pi 2$ & $l_2\slash\lambda'_2$ & \VAR{ other_characteristics[sys_num].wait.P2 | round(5) } \\
+    & $\Pi 3$ & $0$ & \VAR{ other_characteristics[sys_num].wait.P3 | round(5) } \\
+    & \(\Sigma\) & $l\slash\lambda'$ & \VAR{ other_characteristics[sys_num].wait.sum | round(5) } \\
+    \SetCell[r=4]{c} {Время\\ пребывания\\ ($u$)} & $\Pi 1$ & $b$ & \VAR{ other_characteristics[sys_num].response.P1 | round(5) } \\
+    & $\Pi 2$ & $w_2+b$ & \VAR{ other_characteristics[sys_num].response.P2 | round(5) } \\
+    & $\Pi 3$ & $b$ & \VAR{ other_characteristics[sys_num].response.P3 | round(5) } \\
+    & \(\Sigma\) & $w+b$ & \VAR{ other_characteristics[sys_num].response.sum | round(5) } \\
+    \SetCell[r=4]{c} {Вероятность\\ потери\\ ($\pi$)} & $\Pi 1$ & $1-\lambda'_1\slash(\lambda p_1)$ & \VAR{ other_characteristics[sys_num].loss.P1 | round(5) } \\
+    & $\Pi 2$ & $1-\lambda'_2\slash(\lambda p_2)$ & \VAR{ other_characteristics[sys_num].loss.P2 | round(5) } \\
+    & $\Pi 3$ & $1-\lambda'_3\slash(\lambda p_3)$ & \VAR{ other_characteristics[sys_num].loss.P3 | round(5) } \\
+    & \(\Sigma\) & $1-\lambda'\slash\lambda$ & \VAR{ other_characteristics[sys_num].loss.sum | round(5) } \\
+    \SetCell[r=4]{c} {Производительность \\ ($\lambda'$)} & $\Pi 1$ & $\mu m_1$ & \VAR{ other_characteristics[sys_num].throughput.P1 | round(5) } \\
+    & $\Pi 2$ & $\mu m_2$ & \VAR{ other_characteristics[sys_num].throughput.P2 | round(5) } \\
+    & $\Pi 3$ & $\mu m_3$ & \VAR{ other_characteristics[sys_num].throughput.P3 | round(5) } \\
+    & \(\Sigma\) & $\lambda'_1+\lambda'_2+\lambda'_3$ & \VAR{ other_characteristics[sys_num].throughput.sum | round(5) } \\
+    \end{tblr}
+\end{table}

@@ -1,57 +1,71 @@
 \subsection{Анализ функционирования систем}
 
+По результатам моделирования двух различных систем массового обслуживания были рассчитаны характеристики, которые сведены в таблицу \ref{tab:characteristics-both-systems}. Их же, в графической форме, можно наблюдать на рисунке \ref{fig:plots-both-systems}.
+
 \begin{table}
     \centering
     \caption{Сводная таблица характеристик обеих систем.}
+    \label{tab:characteristics-both-systems}
     \begin{tblr}{
-        colspec = {c c X c c},
+        colspec = {Q[c, m] Q[c, m] Q[c, m] Q[c, m]},
         vlines,
         hlines,
-        row{1} = {font=\bfseries},
-        cells = {c},
+        row{1} = {font=\bfseries, bg=gray!15},
     }
-        Хар-ка & Прибор & Расчетная формула & СИСТ.1 & СИСТ.2 \\
+        Характеристика & $\Pi i$ & СИСТЕМА$_1$ & СИСТЕМА$_2$ \\
         
-        \SetCell[r=4]{c} {Нагрузка} & П1 & & & \\
-                                    & П2 & & & \\
-                                    & П3 & & & \\
-                                    & Сумм. & & & \\
+        \SetCell[r=4]{c} {Нагрузка\\ ($A$)} & П1 & \VAR{ other_characteristics[0].load.P1 | round(5) } & \VAR{ other_characteristics[1].load.P1 | round(5) } \\
+        & П2 & \VAR{ other_characteristics[0].load.P2 | round(5) } & \VAR{ other_characteristics[1].load.P2 | round(5) } \\
+        & П3 & --- & \VAR{ other_characteristics[1].load.P3 | round(5) } \\
+        & \(\Sigma\) & \VAR{ other_characteristics[0].load.sum | round(5) } & \VAR{ other_characteristics[1].load.sum | round(5) } \\
                                     
-        \SetCell[r=4]{c} {Загрузка} & П1 & & & \\
-                                    & П2 & & & \\
-                                    & П3 & & & \\
-                                    & Сумм. & & & \\
+        \SetCell[r=4]{c} {Загрузка\\ ($\rho$)} & П1 & \VAR{ other_characteristics[0].utilization.P1 | round(5) } & \VAR{ other_characteristics[1].utilization.P1 | round(5) } \\
+        & П2 & \VAR{ other_characteristics[0].utilization.P2 | round(5) } & \VAR{ other_characteristics[1].utilization.P2 | round(5) } \\
+        & П3 & --- & \VAR{ other_characteristics[1].utilization.P3 | round(5) } \\
+        & \(\Sigma\) & \VAR{ other_characteristics[0].utilization.sum | round(5) } & \VAR{ other_characteristics[1].utilization.sum | round(5) } \\
                                     
-        \SetCell[r=4]{c} {Длина \\ очереди} & П1 & & & \\
-                                            & П2 & & & \\
-                                            & П3 & & & \\
-                                            & Сумм. & & & \\
+        \SetCell[r=4]{c} {Длина\\ очереди\\ ($l$)} & П1 & \VAR{ other_characteristics[0].queue.P1 | round(5) } & \VAR{ other_characteristics[1].queue.P1 | round(5) } \\
+        & П2 & \VAR{ other_characteristics[0].queue.P2 | round(5) } & \VAR{ other_characteristics[1].queue.P2 | round(5) } \\
+        & П3 & --- & \VAR{ other_characteristics[1].queue.P3 | round(5) } \\
+        & \(\Sigma\) & \VAR{ other_characteristics[0].queue.sum | round(5) } & \VAR{ other_characteristics[1].queue.sum | round(5) } \\
                                             
-        \SetCell[r=4]{c} {Число \\ Заявок} & П1 & & & \\
-                                            & П2 & & & \\
-                                            & П3 & & & \\
-                                            & Сумм. & & & \\
+        \SetCell[r=4]{c} {Число\\ заявок\\ ($m$)} & П1 & \VAR{ other_characteristics[0].requests.P1 | round(5) } & \VAR{ other_characteristics[1].requests.P1 | round(5) } \\
+        & П2 & \VAR{ other_characteristics[0].requests.P2 | round(5) } & \VAR{ other_characteristics[1].requests.P2 | round(5) } \\
+        & П3 & --- & \VAR{ other_characteristics[1].requests.P3 | round(5) } \\
+        & \(\Sigma\) & \VAR{ other_characteristics[0].requests.sum | round(5) } & \VAR{ other_characteristics[1].requests.sum | round(5) } \\
                                            
-        \SetCell[r=4]{c} {Время \\ ожидания} & П1 & & & \\
-                                            & П2 & & & \\
-                                            & П3 & & & \\
-                                            & Сумм. & & & \\
+        \SetCell[r=4]{c} {Время\\ ожидания\\ ($w$)} & П1 & \VAR{ other_characteristics[0].wait.P1 | round(5) } & \VAR{ other_characteristics[1].wait.P1 | round(5) } \\
+        & П2 & \VAR{ other_characteristics[0].wait.P2 | round(5) } & \VAR{ other_characteristics[1].wait.P2 | round(5) } \\
+        & П3 & --- & \VAR{ other_characteristics[1].wait.P3 | round(5) } \\
+        & \(\Sigma\) & \VAR{ other_characteristics[0].wait.sum | round(5) } & \VAR{ other_characteristics[1].wait.sum | round(5) } \\
                                              
-        \SetCell[r=4]{c} {Время \\ пребывания} & П1 & & & \\
-                                                & П2 & & & \\
-                                                & П3 & & & \\
-                                                & Сумм. & & & \\
+        \SetCell[r=4]{c} {Время\\ пребывания\\ ($u$)} & П1 & \VAR{ other_characteristics[0].response.P1 | round(5) } & \VAR{ other_characteristics[1].response.P1 | round(5) } \\
+        & П2 & \VAR{ other_characteristics[0].response.P2 | round(5) } & \VAR{ other_characteristics[1].response.P2 | round(5) } \\
+        & П3 & --- & \VAR{ other_characteristics[1].response.P3 | round(5) } \\
+        & \(\Sigma\) & \VAR{ other_characteristics[0].response.sum | round(5) } & \VAR{ other_characteristics[1].response.sum | round(5) } \\
                                                
-        \SetCell[r=4]{c} {Вероятность \\ потери} & П1 & & & \\
-                                                & П2 & & & \\
-                                                & П3 & & & \\
-                                                & Сумм. & & & \\
+        \SetCell[r=4]{c} {Вероятность\\ потери\\ ($\pi$)} & П1 & \VAR{ other_characteristics[0].loss.P1 | round(5) } & \VAR{ other_characteristics[1].loss.P1 | round(5) } \\
+        & П2 & \VAR{ other_characteristics[0].loss.P2 | round(5) } & \VAR{ other_characteristics[1].loss.P2 | round(5) } \\
+        & П3 & --- & \VAR{ other_characteristics[1].loss.P3 | round(5) } \\
+        & \(\Sigma\) & \VAR{ other_characteristics[0].loss.sum | round(5) } & \VAR{ other_characteristics[1].loss.sum | round(5) } \\
                                                  
-        \SetCell[r=4]{c} {Производи"=\\тельность} & П1 & & & \\
-                                                & П2 & & & \\
-                                                & П3 & & & \\
-                                                & Сумм. & & & \\
+        \SetCell[r=4]{c} {Производительность\\ ($\lambda'$)} & П1 & \VAR{ other_characteristics[0].throughput.P1 | round(5) } & \VAR{ other_characteristics[1].throughput.P1 | round(5) } \\
+        & П2 & \VAR{ other_characteristics[0].throughput.P2 | round(5) } & \VAR{ other_characteristics[1].throughput.P2 | round(5) } \\
+        & П3 & --- & \VAR{ other_characteristics[1].throughput.P3 | round(5) } \\
+        & \(\Sigma\) & \VAR{ other_characteristics[0].throughput.sum | round(5) } & \VAR{ other_characteristics[1].throughput.sum | round(5) } \\
     \end{tblr}
 \end{table}
 
-Наилучший способ организации системы...
+\begin{figure}
+    \centering
+    Возможно, здесь следует/достаточно указать графики лишь для моего критерия.
+    \caption{Графики характеристик обеих систем.}
+    \label{fig:plots-both-systems}
+\end{figure}
+
+На основании сведённых данных можно сделаль следующие выводы:
+\begin{itemize}
+    \item \dots
+\end{itemize}
+
+Наилучший способ организации системы по нашему критерию...
