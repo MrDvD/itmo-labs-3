@@ -5,6 +5,7 @@ import lib.config as config
 import pandas as pd
 from lib.artifacts import ArtifactsFiller
 from typing import Any, Dict, List, Tuple
+from sklearn.svm import OneClassSVM
 
 from lib.report import ReportFiller
 
@@ -17,6 +18,8 @@ if __name__ == "__main__":
 
     roc_path = os.path.join(pics_path, 'roc.pdf')
     pr_path = os.path.join(pics_path, 'pr.pdf')
+    outlier_plot_path = os.path.join(pics_path, 'outlier_plot.pdf')
+    novelty_plot_path = os.path.join(pics_path, 'novelty_plot.pdf')
 
     student_mat = pd.read_csv('/lab/student-mat.csv', sep=';')
     student_por = pd.read_csv('/lab/student-por.csv', sep=';')
@@ -24,6 +27,8 @@ if __name__ == "__main__":
     context: Dict[str, Any] = {
         'roc_path': os.path.relpath(roc_path, 'report'),
         'pr_path': os.path.relpath(pr_path, 'report'),
+        'outlier_plot_path': os.path.relpath(outlier_plot_path, 'report'),
+        'novelty_plot_path': os.path.relpath(novelty_plot_path, 'report'),
     }
 
     df = pd.concat([student_mat, student_por], ignore_index=True)
@@ -98,6 +103,23 @@ if __name__ == "__main__":
         cfg['experiment']['binary_thresholds'][1],
         'pr_visualization',
         colors=['green', 'red', 'orange'],
+    )
+
+    print(len(train['higher']), (train['higher'] == 'yes').sum(), (train['higher'] == 'no').sum())
+
+    context = ReportFiller.find_outliers_and_novelty(
+        context,
+        categorical_columns,
+        numeric_columns,
+        predictors,
+        train,
+        test,
+        target_column,
+        'yes',
+        [0.01, 0.1, 0.2],
+        outlier_plot_path,
+        novelty_plot_path,
+        'outlier_novelty',
     )
 
     artifacts = ArtifactsFiller(context, [cfg['report']['dir']])

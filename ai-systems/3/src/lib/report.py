@@ -4,7 +4,7 @@ from sklearn.linear_model import LogisticRegression
 from sklearn.metrics import accuracy_score, f1_score, precision_score, recall_score
 from sklearn.pipeline import Pipeline, clone
 from sklearn.preprocessing import OneHotEncoder, StandardScaler
-from sklearn.svm import SVC
+from sklearn.svm import SVC, OneClassSVM
 import matplotlib.pyplot as plt
 from matplotlib.backends.backend_pdf import PdfPages
 
@@ -348,5 +348,98 @@ class ReportFiller:
 
         new_context = {
             key: visualization_metrics,
+        }
+        return context | new_context
+
+    @staticmethod
+    def find_outliers_and_novelty(
+        context: Dict[str, Any],
+        categorical_columns: List[str],
+        numeric_columns: List[str],
+        predictors: List[str],
+        train: Any,
+        test: Any,
+        target_column: str,
+        normal_class: Any,
+        nu_values: List[float],
+        outlier_plot_path: str,
+        novelty_plot_path: str,
+        key: str,
+    ) -> Dict[str, Any]:
+        preprocessor = ColumnTransformer(
+            transformers=[
+                ('cat', OneHotEncoder(sparse_output=False), categorical_columns),
+                ('num', StandardScaler(), numeric_columns),
+            ]
+        )
+
+        n_total = len(test)
+        per_nu_results: List[Dict[str, Any]] = []
+        outlier_scores: Dict[float, "np.ndarray"] = {}
+        novelty_scores: Dict[float, "np.ndarray"] = {}
+
+        train_novelty = train[train[target_column] == normal_class]
+
+        for nu in nu_values:
+            pipe_outlier = Pipeline(steps=[
+                ("preprocessor", clone(preprocessor)),
+                ("one_class_svm", OneClassSVM(nu=nu)),
+            ])
+            pipe_outlier.fit(train[predictors])
+
+            res_outlier = pipe_outlier.predict(test[predictors])
+            scores_outlier = pipe_outlier.decision_function(test[predictors])
+
+            pipe_novelty = Pipeline(steps=[
+                ("preprocessor", clone(preprocessor)),
+                ("one_class_svm", OneClassSVM(nu=nu)),
+            ])
+            pipe_novelty.fit(train_novelty[predictors])
+
+            res_novelty = pipe_novelty.predict(test[predictors])
+            scores_novelty = pipe_novelty.decision_function(test[predictors])
+
+            per_nu_results.append({
+                'outliers': {
+                    'nu':            nu,
+                    'n_total':       n_total,
+                    'n_outlier':     int((res_outlier == -1).sum()),
+                    'n_inlier':      int((res_outlier == +1).sum()),
+                    'n_higher_no':   int((test[target_column] != normal_class).sum()),
+                },
+                'novelty': {
+                    'nu':            nu,
+                    'n_total':       n_total,
+                    'n_outlier':     int((res_novelty == -1).sum()),
+                    'n_inlier':      int((res_novelty == +1).sum()),
+                    'n_outliers_actual': int((test[target_column] != normal_class).sum()),
+                }
+            })
+            outlier_scores[nu] = scores_outlier
+            novelty_scores[nu] = scores_novelty
+
+        plt.figure(figsize=(9, 5))
+        for nu, scores in outlier_scores.items():
+            plt.hist(scores, bins=44, alpha=0.45, label=f'nu={nu}')
+        plt.axvline(0, color='red', linestyle='--')
+        plt.ylabel('count')
+        plt.legend()
+        plt.tight_layout()
+        plt.savefig(outlier_plot_path, bbox_inches='tight')
+        plt.close()
+
+        plt.figure(figsize=(9, 5))
+        for nu, scores in novelty_scores.items():
+            if nu == nu_values[0]:
+                plt.hist(scores, bins=44, alpha=0.45, label=f'nu={nu}')
+        plt.axvline(0, color='red', linestyle='--')
+        plt.ylabel('count')
+        plt.legend()
+        plt.tight_layout()
+        plt.savefig(novelty_plot_path, bbox_inches='tight')
+        plt.close()
+
+        new_context = {
+            key: per_nu_results
         }
         return context | new_context

@@ -3,6 +3,8 @@
   "build": {
     "dockerfile": "./Containerfile"
   },
+  "workspaceFolder": "/app",
+  "workspaceMount": "source=${localWorkspaceFolder},target=/app,type=bind,consistency=cached",
   "customizations": {
     "vscode": {
       "extensions": [
