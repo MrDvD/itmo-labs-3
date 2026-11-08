@@ -1,0 +1,27 @@
+% !TEX program = xelatex
+\documentclass[12pt]{article}
+
+\input{sections/Preamble}
+
+\begin{document}
+
+\include{sections/Title}
+
+% --- Оглавление ---
+\pagenumbering{arabic}
+\setcounter{page}{2}
+\tableofcontents
+\newpage
+
+\include{sections/Task}
+\include{sections/Execution}
+\include{sections/Conclusion}
+
+\section{Источники литературы}
+
+\printbibliography[heading=none]
+
+\appendix
+\include{sections/Appendix}
+
+\end{document}
