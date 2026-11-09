@@ -11,8 +11,7 @@
         "ms-python.vscode-pylance",
         "ms-python.python",
         "ms-python.debugpy",
-        "ms-python.vscode-python-envs",
-        "ms-toolsai.jupyter"
+        "ms-python.vscode-python-envs"
       ]
     }
   }

@@ -1,0 +1,15 @@
+FROM docker.io/raetro/quartus:21.1.1
+
+COPY ModelSimSetup-20.1.1.720-linux.run /tmp/
+
+# Install ModelSim
+RUN chmod +x /tmp/ModelSimSetup-20.1.1.720-linux.run \
+    && /tmp/ModelSimSetup-20.1.1.720-linux.run --mode unattended --installdir /opt/intelFPGA/modelsim_ase --accept_eula 1 && \
+    rm /tmp/ModelSimSetup-20.1.1.720-linux.run
+
+# Install Cyclone V device support
+COPY cyclone-21.1.1.850.qdz /root/downloads/
+RUN unzip -o -q /tmp/cyclone-21.1.1.850.qdz -d /opt/intelFPGA && \
+    rm /tmp/cyclone-21.1.1.850.qdz
+
+COPY quartus2.ini /root/.altera.quartus/
