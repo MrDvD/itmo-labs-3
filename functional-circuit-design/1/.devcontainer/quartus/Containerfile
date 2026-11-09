@@ -1,15 +1,69 @@
-FROM docker.io/raetro/quartus:21.1.1
+FROM ubuntu:latest
+
+COPY QuartusLiteSetup-21.1.1.850-linux.run /tmp/
+
+# Install Quartus in unattended mode
+RUN chmod +x /tmp/QuartusLiteSetup-21.1.1.850-linux.run \
+    && /tmp/QuartusLiteSetup-21.1.1.850-linux.run \
+        --mode unattended \
+        --unattendedmodeui none \
+        --accept_eula 1 \
+        --installdir /opt/intelFPGA \
+        --disable-components modelsim_ae \
+    && rm /tmp/QuartusLiteSetup-21.1.1.850-linux.run
 
 COPY ModelSimSetup-20.1.1.720-linux.run /tmp/
 
-# Install ModelSim
+# Install ModelSim in unattended mode
 RUN chmod +x /tmp/ModelSimSetup-20.1.1.720-linux.run \
-    && /tmp/ModelSimSetup-20.1.1.720-linux.run --mode unattended --installdir /opt/intelFPGA/modelsim_ase --accept_eula 1 && \
-    rm /tmp/ModelSimSetup-20.1.1.720-linux.run
+    && /tmp/ModelSimSetup-20.1.1.720-linux.run --mode unattended --installdir /opt/intelFPGA/modelsim_ase --accept_eula 1 \
+    && rm /tmp/ModelSimSetup-20.1.1.720-linux.run
+
+# Install unzip (needed for the Cyclone V .qdz extraction below)
+RUN apt-get update && apt-get install -y --no-install-recommends unzip && rm -rf /var/lib/apt/lists/*
 
 # Install Cyclone V device support
-COPY cyclone-21.1.1.850.qdz /root/downloads/
-RUN unzip -o -q /tmp/cyclone-21.1.1.850.qdz -d /opt/intelFPGA && \
-    rm /tmp/cyclone-21.1.1.850.qdz
+COPY cyclone-21.1.1.850.qdz /tmp/
+RUN unzip -o -q /tmp/cyclone-21.1.1.850.qdz -d /opt/intelFPGA \
+    && rm /tmp/cyclone-21.1.1.850.qdz
 
 COPY quartus2.ini /root/.altera.quartus/
+
+# Install locales and generate en_US.UTF-8
+RUN apt-get update && apt-get install -y --no-install-recommends locales \
+    && sed -i '/en_US.UTF-8/s/^# //g' /etc/locale.gen \
+    && locale-gen en_US.UTF-8 \
+    && rm -rf /var/lib/apt/lists/*
+
+# Install other dependencies
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    libglib2.0-0t64 \
+    libx11-xcb1 \
+    libfontconfig1 \
+    libfreetype6 \
+    libx11-6 \
+    libxext6 \
+    libxft2 \
+    libxrender1 \
+    libxi6 \
+    libxrandr2 \
+    libxcursor1 \
+    libxinerama1 \
+    libdbus-1-3 \
+    libsm6 \
+    libice6 \
+    libxtst6 \
+    zlib1g \
+    libstdc++6 \
+    && rm -rf /var/lib/apt/lists/*
+
+RUN dpkg --add-architecture i386 && \
+    apt-get update && \
+    apt-get install -y --no-install-recommends \
+        libxft2:i386 \
+        libxext6:i386 && \
+    rm -rf /var/lib/apt/lists/*
+
+# Permanently add ModelSim bin to the system PATH environment variable
+ENV PATH="/opt/intelFPGA/modelsim_ase/modelsim_ase/linuxaloem:$PATH"
+ENV PATH="/opt/intelFPGA/quartus/bin:$PATH"
