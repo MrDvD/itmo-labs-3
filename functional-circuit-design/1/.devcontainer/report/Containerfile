@@ -18,12 +18,3 @@ ENV PLATFORM=linux_amd64
 RUN curl -sL https://github.com/mikefarah/yq/releases/download/${VERSION}/yq_${PLATFORM}.tar.gz | \
     tar -xzf - -C /usr/local/bin ./yq_${PLATFORM} && \
     mv /usr/local/bin/yq_${PLATFORM} /usr/local/bin/yq
-
-# download dataset
-RUN mkdir -p /lab && \
-    curl -L https://archive.ics.uci.edu/static/public/320/student+performance.zip -o /lab/dataset.zip && \
-    unzip /lab/dataset.zip -d /lab && \
-    unzip /lab/student.zip -d /lab && \
-    rm /lab/dataset.zip && \
-    rm /lab/student.zip && \
-    rm /lab/.student.zip_old
