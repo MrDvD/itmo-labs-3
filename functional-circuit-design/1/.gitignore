@@ -10,6 +10,7 @@
 
 temp/
 __pycache__/
+_minted/
 
 cyclone-21.1.1.850.qdz
 ModelSimSetup-20.1.1.720-linux.run
