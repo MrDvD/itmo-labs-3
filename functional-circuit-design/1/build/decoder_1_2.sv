@@ -4,12 +4,11 @@ module decoder_testbench;
 	parameter N = 8;
 	reg [$clog2(N)-1:0] sel3;
 	wire [N-1:0] d3;
-	reg clk, rst;
-	
+	reg clk, rst, en;
 	
 	decoder_1_assign first_decoder(sel1, d1);
 	decoder_1_always second_decoder(sel2, d2);
-	decoder_2_parametric #(.N(N)) third_decoder(sel3, d3);
+	decoder_tree #(.N(N)) third_decoder(en, sel3, d3);
 	result_keeper #(.N(N)) keeper_element(clk, rst, d3);
 	
 	initial begin
@@ -34,6 +33,7 @@ module decoder_testbench;
 	
 	initial begin
 		// third decoder
+		en = 1;
 		for (int i = 0; i < N; i++) begin
 			sel3 = i;
 			#1;
@@ -80,23 +80,54 @@ module decoder_1_always
 	output reg [1:0] d
 );	
 	always @(*) begin
-		d = (q == 1'b0) ? 2'b01 : 2'b10;
+		if (q == 1'b0)
+			d = 2'b01;
+		else
+			d = 2'b10;
 	end
 endmodule
 
-module decoder_2_parametric
+module decoder_2_tuned
+(
+	input wire q, enable,
+	output reg [1:0] d
+);
+	wire [1:0] decoder_d;
+	decoder_1_assign decoder_1_to_2(q, decoder_d);
+	assign d = ~enable ? 2'b00 : decoder_d;
+endmodule
+
+module decoder_tree
 #(
 	parameter int N = 2
 )
 (
+	input wire enable,
 	input wire [$clog2(N)-1:0] q,
-	output reg [N-1:0] d
+	output wire [N-1:0] d
 );
-	wire [N-1:0] d_result;
-	assign d_result = {{(N-1){1'b0}}, 1'b1} << q;
-	always @(*) begin
-		d = d_result;
-	end
+	generate
+		if (N == 2) begin : g_leaf
+			decoder_2_tuned u (
+				.q(q[0]),
+				.enable(enable),
+				.d(d)
+			);
+		end else begin : g_node
+			int MSB = $clog2(N) - 1;
+			
+			decoder_tree #(.N(N/2)) u_lo (
+				.enable(enable & ~q[MSB]),
+				.q(q[MSB-1:0]),
+				.d(d[N/2-1:0])
+			);
+			decoder_tree #(.N(N/2)) u_hi (
+				.enable(enable & q[MSB]),
+				.q(q[MSB-1:0]),
+				.d(d[N-1:N/2])
+			);
+		end
+	endgenerate
 endmodule
 
 module result_keeper

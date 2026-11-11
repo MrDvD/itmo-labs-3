@@ -123,25 +123,53 @@ endmodule
 
 \subsubsection{Реализация параметризируемого модуля}
 
-В листинге \ref{lst:decoder_2_parametric} приведена реализация параметризируемого дешифратора.
+В листинге \ref{lst:decoder_2_parametric} приведена реализация параметризируемого дешифратора с применением \texttt{generate}-блока.
 
 \begin{code}
 \caption{Параметризируемый дешифратор.}
 \label{lst:decoder_2_parametric}
 \begin{minted}{verilog}
-module decoder_2_parametric
+module decoder_2_tuned
+(
+    input wire q, enable,
+    output reg [1:0] d
+);
+    wire [1:0] decoder_d;
+    decoder_1_assign decoder_1_to_2(q, decoder_d);
+    assign d = ~enable ? 2'b00 : decoder_d;
+endmodule
+
+module decoder_tree
 #(
     parameter int N = 2
 )
 (
+    input wire enable,
     input wire [$clog2(N)-1:0] q,
-    output reg [N-1:0] d
+    output wire [N-1:0] d
 );
-    wire [N-1:0] d_result;
-    assign d_result = {{(N-1){1'b0}}, 1'b1} << q;
-    always @(*) begin
-        d = d_result;
-    end
+    generate
+        if (N == 2) begin : g_leaf
+            decoder_2_tuned u (
+                .q(q[0]),
+                .enable(enable),
+                .d(d)
+            );
+        end else begin : g_node
+            int MSB = $clog2(N) - 1;
+            
+            decoder_tree #(.N(N/2)) u_lo (
+                .enable(enable & ~q[MSB]),
+                .q(q[MSB-1:0]),
+                .d(d[N/2-1:0])
+            );
+            decoder_tree #(.N(N/2)) u_hi (
+                .enable(enable & q[MSB]),
+                .q(q[MSB-1:0]),
+                .d(d[N-1:N/2])
+            );
+        end
+    endgenerate
 endmodule
 \end{minted}
 \end{code}
