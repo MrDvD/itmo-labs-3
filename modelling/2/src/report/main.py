@@ -1,9 +1,9 @@
 import os
-import lib.config as config
-from lib.artifacts import ArtifactsFiller
-from typing import Any, Dict
+import common.config as config
+from report.lib.artifacts import ArtifactsFiller
+from typing import Any, Dict, List
 
-from lib.report import ReportFiller
+from report.lib.report import ReportFiller
 
 if __name__ == "__main__":
     cfg = config.load('config.yml')
@@ -157,138 +157,43 @@ if __name__ == "__main__":
         'graph_2': matrix_2,
     }
 
-    stationary_probabilities = [
-        [
-            {'name': '0', 'value': 0},
-            {'name': '6', 'value': 0},
-            {'name': '12', 'value': 0},
-            {'name': '18', 'value': 0},
-            {'name': '19', 'value': 0},
-            {'name': '20', 'value': 0},
-            {'name': '21', 'value': 0},
-            {'name': '22', 'value': 0},
-            {'name': '23', 'value': 0},
-        ],
-        [
-            {'name': '3', 'value': 0},
-            {'name': '3', 'value': 0},
-            {'name': '3', 'value': 0},
-            {'name': '3', 'value': 0},
-            {'name': '3', 'value': 0},
-            {'name': '3', 'value': 0},
-            {'name': '3', 'value': 0},
-            {'name': '3', 'value': 0},
-            {'name': '3', 'value': 0},
-            {'name': '3', 'value': 0},
-            {'name': '3', 'value': 0},
-            {'name': '3', 'value': 0},
-            {'name': '3', 'value': 0},
-            {'name': '3', 'value': 0},
-            {'name': '3', 'value': 0},
-            {'name': '3', 'value': 0},
-            {'name': '3', 'value': 0},
-            {'name': '3', 'value': 0},
-        ],
+    state_names = [
+        ["0", "6", "12", "18", "19", "20", "21", "22", "23"],
+        ["0", "2", "4", "5", "6", "7", "8", "10", "12", "13", "14", "15", "16", "20", "21", "24", "28", "29"],
     ]
 
-    context['stationary_probabilities'] = stationary_probabilities
+    context = ReportFiller.get_stationary_probabilities(
+        context,
+        state_names,
+        ReportFiller.get_api_url(cfg, 'probs_endpoint'),
+        'stationary_probabilities',
+    )
 
-    other_characteristics = [
-        {
-            'load': {
-                'P1': 0,
-                'P2': 1,
-                'sum': 2,
-            },
-            'utilization': {
-                'P1': 0,
-                'P2': 1,
-                'sum': 2,
-            },
-            'queue': {
-                'P1': 0,
-                'P2': 1,
-                'sum': 2,
-            },
-            'requests': {
-                'P1': 0,
-                'P2': 1,
-                'sum': 2,
-            },
-            'wait': {
-                'P1': 0,
-                'P2': 1,
-                'sum': 2,
-            },
-            'response': {
-                'P1': 0,
-                'P2': 1,
-                'sum': 2,
-            },
-            'loss': {
-                'P1': 0,
-                'P2': 1,
-                'sum': 2,
-            },
-            'throughput': {
-                'P1': 0,
-                'P2': 1,
-                'sum': 2,
-            },
-        },
-        {
-            'load': {
-                'P1': 0,
-                'P2': 1,
-                'P3': 1,
-                'sum': 2,
-            },
-            'utilization': {
-                'P1': 0,
-                'P2': 1,
-                'P3': 1,
-                'sum': 2,
-            },
-            'queue': {
-                'P1': 0,
-                'P2': 1,
-                'P3': 1,
-                'sum': 2,
-            },
-            'requests': {
-                'P1': 0,
-                'P2': 1,
-                'P3': 1,
-                'sum': 2,
-            },
-            'wait': {
-                'P1': 0,
-                'P2': 1,
-                'P3': 1,
-                'sum': 2,
-            },
-            'response': {
-                'P1': 0,
-                'P2': 1,
-                'P3': 1,
-                'sum': 2,
-            },
-            'loss': {
-                'P1': 0,
-                'P2': 1,
-                'P3': 1,
-                'sum': 2,
-            },
-            'throughput': {
-                'P1': 0,
-                'P2': 1,
-                'P3': 1,
-                'sum': 2,
-            },
-        },
+    context = ReportFiller.calc_characteristics_1(
+        context,
+        context['stationary_probabilities'][0],
+        cfg['load_params']['b'],
+        cfg['load_params']['Pi_1'],
+        cfg['load_params']['Pi_2'] + cfg['load_params']['Pi_3'],
+        cfg['load_params']['lambda'],
+        'other_characteristics_1',
+    )
+
+    context = ReportFiller.calc_characteristics_2(
+        context,
+        context['stationary_probabilities'][0],
+        cfg['load_params']['b'],
+        cfg['load_params']['Pi_1'],
+        cfg['load_params']['Pi_2'],
+        cfg['load_params']['Pi_3'],
+        cfg['load_params']['lambda'],
+        'other_characteristics_2',
+    )
+
+    context['other_characteristics'] = [
+        context['other_characteristics_1'],
+        context['other_characteristics_2'],
     ]
-
-    context['other_characteristics'] = other_characteristics
 
     artifacts = ArtifactsFiller(context, [cfg['report']['dir']])
     artifacts.compile_patterns()

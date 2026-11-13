@@ -74,7 +74,32 @@ RUN winetricks -q --optout corefonts && \
     wine reg add 'HKCU\Software\Wine\Uniscribe\Fallback' /v '0x6c727963' /t REG_SZ /d 'Microsoft Sans Serif' /f && \
     wineserver -k
 
-WORKDIR /exe
+RUN apt-get update && \
+    apt-get install -y \
+        xdotool \
+        x11vnc \
+        scrot \
+        tesseract-ocr \
+        imagemagick \
+        && \
+    apt-get clean && rm -rf /var/lib/apt/lists/*
+
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    python3 \
+    python3-pip \
+    python3-venv \
+    && apt-get clean \
+    && rm -rf /var/lib/apt/lists/*
+
+# install python dependencies
+COPY requirements.txt /tmp/requirements.txt
+RUN python3 -m venv /opt/venv && \
+    /opt/venv/bin/pip install --no-cache-dir -r /tmp/requirements.txt
 
 ENV LANG=ru_RU.CP1251
 ENV LC_ALL=ru_RU.CP1251
+
+WORKDIR /app
+
+ENV PYTHONPATH="/app/src"
+CMD ["/opt/venv/bin/python3", "/app/src/mark/main.py"]

@@ -15,4 +15,8 @@ load_params:
     Pi_2: 0.15
     Pi_3: 0.1
 variant_num: 108
-random_seed: 475878
+api:
+    host: mark
+    port: 8000
+    prefix: /api/v1
+    probs_endpoint: /probs

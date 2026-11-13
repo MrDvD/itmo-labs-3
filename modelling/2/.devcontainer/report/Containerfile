@@ -17,3 +17,5 @@ ENV PLATFORM=linux_amd64
 RUN curl -sL https://github.com/mikefarah/yq/releases/download/${VERSION}/yq_${PLATFORM}.tar.gz | \
     tar -xzf - -C /usr/local/bin ./yq_${PLATFORM} && \
     mv /usr/local/bin/yq_${PLATFORM} /usr/local/bin/yq
+
+WORKDIR /app

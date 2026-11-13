@@ -11,4 +11,5 @@
 temp/
 __pycache__/
 pics/
-*.mrk
+.devcontainer/mark/exe/*.png
+.devcontainer/mark/exe/*.txt
