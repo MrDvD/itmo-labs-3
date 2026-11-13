@@ -1,0 +1,22 @@
+report:
+    dir: ./report/
+    tasks_dir: tasks
+    name: main
+variant:
+    N_1: 50
+    N_2: 50
+    N_3: 31
+    ISU: 466449
+    GROUP: 3331
+load_params:
+    lambda: 0.6
+    b: 10
+    Pi_1: 0.75
+    Pi_2: 0.15
+    Pi_3: 0.1
+variant_num: 108
+api:
+    host: mark
+    port: 8000
+    prefix: /api/v1
+    probs_endpoint: /probs

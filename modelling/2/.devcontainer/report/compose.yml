@@ -1,0 +1,24 @@
+services:
+  mark:
+    build:
+      context: ../mark
+      dockerfile: ../Containerfile.mark
+    volumes:
+      - ../..:/app
+      - ../mark/exe:/exe
+    networks:
+      - modelling-2
+  report:
+    build:
+      context: .
+      dockerfile: Containerfile
+    command: sleep infinity
+    volumes:
+      - ../..:/app
+    depends_on:
+      - mark
+    networks:
+      - modelling-2
+
+networks:
+  modelling-2: {}

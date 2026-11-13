@@ -1,0 +1,13 @@
+services:
+  mark:
+    build:
+      context: .
+      dockerfile: ../Containerfile.mark
+    command: sleep infinity
+    extra_hosts:
+      - "host.containers.internal:host-gateway"
+    ports:
+      - "5900:5900"
+    volumes:
+      - ../..:/app
+      - ./exe:/exe

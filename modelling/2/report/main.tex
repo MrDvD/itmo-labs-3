@@ -1,0 +1,25 @@
+% !TEX program = xelatex
+\documentclass[12pt]{article}
+
+\input{sections/Preamble}
+
+\begin{document}
+
+\include{sections/Title}
+
+% --- Оглавление ---
+\pagenumbering{gobble}
+\tableofcontents
+\newpage
+\pagenumbering{arabic}
+\setcounter{page}{1}
+
+\include{sections/Task}
+\include{sections/Execution}
+\include{sections/Conclusion}
+
+\section{Источники литературы}
+
+\printbibliography[heading=none]
+
+\end{document}
