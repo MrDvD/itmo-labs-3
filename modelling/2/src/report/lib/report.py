@@ -207,9 +207,9 @@ class ReportFiller:
         response_p3 = b
         response_sum = wait_sum + b
 
-        loss_p1 = 1 - (throughput_p1 / (lmd * p1)) if (lmd * p1) > 0 else 0.0
-        loss_p2 = 1 - (throughput_p2 / (lmd * p2)) if (lmd * p2) > 0 else 0.0
-        loss_p3 = 1 - (throughput_p3 / (lmd * p3)) if (lmd * p3) > 0 else 0.0
+        loss_p1 = m1
+        loss_p2 = m2
+        loss_p3 = m3
         loss_sum = 1 - (throughput_sum / lmd) if lmd > 0 else 0.0
 
         other_characteristics = {
@@ -266,3 +266,47 @@ class ReportFiller:
         new_context = context.copy()
         new_context[key] = other_characteristics
         return new_context
+
+    @staticmethod
+    def plot_characteristics(
+        other_characteristics_list: List[Dict[str, Any]],
+        plot_path: str,
+    ):
+        import matplotlib.pyplot as plt
+        import numpy as np
+
+        characteristics = [
+            'load', 'utilization', 'queue', 'requests', 
+            'wait', 'response', 'loss', 'throughput'
+        ]
+        
+        categories = ['P1', 'P2', 'P3', 'sum']
+        
+        _, axes = plt.subplots(2, 4, figsize=(18, 10))
+        axes = axes.flatten()
+        
+        for idx, characteristic in enumerate(characteristics):
+            ax = axes[idx]
+            sys1_data = other_characteristics_list[0].get(characteristic, {})
+            sys2_data = other_characteristics_list[1].get(characteristic, {})
+
+            vals_sys1 = [sys1_data.get(cat, 0.0) for cat in categories]
+            vals_sys2 = [sys2_data.get(cat, 0.0) for cat in categories]
+            
+            x = np.arange(len(categories))
+            width = 0.35  
+
+            ax.bar(x - width/2, vals_sys1, width, label='System 1', color='skyblue')
+            ax.bar(x + width/2, vals_sys2, width, label='System 2', color='salmon')
+
+            ax.set_title(f'{characteristic.capitalize()}', fontsize=12)
+            ax.set_xticks(x)
+            ax.set_xticklabels(categories)
+            ax.grid(axis='y', linestyle='--', alpha=0.7)
+            
+            if idx == 0:
+                ax.legend(loc='upper right')
+
+        plt.tight_layout()
+        plt.savefig(plot_path, bbox_inches='tight')
+        plt.close()

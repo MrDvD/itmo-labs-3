@@ -9,6 +9,9 @@ if __name__ == "__main__":
     cfg = config.load('config.yml')
 
     pics_path = os.path.join(cfg['report']['dir'], 'pics')
+    os.makedirs(pics_path, exist_ok=True)
+
+    plot_path = os.path.join(pics_path, 'characteristics_comparison.pdf')
 
     matrix_1 = [['--' for _ in range(24)]
                       for _ in range(24)]
@@ -155,6 +158,7 @@ if __name__ == "__main__":
         },
         'graph_1': matrix_1,
         'graph_2': matrix_2,
+        'plot_path': os.path.relpath(plot_path, 'report'),
     }
 
     state_names = [
@@ -181,7 +185,7 @@ if __name__ == "__main__":
 
     context = ReportFiller.calc_characteristics_2(
         context,
-        context['stationary_probabilities'][0],
+        context['stationary_probabilities'][1],
         cfg['load_params']['b'],
         cfg['load_params']['Pi_1'],
         cfg['load_params']['Pi_2'],
@@ -194,6 +198,8 @@ if __name__ == "__main__":
         context['other_characteristics_1'],
         context['other_characteristics_2'],
     ]
+
+    ReportFiller.plot_characteristics(context['other_characteristics'], plot_path)
 
     artifacts = ArtifactsFiller(context, [cfg['report']['dir']])
     artifacts.compile_patterns()
