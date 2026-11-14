@@ -1,0 +1,14 @@
+*.log
+*.aux
+*.toc
+*.out
+*.bcf
+*.bbl
+*.blg
+*.run.xml
+*.compiled.*
+
+_minted/
+temp/
+__pycache__/
+pics/
