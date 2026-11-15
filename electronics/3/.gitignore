@@ -15,3 +15,6 @@ _minted/
 temp/
 pics/
 __pycache__/
+
+schemas/*.txt
+schemas/*.png

@@ -76,16 +76,16 @@ if [ -n "$WID" ]; then
     echo "Waiting for LTspice window to appear..."
     LTWID=$(xdotool search --sync --onlyvisible --name '^LTspice' 2>/dev/null)
     echo "Found LTspice window ID: $LTWID"
-    echo "Done waiting!"
 
-    xdotool windowmove "$LTWID" 0 0
-    xdotool windowsize "$LTWID" 1280 720
+    xdotool mousemove --window "$WID" 592 194 click --repeat 2 --delay 50 1
 
     for i in {1..20}; do
         eval "$(xdotool getwindowgeometry --shell "$LTWID")"
         [ "$WIDTH" -eq 1280 ] && [ "$HEIGHT" -eq 720 ] && break
         sleep 0.05
     done
+
+    echo "Window is resized successfully."
 
     # create a new schematic
     xdotool mousemove --window "$WID" 25 35 click 1
