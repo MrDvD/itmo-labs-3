@@ -1,11 +1,12 @@
 services:
-  spice:
+  spice_lab:
     build:
       context: ..
       dockerfile: Containerfile.spice
-    container_name: spice
+    container_name: spice_lab
     volumes:
       - ../..:/app
+      - ../../schemas:/schemas
     networks:
       - electronics-1
   report:
@@ -15,7 +16,7 @@ services:
     container_name: report
     command: sleep infinity
     depends_on:
-      - spice
+      - spice_lab
     volumes:
       - ../..:/app
     networks:

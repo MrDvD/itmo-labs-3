@@ -2,9 +2,13 @@ report_dir := $(shell yq eval '.report.dir' config.yml)
 report_name := $(shell yq eval '.report.name' config.yml)
 
 clean:
+	@if [ -z "$(report_dir)" ]; then \
+		echo "Error: report_dir is not configured or resolved to none. Stopping."; \
+		exit 1; \
+	fi
 	# clean LaTeX artifacts
 	@for file_ext in "*.pdf" "*.aux" "*.log" "*.toc" "*.out" "*.run.xml"; do \
-		find $(report_dir) -name "$${file_ext}" -delete; \
+		find $(report_dir) -name "$${file_ext}" -not -path "*/resources/*" -delete; \
 	done
 	# clean project compiled files
 	find . -name "*.compiled.*" -delete

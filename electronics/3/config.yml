@@ -2,3 +2,9 @@ report:
     dir: report
     name: main
 variant_num: 316
+api:
+    host: spice_lab
+    port: 8000
+    prefix: /api/v1
+    generate_images_endpoint: /generate_images
+    schemas_endpoint: /schemas

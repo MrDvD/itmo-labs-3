@@ -1,9 +1,7 @@
 {
   "name": "Spice Local Container",
-  "build": {
-    "dockerfile": "../Containerfile.spice"
-  },
-  "workspaceMount": "source=${localWorkspaceFolder},target=/app,type=bind",
+  "dockerComposeFile": "./compose.yml",
+  "service": "spice",
   "workspaceFolder": "/app",
   "customizations": {
     "vscode": {

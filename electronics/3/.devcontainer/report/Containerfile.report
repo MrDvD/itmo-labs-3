@@ -1,4 +1,4 @@
-FROM ghcr.io/mrdvd/xetex-base:labs
+FROM ghcr.io/mrdvd/xetex-base:labs-2026
 
 RUN apt-get update && apt-get install -y --no-install-recommends \
     python3 \
