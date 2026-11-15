@@ -22,6 +22,13 @@ if __name__ == "__main__":
     context = ReportFiller.get_schemas_paths(
         context,
         ReportFiller.get_api_url(cfg, 'schemas_endpoint'),
+        'schemas_paths',
+    )
+
+    context = ReportFiller.get_schemas_paths(
+        context,
+        ReportFiller.get_api_url(cfg, 'oscillograms_endpoint'),
+        'oscillograms_paths'
     )
 
     artifacts = ArtifactsFiller(context, [cfg['report']['dir']])

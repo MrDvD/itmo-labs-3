@@ -7,7 +7,7 @@
 \begin{figure}[h]
     \centering
     \includegraphics[width=0.6\textwidth]{\VAR{ schemas_paths[0] }}
-    \caption{Схема исследования полупроводникового диода.}
+    \caption{Схема исследования прямой ветви ВАХ полупроводникового диода.}
     \label{fig:diode_circuit}
 \end{figure}
 
@@ -33,7 +33,7 @@
 
 \begin{figure}[h]
     \centering
-    % \includegraphics[width=0.6\textwidth]{fig3a.png}
+    \includegraphics[width=0.9\textwidth]{\VAR{  oscillograms_paths[0] }}
     \caption{Характеристики прямой ветви полупроводникового диода.}
     \label{fig:diode_vah}
 \end{figure}
@@ -64,11 +64,18 @@
     \end{tblr}
 \end{table}
 
-Также с помощью плоттера была построена обратная ветвь ВАХ диода. На рисунке \ref{fig:diode_vah_reverse} представлен полученный график.
+Также с помощью плоттера была построена обратная ветвь ВАХ диода по схеме на рисунке \ref{fig:diode_circuit_reverse}. На рисунке \ref{fig:diode_vah_reverse} представлен полученный график.
 
-\begin{figure}
+\begin{figure}[h]
     \centering
-    % \includegraphics[width=0.6\textwidth]{fig3a.png}
+    \includegraphics[width=0.6\textwidth]{\VAR{ schemas_paths[1] }}
+    \caption{Схема исследования обратной ветви ВАХ полупроводникового диода.}
+    \label{fig:diode_circuit_reverse}
+\end{figure}
+
+\begin{figure}[h]
+    \centering
+    \includegraphics[width=0.9\textwidth]{\VAR{  oscillograms_paths[1] }}
     \caption{Обратная ветвь ВАХ полупроводникового диода.}
     \label{fig:diode_vah_reverse}
 \end{figure}
@@ -86,7 +93,7 @@
 
 \begin{figure}
     \centering
-    % \includegraphics[width=0.6\textwidth]{fig3a.png}
+    \includegraphics[width=0.9\textwidth]{\VAR{ oscillograms_paths[2] }}
     \caption{Осциллограммы работы однополупериодного выпрямителя.}
     \label{fig:rectifier_waveforms}
 \end{figure}

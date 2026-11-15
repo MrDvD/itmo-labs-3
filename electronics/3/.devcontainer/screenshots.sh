@@ -11,9 +11,6 @@ Xvfb :99 -screen 0 1280x720x24 &
 sleep 1
 export DISPLAY=:99
 
-openbox &
-sleep 0.5
-
 x11vnc -display :99 -forever -nopw &
 
 LTSPICE_WINDOW_NAME="GenLtSp"
@@ -62,9 +59,27 @@ capture_schema() {
     # # select a schema to open from the list
     xdotool mousemove --window "$WID" "$item_x" "$item_y" click --repeat 2 --delay 50 1
     sleep 0.3
-    scrot -a "8,122,1265,564" "$img_name"
+    scrot -a "8,90,1265,596" "$img_name"
 
     echo "$(pwd)/$img_name" >> /schemas/schemas.txt
+
+    capture_oscillogram
+
+    # exit schema view
+    wait_for xdotool search --sync --onlyvisible --name ".asc]$"
+    xdotool mousemove --window "$WID" 1270 33 click --repeat 2 --delay 50 1
+}
+
+capture_oscillogram() {
+    xdotool mousemove --window "$WID" 231 66 click 1
+    sleep 0.1
+    xdotool mousemove --window "$WID" 1245 131 click 1
+    sleep 0.6
+    scrot -a "8,116,1268,574" "osc_$img_name"
+
+    # exit oscillogram view
+    xdotool mousemove --window "$WID" 1270 33 click 1
+    wait_for bash -c '! xdotool search --onlyvisible --name ".raw]$" >/dev/null 2>&1'
 }
 
 if [ -n "$WID" ]; then
@@ -86,12 +101,6 @@ if [ -n "$WID" ]; then
     done
 
     echo "Window is resized successfully."
-
-    # create a new schematic
-    xdotool mousemove --window "$WID" 25 35 click 1
-    sleep 0.1
-    xdotool mousemove --window "$WID" 81 60 click 1
-    sleep 0.1
 
     capture_schema "schema1.png" 513 193
     capture_schema "schema2.png" 513 212

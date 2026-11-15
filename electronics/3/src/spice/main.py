@@ -32,5 +32,18 @@ async def get_schema_image(schema_number: int):
         filename=filename,
     )
 
+@app.get(f"{api['prefix']}{api['oscillograms_endpoint']}/{{oscillogram_number}}")
+async def get_oscillogram_image(oscillogram_number: int):
+    if oscillogram_number < 1 or oscillogram_number > 3:
+        raise HTTPException(404)
+
+    filename = f"osc_schema{oscillogram_number}.png"
+    target = (SCHEMAS_DIR / filename).resolve()
+
+    return FileResponse(
+        target,
+        filename=filename,
+    )
+
 if __name__ == "__main__":
     uvicorn.run("main:app", host="0.0.0.0", port=api['port'])

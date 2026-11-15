@@ -8,3 +8,4 @@ api:
     prefix: /api/v1
     generate_images_endpoint: /generate_images
     schemas_endpoint: /schemas
+    oscillograms_endpoint: /oscillograms

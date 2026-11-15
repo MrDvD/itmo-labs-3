@@ -18,6 +18,7 @@ class ReportFiller:
     def get_schemas_paths(
         context: Dict[str, Any],
         url: str,
+        key: str,
     ) -> Dict[str, Any]:
         tmpdir = Path(tempfile.mkdtemp(prefix="schemas_")).resolve()
         paths = list()
@@ -34,6 +35,6 @@ class ReportFiller:
                 continue
 
         new_context = context.copy()
-        new_context["schemas_paths"] = paths
+        new_context[key] = paths
         print(paths)
         return new_context
