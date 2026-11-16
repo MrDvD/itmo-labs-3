@@ -75,7 +75,7 @@ capture_oscillogram() {
     sleep 0.1
     xdotool mousemove --window "$WID" 1245 131 click 1
     sleep 0.6
-    scrot -a "8,116,1268,574" "osc_$img_name"
+    scrot -a "2,116,1274,574" "osc_$img_name"
 
     # exit oscillogram view
     xdotool mousemove --window "$WID" 1270 33 click 1
