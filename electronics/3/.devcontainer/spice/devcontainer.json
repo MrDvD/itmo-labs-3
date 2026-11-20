@@ -1,0 +1,19 @@
+{
+  "name": "Spice Local Container",
+  "dockerComposeFile": "./compose.yml",
+  "service": "spice",
+  "workspaceFolder": "/app",
+  "customizations": {
+    "vscode": {
+      "extensions": [
+        "ms-python.vscode-pylance",
+        "ms-python.python",
+        "ms-python.debugpy",
+        "ms-python.vscode-python-envs"
+      ],
+      "settings": {
+        "python.defaultInterpreterPath": "/opt/venv/bin/python"
+      }
+    }
+  }
+}

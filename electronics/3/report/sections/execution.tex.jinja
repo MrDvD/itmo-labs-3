@@ -1,0 +1,87 @@
+\section{Выполнение работы}
+
+\subsection{Исследование полупроводникового диода}
+
+По рисунку 3.а из методических указаний была собрана схема, представленная на рисунке~\ref{fig:diode_circuit}.
+
+\begin{figure}[h]
+    \centering
+    \includegraphics[width=0.6\textwidth]{\VAR{ schemas_paths[0] }}
+    \caption{Схема исследования прямой ветви ВАХ полупроводникового диода.}
+    \label{fig:diode_circuit}
+\end{figure}
+
+С помощью плоттера были построены прямая ветвь ВАХ диода и зависимости статического и динамического сопротивлений. На рисунке \ref{fig:diode_vah} представлены полученные результаты:
+\begin{itemize}
+    \item \textit{синяя кривая} --- прямая ветвь ВАХ диода;
+    \item \textit{красная кривая} --- зависимость динамического сопротивления диода от приложенного напряжения;
+    \item \textit{зелёная кривая} --- зависимость статического сопротивления диода от приложенного напряжения.
+\end{itemize}
+
+\begin{figure}[h]
+    \centering
+    \includegraphics[width=0.9\textwidth]{\VAR{  oscillograms_paths[0] }}
+    \caption{Характеристики прямой ветви полупроводникового диода.}
+    \label{fig:diode_vah}
+\end{figure}
+
+По рисунку \ref{fig:diode_vah} определим пороговое напряжение \( U_{th} \), начиная с которого полупроводниковый диод проводит ток:
+\[
+    U_{th} \approx 495 \text{ мВ}
+\]
+
+Из технической документации на диод UMN1N следует, что максимальный средний выпрямленный ток \( I_{avg} \) составляет $25$ мА. Опираясь на них, определим статическое и динамическое сопротивления диода при работе на максимальный средний выпрямленный ток:
+\[
+    R_{st} \approx 31 \text{ Ом}, \quad R_{dyn} \approx 3 \text{ Ом}
+\]
+
+Также с помощью плоттера была построена обратная ветвь ВАХ диода по схеме на рисунке \ref{fig:diode_circuit_reverse}. На рисунке \ref{fig:diode_vah_reverse} представлен полученный график.
+
+\begin{figure}[h]
+    \centering
+    \includegraphics[width=0.6\textwidth]{\VAR{ schemas_paths[1] }}
+    \caption{Схема исследования обратной ветви ВАХ полупроводникового диода.}
+    \label{fig:diode_circuit_reverse}
+\end{figure}
+
+\begin{figure}[h]
+    \centering
+    \includegraphics[width=0.9\textwidth]{\VAR{  oscillograms_paths[1] }}
+    \caption{Обратная ветвь ВАХ полупроводникового диода.}
+    \label{fig:diode_vah_reverse}
+\end{figure}
+
+\subsection{Исследование однополупериодного выпрямителя}
+
+По условию была собрана схема выпрямителя, представленная на рисунке~\ref{fig:rectifier_circuit}. С помощью плоттера были получены осциллограммы искомых параметров, результат представлен на рисунке \ref{fig:rectifier_waveforms}:
+\begin{itemize}
+    \item \textit{синяя кривая} --- напряжение источника питания;
+    \item \textit{красная кривая} --- напряжение на диоде;
+    \item \textit{зелёная кривая} --- напряжение на нагрузке.
+\end{itemize}
+
+\begin{figure}[h]
+    \centering
+    \includegraphics[width=0.6\textwidth]{\VAR{ schemas_paths[2] }}
+    \caption{Схема исследования однополупериодного выпрямителя.}
+    \label{fig:rectifier_circuit}
+\end{figure}
+
+\begin{figure}
+    \centering
+    \includegraphics[width=0.9\textwidth]{\VAR{ oscillograms_paths[2] }}
+    \caption{Осциллограммы работы однополупериодного выпрямителя.}
+    \label{fig:rectifier_waveforms}
+\end{figure}
+
+По осциллограммам определим следующие параметры:
+\[
+    U_{max} \approx 4.4157 \text{ В}, \quad U_{avg} \approx 1.3256 \text{ В}, \quad U_{rev} \approx 4.9745 \text{ В},
+\]
+
+где:
+\begin{itemize}
+    \item \( U_{max} \) --- максимальное мгновенное значение напряжения на выходе выпрямителя в нагрузке \textit{(максимальное значение напряжения на нагрузке)};
+    \item \( U_{avg} \) --- средневыпрямленное значение напряжения на выходе выпрямителя \textit{(усреднённое значение напряжения на нагрузке за один период работы выпрямителя)};
+    \item \( U_{rev} \) --- максимальное обратное напряжение на диоде \textit{(максимальное значение обратного напряжения на диоде)}.
+\end{itemize}
