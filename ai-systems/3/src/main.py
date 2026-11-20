@@ -32,6 +32,7 @@ if __name__ == "__main__":
     }
 
     df = pd.concat([student_mat, student_por], ignore_index=True)
+    df['higher'] = (df['higher'] == 'yes').astype(int)
 
     train, test = train_test_split(
         df,
@@ -46,7 +47,6 @@ if __name__ == "__main__":
 
     context = ReportFiller.teach_models(
         context,
-        cfg['experiment']['C'],
         categorical_columns,
         numeric_columns,
         predictors,
@@ -115,7 +115,7 @@ if __name__ == "__main__":
         train,
         test,
         target_column,
-        'yes',
+        1,
         [0.01, 0.1, 0.2],
         outlier_plot_path,
         novelty_plot_path,

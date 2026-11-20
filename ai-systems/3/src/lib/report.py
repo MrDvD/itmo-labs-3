@@ -2,6 +2,7 @@ from typing import Dict, Any, List, Tuple
 from sklearn.compose import ColumnTransformer
 from sklearn.linear_model import LogisticRegression
 from sklearn.metrics import accuracy_score, f1_score, precision_score, recall_score
+from sklearn.model_selection import GridSearchCV
 from sklearn.pipeline import Pipeline, clone
 from sklearn.preprocessing import OneHotEncoder, StandardScaler
 from sklearn.svm import SVC, OneClassSVM
@@ -12,7 +13,6 @@ class ReportFiller:
     @staticmethod
     def teach_models(
         context: Dict[str, Any],
-        C: float,
         categorical_columns: List[str],
         numeric_columns: List[str],
         predictors: List[str],
@@ -30,7 +30,7 @@ class ReportFiller:
             transformers=[
                 (
                     'cat',
-                    OneHotEncoder(sparse_output=False),
+                    OneHotEncoder(),
                     categorical_columns,
                 ),
                 (
@@ -52,34 +52,42 @@ class ReportFiller:
         y_pred_log = pipe_log.predict(test[predictors])
     
         logistic_regression_metrics['accuracy'] = accuracy_score(test[target_column], y_pred_log)
-        logistic_regression_metrics['precision'] = precision_score(test[target_column], y_pred_log, pos_label='yes')
-        logistic_regression_metrics['recall'] = recall_score(test[target_column], y_pred_log, pos_label='yes')
-        logistic_regression_metrics['f1'] = f1_score(test[target_column], y_pred_log, pos_label='yes')
+        logistic_regression_metrics['precision'] = precision_score(test[target_column], y_pred_log, pos_label=1)
+        logistic_regression_metrics['recall'] = recall_score(test[target_column], y_pred_log, pos_label=1)
+        logistic_regression_metrics['f1'] = f1_score(test[target_column], y_pred_log, pos_label=1)
     
         new_context['logistic_regression'] = logistic_regression_metrics
     
-        support_vector_machine_metrics: Dict[str, Any] = {
-            'C': C,
-        }
-    
-        reg_svc = SVC(
-            kernel='linear',
-            C=C,
-        )
+        support_vector_machine_metrics: Dict[str, Any] = dict()
+
+        reg_svc = SVC(kernel='linear')
     
         pipe_svc = Pipeline(steps=[
             ("preprocessor", clone(preprocessor)), 
             ("svc", reg_svc)
         ])
+
+        param_grid = {
+            'svc__C': [0.01, 0.1, 1, 10, 100],
+        }
+
+        grid_search = GridSearchCV(
+            estimator=pipe_svc,
+            param_grid=param_grid,
+            cv=5,
+            scoring='f1',
+            n_jobs=-1
+        )
     
-        pipe_svc.fit(train[predictors], train[target_column])
+        grid_search.fit(train[predictors], train[target_column])
     
-        y_pred_svc = pipe_svc.predict(test[predictors])
+        y_pred_svc = grid_search.predict(test[predictors])
     
         support_vector_machine_metrics['accuracy'] = accuracy_score(test[target_column], y_pred_svc)
-        support_vector_machine_metrics['precision'] = precision_score(test[target_column], y_pred_svc, pos_label='yes')
-        support_vector_machine_metrics['recall'] = recall_score(test[target_column], y_pred_svc, pos_label='yes')
-        support_vector_machine_metrics['f1'] = f1_score(test[target_column], y_pred_svc, pos_label='yes')
+        support_vector_machine_metrics['precision'] = precision_score(test[target_column], y_pred_svc, pos_label=1)
+        support_vector_machine_metrics['recall'] = recall_score(test[target_column], y_pred_svc, pos_label=1)
+        support_vector_machine_metrics['f1'] = f1_score(test[target_column], y_pred_svc, pos_label=1)
+        support_vector_machine_metrics['C'] = grid_search.best_params_['svc__C']
     
         new_context['support_vector_machine'] = support_vector_machine_metrics
 

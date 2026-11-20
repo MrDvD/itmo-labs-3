@@ -264,6 +264,8 @@ AUC --- это площадь под этой кривой, которая вы�
 
 \begin{table}
     \centering
+    \caption{Визуализация результатов расчёта Recall и Precision для первого класса с порогом \VAR{ pr_visualization.threshold }.}
+    \label{tab:pr-calc-visualization}
     \begin{tblr}{
         colspec = {Q[c, m] c c c c c c c c},
         vlines,
@@ -276,8 +278,6 @@ AUC --- это площадь под этой кривой, которая вы�
             \BLOCK{ if loop.first } \SetCell[r=\VAR{ pr_visualization.Y | length }]{c} \VAR{ pr_visualization.precision } & \SetCell[r=\VAR{ pr_visualization.Y | length }]{c} \VAR{ pr_visualization.recall } \BLOCK{ else } & \BLOCK{ endif } \\
         \BLOCK{ endfor }
     \end{tblr}
-    \caption{Визуализация результатов расчёта Recall и Precision для первого класса с порогом \VAR{ pr_visualization.threshold }.}
-    \label{tab:pr-calc-visualization}
 \end{table}
 
 \subsubsection{Выводы}
