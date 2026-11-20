@@ -1,0 +1,12 @@
+services:
+  spice:
+    build:
+      context: ..
+      dockerfile: Containerfile.spice
+    container_name: spice
+    command: sleep infinity
+    ports:
+      - "5900:5900"
+    volumes:
+      - ../..:/app
+      - ../../schemas:/schemas
