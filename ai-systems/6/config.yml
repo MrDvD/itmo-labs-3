@@ -1,0 +1,9 @@
+report:
+    dir: report
+    name: main
+random_state: 132547
+k: 4
+dbscan:
+    eps: 1.5
+    min_samples: 5
+    n_components: 5

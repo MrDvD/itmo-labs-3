@@ -1,0 +1,258 @@
+\section{Выполнение работы}
+
+\subsection{Выбор категориального признака}
+
+\subsubsection{Описание датасета}
+
+Для рассмотрения задачи регрессии в исходной лабораторной работе был выбран датасет Student Performance с репозитория UCI Machine Learning.\cite{student_performance_dataset} Он имеет следующие особенности:
+\begin{itemize}
+    \item количество признаков --- 30;
+    \item количество объектов --- 649;
+    \item год публикации --- 2014;
+    \item использовался в предыдущей лабораторной работе.\cite{labin2026pandas}
+\end{itemize}
+
+В датасете представлены результаты студентов среднего образования двух португальских школ. Данные включают оценки студентов, демографические, социальные и школьные характеристики, и были собраны с использованием школьных отчётов и анкет.
+
+Предоставлены два набора данных, касающиеся успеваемости по двум различным предметам: математика и португальский язык. 
+
+\subsubsection{Формулирование задачи кластеризации}
+
+В качестве целевой переменной \textit{(метки класса)} предлагается использовать диапазон времени, затраченного на учёбу (\texttt{studytime}).
+
+В качестве фичей \textit{(предикторов)} возьмём следующие признаки:
+\begin{itemize}
+    \item \texttt{age} (возраст) --- числовой признак, который может коррелировать с тем, сколько времени студенту требуется на освоение материала;
+    \item \texttt{Medu} (образование матери) --- числовой признак, который может влиять на учебные привычки студента и количество времени, выделяемого на учёбу;
+    \item \texttt{Fedu} (образование отца) --- числовой признак, аналогично \texttt{Medu};
+    \item \texttt{goout} (частота прогулок с друзьями) --- числовой признак, который может отрицательно коррелировать с количеством времени, затрачиваемого на учёбу;
+    \item \texttt{Dalc} (потребление алкоголя в будни) --- числовой признак, который может отражать образ жизни студента и влиять на его способность выделять время на учёбу;
+    \item \texttt{Walc} (потребление алкоголя в выходные) --- числовой признак, аналогично \texttt{Dalc};
+    \item \texttt{health} (текущее состояние здоровья) --- числовой признак, который может влиять на общую работоспособность и регулярность занятий;
+    \item \texttt{absences} (количество пропусков) --- числовой признак, который может отражать уровень дисциплины и необходимость навёрстывать материал самостоятельно;
+    \item \texttt{failures} (количество академических неудач) --- числовой признак, который может быть связан с необходимостью увеличить время на учёбу для исправления ситуации.
+\end{itemize}
+
+Остальные признаки были исключены из рассмотрения, так как они либо категориальные, либо не имеют прямого влияния на количество времени, затрачиваемого на учёбу.
+
+\subsection{Собственная реализация \texttt{k-means}}
+
+\subsubsection{Описание алгоритма}
+
+Алгоритм \texttt{k-means} относится к методам обучения без учителя и решает задачу кластеризации. В качестве метрики воспользуемся \textit{евклидовым расстоянием}.
+
+Процесс работы алгоритма можно описать следующей схемой:
+
+\begin{figure}[H]
+    \centering
+    \begin{tikzpicture}[
+        box/.style={rectangle, draw=black, thick, rounded corners, minimum width=3cm, minimum height=1cm, align=center, fill=blue!10},
+        arrow/.style={->, thick, >=stealth}
+    ]
+        \node (init) [box] {Инициализация \\ \(k\) центроидов\\ $\{\mu_j^{(0)} \}_{j=1}^{k}$};
+        \coordinate (init_branch) at ([yshift=1cm] init.north);
+        \node (assign) [box, anchor=west, xshift=1cm] at (init_branch) {Распределение \\ объектов по кластерам\\ $\{C_j^{(i)} \}_{j=1}^{k}$};
+        \node (update) [box, anchor=west, xshift=1cm] at (assign.east) {Пересчёт \\ центроидов\\ $\{\mu_j^{(i)} \}_{j=1}^{k}$};
+        \node (check)  [box, anchor=north, yshift=-1cm] at (update.south) {Проверка \\ сходимости};
+        \node (stop)   [box, anchor=north, yshift=-1cm, fill=green!20] at (check.south) {Остановка};
+
+        \draw [arrow] (init.north) |- node[above] {$i=0$} (assign.west);
+        \draw [arrow] (assign.east)   -- (update.west);
+        \draw [arrow] (update.south)  -- (check.north);
+        \draw [arrow] (check.west) -| node[pos=0, above left] {Нет} node[pos=.6, right] {$i=i+1$} (assign.south);
+        \draw [arrow] (check) -- node[right] {Да} (stop);
+    \end{tikzpicture}
+    \caption{Схема алгоритма \texttt{k-means}.}
+\end{figure}
+
+Шаги алгоритма подробнее:
+\begin{enumerate}
+    \item \textbf{Инициализация:} выбираются \(k\) начальных центров кластеров, в нашем случае \textit{центроидов}.
+    \item \textbf{Распределение:} для каждого объекта вычисляется расстояние до каждого центроида. Объект относится к тому кластеру, расстояние до центра которого минимально.
+    \item \textbf{Пересчёт:} для каждого кластера вычисляется новый центроид.
+    \item \textbf{Проверка сходимости:} если центроиды перестали меняться, алгоритм завершает работу. В противном случае происходит повторное распределение объектов, и шаги повторяются.
+\end{enumerate}
+
+\subsubsection{Реализация алгоритма на Python}
+
+В листинге \ref{lst:kmeans} представлен код собственной реализации алгоритма \texttt{k-means}.
+
+\begin{code}
+\caption{Собственная реализация \texttt{k-means}.}
+\label{lst:kmeans}
+\begin{minted}{python}
+class CustomKMeans:
+    def __init__(
+        self,
+        n_clusters: int,
+        max_iter: int,
+        random_state: int,
+    ):
+        self.n_clusters = n_clusters
+        self.max_iter = max_iter
+        self.random_state = random_state
+        self.centroids = None
+        self.labels_ = None
+
+    def get_labels(self) -> List[int]:
+        if self.labels_ is None:
+            raise RuntimeError("CustomKMeans must be fitted before labels are requested")
+        return list(self.labels_)
+
+    def fit(self, X):
+        X = np.array(X)
+        np.random.seed(self.random_state)
+        idx = np.random.choice(X.shape[0], self.n_clusters, replace=False)
+        self.centroids = X[idx]
+
+        for _ in range(self.max_iter):
+            distances = np.linalg.norm(X[:, np.newaxis] - self.centroids, axis=2)
+            self.labels_ = np.argmin(distances, axis=1)
+
+            new_centroids = np.array([
+                X[self.labels_ == k].mean(axis=0) if np.sum(self.labels_ == k) > 0 else self.centroids[k]
+                for k in range(self.n_clusters)
+            ])
+
+            if np.all(self.centroids == new_centroids):
+                break
+            self.centroids = new_centroids
+        return self
+\end{minted}
+\end{code}
+
+\subsubsection{Результаты применения алгоритма}
+
+Опишем параметры эксперимента для воспроизведения результатов:
+\begin{itemize}
+    \item количество кластеров \(k=\VAR{ k }\);
+    \item случайная инициализация центроидов с сидом $\VAR{ random_state }$;
+    \item стандартизация данных перед подачей в алгоритм.
+\end{itemize}
+
+\subsection{Применение \texttt{k-means} из библиотеки \texttt{sklearn}}
+
+Опишем параметры эксперимента для воспроизведения результатов:
+\begin{itemize}
+    \item количество кластеров \(k=\VAR{ k }\);
+    \item случайная инициализация центроидов с сидом $\VAR{ random_state }$;
+    \item стандартизация данных перед подачей в алгоритм.
+\end{itemize}
+
+Как можно заметить, параметры эксперимента совпадают с параметрами собственной реализации алгоритма. Это сделано намеренно, чтобы можно было сравнить результаты двух реализаций.
+
+В качестве эталонной реализации возьмём алгоритм \texttt{k-means} из библиотеки \texttt{scikit-learn}. Листинг \ref{lst:sklearn_kmeans} демонстрирует применение алгоритма к подготовленным данным.
+
+\begin{code}
+\caption{Применение \texttt{k-means} из \texttt{scikit-learn}.}
+\label{lst:sklearn_kmeans}
+\begin{minted}{python}
+kmeans = CustomKMeans(
+    n_clusters=k,
+    max_iter=max_iter,
+    random_state=random_state
+)
+kmeans.fit(X_scaled)
+labels = kmeans.get_labels()
+
+unique_labels = set(labels)
+n_clusters = len(unique_labels)
+
+db = davies_bouldin_score(X_scaled, labels)
+nmi = normalized_mutual_info_score(Y, labels)
+\end{minted}
+\end{code}
+
+\subsection{Применение иерархической кластеризации}
+
+Для иерархической кластеризации воспользуемся \textit{агломеративным подходом}. Он подразумевает, что на начальном этапе каждый объект является отдельным кластером, а затем происходит последовательное объединение наиболее близких кластеров до тех пор, пока не останется $k$ кластеров.
+
+Реализация агломеративной кластеризации взята из библиотеки \texttt{scikit-learn} с класса \texttt{AgglomerativeClustering}. Листинг \ref{lst:hierarchical_clustering} демонстрирует применение алгоритма к подготовленным данным.
+
+\begin{code}
+\caption{Иерархическая кластеризация}
+\label{lst:hierarchical_clustering}
+\begin{minted}{python}
+hc = AgglomerativeClustering(n_clusters=k)
+labels = hc.fit_predict(X_scaled)
+
+unique_labels = set(labels)
+n_clusters = len(unique_labels - {-1})
+
+db = davies_bouldin_score(X_scaled, labels)
+nmi = normalized_mutual_info_score(Y, labels)
+\end{minted}
+\end{code}
+
+\subsection{Применение \textbf{DBSCAN}}
+
+\textbf{DBSCAN} \textit{(Density-Based Spatial Clustering of Applications with Noise)} --- алгоритм, который находит кластеры на основе плотности точек. Он не требует заранее задавать количество кластеров $k$, но чувствителен к выбору следующих параметров:
+\begin{itemize}
+    \item \(\varepsilon\) --- радиус окрестности, в пределах которого точки считаются соседними;
+    \item \texttt{min\_samples} --- минимальное количество точек, необходимых для формирования плотного ядра.
+\end{itemize}
+
+Реализация агломеративной кластеризации взята из библиотеки \texttt{scikit-learn} с класса \texttt{DBSCAN}. Листинг \ref{lst:dbscan} демонстрирует применение алгоритма к подготовленным данным.
+
+\begin{code}
+\caption{Применение DBSCAN.}
+\label{lst:dbscan}
+\begin{minted}{python}
+dbscan = DBSCAN(eps=eps, min_samples=min_samples)
+labels = dbscan.fit_predict(X_scaled)
+
+unique_labels = set(labels)
+n_clusters = len(unique_labels - {-1})
+n_noise = int((labels == -1).sum())
+
+nmi = normalized_mutual_info_score(Y, labels)
+db = davies_bouldin_score(X_scaled, labels)
+\end{minted}
+\end{code}
+
+\subsection{Уменьшение размерности с помощью PCA}
+
+\textbf{Метод главных компонент} \textit{(Principal Component Analysis, PCA)} позволяет спроецировать данные в пространство меньшей размерности, сохраняя при этом максимум дисперсии.
+
+Метод может улучшить результат кластеризации за счёт удаления шума и менее информативных признаков. Применим PCA для сжатия до $\VAR{ n_components }$ компонент, после чего запустим DBSCAN.
+
+\begin{code}
+\caption{Кластеризация DBSCAN с предварительным применением PCA.}
+\begin{minted}{python}
+pca = PCA(n_components=n_components)
+X_pca = pca.fit_transform(X_scaled)
+
+dbscan = DBSCAN(eps=eps, min_samples=min_samples)
+labels = dbscan.fit_predict(X_pca)
+
+unique_labels = set(labels)
+n_clusters = len(unique_labels - {-1})
+n_noise = int((labels == -1).sum())
+
+db = davies_bouldin_score(X_pca, labels)
+nmi = normalized_mutual_info_score(Y, labels)
+\end{minted}
+\end{code}
+
+\subsection{Нормализация данных}
+
+В предыдущих пунктах уже использовалась стандартизация при помощи класса \texttt{StandardScaler} из библиотеки \texttt{scikit-learn}, которая приводит признаки к нулевому среднему и единичной дисперсии, но не гарантирует, что значения признаков будут находиться в одном диапазоне.
+
+В этом пункте применим \textit{min-max нормализацию}, которая масштабирует значения признаков в диапазон \([0, 1]\). Это особенно полезно, если признаки имеют разные единицы измерения и их распределение далеко от нормального.
+
+Нормализованные данные будут поданы на вход алгоритму \textit{агломеративной кластеризации}, чтобы оценить влияние нормализации на качество кластеризации. Листинг \ref{lst:normalization} демонстрирует применение нормализации и последующей кластеризации.
+
+\begin{code}
+\caption{Кластеризация с Min-Max нормализацией.}
+\label{lst:normalization}
+\begin{minted}{python}
+hc = AgglomerativeClustering(n_clusters=k)
+labels = hc.fit_predict(X_norm)
+
+unique_labels = set(labels)
+n_clusters = len(unique_labels)
+
+db = davies_bouldin_score(X_norm, labels)
+nmi = normalized_mutual_info_score(Y, labels)
+\end{minted}
+\end{code}
