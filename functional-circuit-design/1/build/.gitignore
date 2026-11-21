@@ -1,0 +1,23 @@
+# Quartus generated output
+db/
+incremental_db/
+output_files/
+simulation/
+*.qws
+*.qpf.bak
+*.bak
+*.rpt
+*.sof
+*.pof
+*.jdi
+*.sld
+*.vcd
+*.wlf
+*.wlf.*
+*.txt
+
+# ModelSim work libraries
+work/
+modelsim.ini
+transcript
+vsim.wlf

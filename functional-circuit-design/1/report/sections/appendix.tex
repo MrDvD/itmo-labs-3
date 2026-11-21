@@ -1,0 +1,109 @@
+\section{Листинг \texttt{testbench}}
+\label{sec:testbench_listing}
+
+\begin{code}
+\caption{Код \texttt{testbench}.}
+\begin{minted}{verilog}
+module decoder_testbench;
+    reg sel1, sel2;
+    wire [1:0] d1, d2;
+    parameter N = 8;
+    reg [$clog2(N)-1:0] sel3;
+    wire [N-1:0] d3;
+    reg clk, rst, en;
+    
+    decoder_1_assign first_decoder(sel1, d1);
+    decoder_1_always second_decoder(sel2, d2);
+    decoder_tree #(.N(N)) third_decoder(en, sel3, d3);
+    result_keeper #(.N(N)) keeper_element(clk, rst, d3);
+    
+    initial begin
+        // first decoder
+        sel1 = 1'b0;
+        #1;
+        $display("first: expected 1 - found %0d", d1);
+        sel1 = 1'b1;
+        #1;
+        $display("first: expected 2 - found %0d", d1);
+    end
+    
+    initial begin
+        // second decoder
+        sel2 = 1'b0;
+        #1;
+        $display("second: expected 1 - found %0d", d2);
+        sel2 = 1'b1;
+        #1;
+        $display("second: expected 2 - found %0d", d2);
+    end
+    
+    initial begin
+        // third decoder
+        en = 1;
+        for (int i = 0; i < N; i++) begin
+            sel3 = i;
+            #1;
+            $display("third: expected %0d - found %0d", 1 << i, d3);
+        end
+    end
+    
+    initial begin
+        // init keeper element
+        $display("keeper: initial value - %0d", keeper_element.result);
+        clk = 0;
+        rst = 1;
+        forever #5 clk = ~clk;
+    end
+    
+    initial begin
+        // test keeper
+        for (int i = 1; i <= 8; i++) begin
+            if (i == 3) begin
+                $display("setting rst");
+                rst = 0;
+            end
+            if (i == 6) begin
+                $display("unsetting rst");
+                rst = 1;
+            end
+            #6;
+            $display("keeper: saved value #%0d - %0d", i, keeper_element.result);
+        end
+    end
+endmodule
+\end{minted}
+\end{code}
+
+\newpage
+\section{Результаты симуляции}
+\label{sec:sim_results}
+
+\begin{code}
+\caption{Лог выполнения симуляции \texttt{testbench}.}
+\begin{minted}{verilog}
+VSIM 3> run
+# keeper: initial value - 0
+# first: expected 1 - found 1
+# second: expected 1 - found 1
+# third: expected 1 - found 1
+# first: expected 2 - found 2
+# second: expected 2 - found 2
+# third: expected 2 - found 2
+# third: expected 4 - found 4
+# third: expected 8 - found 8
+# third: expected 16 - found 16
+# keeper: saved value #1 - 32
+# third: expected 32 - found 32
+# third: expected 64 - found 64
+# third: expected 128 - found 128
+# keeper: saved value #2 - 32
+# setting rst
+# keeper: saved value #3 - 0
+# keeper: saved value #4 - 0
+# keeper: saved value #5 - 0
+# unsetting rst
+# keeper: saved value #6 - 128
+# keeper: saved value #7 - 128
+# keeper: saved value #8 - 128
+\end{minted}
+\end{code}
