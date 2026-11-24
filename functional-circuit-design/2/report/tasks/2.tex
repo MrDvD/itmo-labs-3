@@ -1,0 +1,81 @@
+\subsection{Многотактная схема вычисления функции}
+
+\subsubsection{Постановка задачи}
+
+Для вычисления значения функции \eqref{eq:func} необходимо произвести три арифметические операции:
+\begin{itemize}
+    \item вычисление кубического корня числа $a$;
+    \item вычисление квадратного корня числа $b$;
+    \item суммирование результатов двух предыдущих операций.
+\end{itemize}
+
+Все перечисленные операции были реализованы в разделе \ref{sec:multi_cycle_modules}.
+
+Дополним граф зависимости модулей, чтобы реализовать вычисление функции. Результат представлен на рисунке \ref{fig:module_dependencies_function}.
+
+\begin{figure}[h]
+    \centering
+    \begin{tikzpicture}[
+        fsm/.style={
+            draw, rectangle, thick, fill=blue!10, 
+            minimum width=4cm, minimum height=1cm, 
+            align=center, rounded corners
+        },
+        module/.style={
+            draw, rectangle, thick, fill=green!10, 
+            minimum width=3.5cm, minimum height=1.2cm, 
+            align=center
+        },
+        resource/.style={
+            draw, rectangle, thick, fill=orange!15, 
+            minimum width=3.5cm, minimum height=1cm, 
+            align=center
+        },
+        data/.style={
+            -{Stealth[scale=1.2]}, thick, draw=black
+        },
+        node distance=1.5cm and 1.5cm
+    ]
+
+    % --- Узлы ---
+    
+    % Управляющий автомат
+    \node[fsm] (fsm) {Модуль\\ результата функции};
+
+    % Модули алгоритмов
+    \node[module, below=1cm of fsm, xshift=-2.5cm] (cbrt) {Модуль\\кубического корня};
+    \node[module, below=1cm of fsm, xshift=2.5cm] (sqrt) {Модуль\\квадратного корня};
+
+    % Общие аппаратные ресурсы
+    \node[resource, below=3cm of fsm] (adder) {Модуль сумматора};
+    \node[resource, below=3cm of fsm, xshift=-5cm] (mult)  {Модуль умножителя};
+
+    % --- Связи ---
+
+    \draw[data] (fsm) -- (cbrt);
+    \draw[data] (fsm) -- (sqrt);
+    \draw[data] (fsm) -- (adder);
+
+    \draw[data] (cbrt) -- (adder);
+    \draw[data] (sqrt) -- (adder);
+    \draw[data] (cbrt) -- (mult);
+    \end{tikzpicture}
+    \caption{Граф зависимости модулей для вычисления функции.}
+    \label{fig:module_dependencies_function}
+\end{figure}
+
+\subsubsection{Модуль результата функции}
+
+Граф переходов для модуля результата функции представлен на рисунке \ref{fig:func_result_fsm}.
+
+\begin{figure}[h]
+    \caption{Граф переходов для модуля результата функции.}
+    \label{fig:func_result_fsm}
+    \centering
+\end{figure}
+
+Код модуля результата функции представлен в листинге \ref{lst:func_result} приложения \ref{app:listings}.
+
+\subsubsection{Область допустимых значений функции}
+
+\dots

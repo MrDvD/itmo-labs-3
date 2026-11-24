@@ -1,0 +1,123 @@
+\subsection{Многотактные арифметические модули}
+\label{sec:multi_cycle_modules}
+
+\subsubsection{Постановка задачи}
+
+Для базовой реализации арифметических модулей естественно было бы разделить их на три независимых модуля, каждый из которых будет реализовывать свою операцию. Однако в дальнейшем эти модули должны быть объединены в единую многотактную схему вычисления функции \eqref{eq:func} с заданными ограничениями на количество сумматоров и умножителей. Поэтому такой вариант разделения на модули не подойдёт.
+
+Посчитаем количество базовых операционных элементов, которое требует каждая из операций согласно блок-схемам из приложения \ref{app:algorithms}:
+\begin{itemize}
+    \item суммирование результатов двух предыдущих операций:
+    \begin{itemize}
+        \item $N$-разрядный сумматор.
+    \end{itemize}
+    \item вычисление квадратного корня числа $b$:
+    \begin{itemize}
+        \item вычитатель $N$-разрядного числа;
+        \item $N$-разрядное логическое ИЛИ.
+    \end{itemize}
+    \item вычисление кубического корня числа $a$:
+    \begin{itemize}
+        \item $N$-разрядное логическое ИЛИ;
+        \item вычитатель $N$-разрядного числа;
+        \item $N$-разрядный умножитель.
+    \end{itemize}
+\end{itemize}
+
+В данной работе вычитатель будет реализован с помощью сумматора, поэтому на него распространяются ограничения на количество сумматоров.
+
+Как можно видеть, если реализовать каждую из операций в виде отдельного модуля, то ограничения не будут соблюдены. Поэтому было принято решение вынести сумматор в отдельный общий модуль, который будет последовательно использоваться как общий ресурс.
+
+Итого получим следующий граф зависимости модулей, который представлен на рисунке \ref{fig:module_dependencies_basic}.
+
+\begin{figure}[h]
+    \centering
+    \begin{tikzpicture}[
+        fsm/.style={
+            draw, rectangle, thick, fill=blue!10, 
+            minimum width=4cm, minimum height=1cm, 
+            align=center, rounded corners
+        },
+        module/.style={
+            draw, rectangle, thick, fill=green!10, 
+            minimum width=3.5cm, minimum height=1.2cm, 
+            align=center
+        },
+        resource/.style={
+            draw, rectangle, thick, fill=orange!15, 
+            minimum width=3.5cm, minimum height=1cm, 
+            align=center
+        },
+        data/.style={
+            -{Stealth[scale=1.2]}, thick, draw=black
+        },
+        node distance=1.5cm and 1.5cm
+    ]
+
+    % --- Узлы ---
+
+    % Модули алгоритмов
+    \node[module, xshift=-2.5cm] (cbrt) {Модуль\\кубического корня};
+    \node[module, xshift=2.5cm] (sqrt) {Модуль\\квадратного корня};
+
+    % Общие аппаратные ресурсы
+    \node[resource, yshift=-2cm] (adder) {Модуль сумматора};
+    \node[resource, yshift=-2cm, xshift=-5cm] (mult)  {Модуль умножителя};
+
+    % --- Связи ---
+
+    \draw[data] (cbrt) -- (adder);
+    \draw[data] (sqrt) -- (adder);
+    \draw[data] (cbrt) -- (mult);
+    \end{tikzpicture}
+    \caption{Граф зависимости модулей для арифметических операций.}
+    \label{fig:module_dependencies_basic}
+\end{figure}
+
+\subsubsection{Модуль сумматора}
+
+Граф переходов для модуля сумматора представлен на рисунке \ref{fig:adder_fsm}.
+
+\begin{figure}[h]
+    \caption{Граф переходов для модуля сумматора.}
+    \label{fig:adder_fsm}
+    \centering
+\end{figure}
+
+Код модуля сумматора представлен в листинге \ref{lst:summer} приложения \ref{app:listings}.
+
+\subsubsection{Модуль умножителя}
+
+Граф переходов для модуля умножителя представлен на рисунке \ref{fig:multiplier_fsm}.
+
+\begin{figure}[h]
+    \caption{Граф переходов для модуля умножителя.}
+    \label{fig:multiplier_fsm}
+    \centering
+\end{figure}
+
+Код модуля умножителя представлен в листинге \ref{lst:multiplier} приложения \ref{app:listings}.
+
+\subsubsection{Модуль квадратного корня}
+
+Граф переходов для модуля квадратного корня представлен на рисунке \ref{fig:sqrt_fsm}.
+
+\begin{figure}[h]
+    \caption{Граф переходов для модуля квадратного корня.}
+    \label{fig:sqrt_fsm}
+    \centering
+\end{figure}
+
+Код модуля квадратного корня представлен в листинге \ref{lst:sqrt} приложения \ref{app:listings}.
+
+\subsubsection{Модуль кубического корня}
+
+Граф переходов для модуля кубического корня представлен на рисунке \ref{fig:cbrt_fsm}.
+
+\begin{figure}[h]
+    \caption{Граф переходов для модуля кубического корня.}
+    \label{fig:cbrt_fsm}
+    \centering
+\end{figure}
+
+Код модуля кубического корня представлен в листинге \ref{lst:cbrt} приложения \ref{app:listings}.
