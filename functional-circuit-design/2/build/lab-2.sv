@@ -194,10 +194,10 @@ module sqrt_module_testbench;
 	shortint a_sub, b_sub, c_sub;
 	shortint idx;
 	
-	shortint test_data [2][3] = '{
-		'{16'd4, 16'd25, 16'd9},
-		'{16'd2, 16'd5, 16'd3}
-	};
+	shortint test_data [2][10] = '{
+    '{16'd0, 16'd1, 16'd2, 16'd3, 16'd4, 16'd9, 16'd15, 16'd16, 16'd25, 16'd65535},
+    '{16'd0, 16'd1, 16'd1, 16'd1, 16'd2, 16'd3, 16'd3, 16'd4, 16'd5, 16'd255}
+};
 	
 	initial begin
 		idx = -1;
@@ -208,7 +208,7 @@ module sqrt_module_testbench;
 	always #10 clk = ~clk;
 	
 	always @(idx) begin
-		if (idx < 3) begin
+		if (idx < 10) begin
 			start = 1;
 			x = test_data[0][idx];
 		end
@@ -251,9 +251,13 @@ module cbrt_module_testbench;
 	shortint idx;
 	int c_mul;
 	
-	shortint test_data [2][3] = '{
-		'{16'd8, 16'd343, 16'd125},
-		'{16'd2, 16'd7, 16'd5}
+	// shortint test_data [2][10] = '{
+	//	'{16'd8, 16'd343, 16'd125, 16'd27, 16'd64, 16'd1, 16'd216, 16'd512, 16'd1000, 16'd1728},
+	//	'{16'd2, 16'd7, 16'd5, 16'd3, 16'd4, 16'd1, 16'd6, 16'd8, 16'd10, 16'd12}
+	//};
+	shortint test_data [2][2] = '{
+		'{16'd1000, 16'd216},
+		'{16'd10, 16'd6}
 	};
 	
 	initial begin
@@ -265,7 +269,7 @@ module cbrt_module_testbench;
 	always #10 clk = ~clk;
 	
 	always @(idx) begin
-		if (idx < 3) begin
+		if (idx < 2) begin
 			start = 1;
 			x = test_data[0][idx];
 		end
@@ -298,6 +302,14 @@ module cbrt_module_testbench;
 		.done(done_sub),
 		.a(a_sub), .b(b_sub),
 		.c(c_sub)
+	);
+	
+	multiplier mul_instance(
+		.clk(clk),
+		.start(start_mul),
+		.done(done_mul),
+		.a(a_mul), .b(b_mul),
+		.c(c_mul)
 	);
 endmodule
 
@@ -483,7 +495,7 @@ module square_root
 	shortint x_buf, x_buf_next;
 	shortint y_buf, y_buf_next;
 	shortint m, m_next;
-	shortint b;
+	shortint b, b_neg;
 	
 	always @(posedge clk) begin
 		state <= state_next;
@@ -492,7 +504,7 @@ module square_root
 		m <= m_next;
 	end
 	
-	assign b = y | m;
+	assign b = (y_buf << 1) | m;
 	
 	always @* begin
 		state_next = state;
@@ -503,13 +515,13 @@ module square_root
 		done = 0;
 		y = 0;
 		start_sub = 0;
-		x_sub_arg = 0;
-		b_sub_arg = 0;
+		x_sub_arg = x_buf;
+		b_sub_arg = -b;
 		
 		case (state)
 			IDLE: begin
 				if (start) begin
-					m_next = 1'b1 << 14;
+					m_next = 16'b1 << 14;
 					y_buf_next = 0;
 					x_buf_next = x;
 					state_next = BRANCH_M;
@@ -530,7 +542,7 @@ module square_root
 			end
 			
 			BRANCH_X: begin
-				if (x >= b) begin
+				if (x_buf >= b) begin
 					state_next = SUB_BEGIN;
 				end else begin
 					state_next = END_BRANCH;
@@ -538,8 +550,6 @@ module square_root
 			end
 			
 			SUB_BEGIN: begin
-				b_sub_arg = ~b + 1'b1;
-				x_sub_arg = x_buf;
 				start_sub = 1;
 				state_next = SUB_WAIT;
 			end
@@ -547,12 +557,12 @@ module square_root
 			SUB_WAIT: begin
 				if (done_sub) begin
 					x_buf_next = x_sub_res;
+					y_buf_next |= m;
 					state_next = END_BRANCH;
 				end
 			end
 			
 			END_BRANCH: begin
-				y_buf_next |= m;
 				m_next >>= 2;
 				state_next = BRANCH_M;
 			end
@@ -605,10 +615,11 @@ module cubic_root
 	} state_t;
 	
 	state_t state, state_next;
-	bit signed [3:0] s, s_next;
+	bit signed [4:0] s, s_next;
 	shortint x_buf, x_buf_next;
 	shortint y_buf, y_buf_next;
 	int b_buf, b_buf_next;
+	bit is_sq, is_sq_next;
 	
 	always @(posedge clk) begin
 		state <= state_next;
@@ -616,6 +627,7 @@ module cubic_root
 		y_buf <= y_buf_next;
 		b_buf <= b_buf_next;
 		s <= s_next;
+		is_sq <= is_sq_next;
 	end
 	
 	always @* begin
@@ -623,23 +635,24 @@ module cubic_root
 		x_buf_next = x_buf;
 		y_buf_next = y_buf;
 		b_buf_next = b_buf;
+		is_sq_next = is_sq;
 		s_next = s;
 		
 		done = 0;
 		y = 0;
 		start_sub = 0;
-		x_sub_arg = 0;
-		b_sub_arg = 0;
+		x_sub_arg = x_buf;
+		b_sub_arg = shortint'(~b_buf + 1'b1);
 		start_mul = 0;
-		a_mul_arg = 0;
-		b_mul_arg = 0;
+		a_mul_arg = is_sq ? shortint'(b_buf) : 3;
+		b_mul_arg = is_sq ? y_buf + 1'b1 : y_buf;
 		
 		case (state)
 			IDLE: begin
 				if (start) begin
 					y_buf_next = 0;
 					x_buf_next = x;
-					s_next = 4'd14;
+					s_next = 5'sd15;
 					state_next = BRANCH_S;
 				end
 			end
@@ -658,8 +671,7 @@ module cubic_root
 			end
 			
 			MUL_3_BEGIN: begin
-				a_mul_arg = 3;
-				b_mul_arg = y_buf;
+				is_sq_next = 0;
 				start_mul = 1;
 				state_next = MUL_3_WAIT;
 			end
@@ -672,8 +684,7 @@ module cubic_root
 			end
 			
 			MUL_SQ_BEGIN: begin
-				a_mul_arg = shortint'(b_buf);
-				b_mul_arg = y_buf + 1'b1;
+				is_sq_next = 1;
 				start_mul = 1;
 				state_next = MUL_SQ_WAIT;
 			end
@@ -699,8 +710,6 @@ module cubic_root
 			end
 			
 			SUB_BEGIN: begin
-				b_sub_arg = shortint'(~b_buf + 1'b1);
-				x_sub_arg = x_buf;
 				start_sub = 1;
 				state_next = SUB_WAIT;
 			end

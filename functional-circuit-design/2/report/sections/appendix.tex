@@ -141,7 +141,7 @@
     % FALSE branch from x >= b (routes right, then down to join the main flow)
     \draw[regular arrow] (dec_x.east) 
         -- node[above, font=\small] {No} ([xshift=\nodegap]dec_x.east) 
-        |- (or_y.east); % Joins exactly between sub_x and or_y
+        |- (shift_m.east);
 
     % Loop back from m = m >> 2 to m != 0
     \draw[regular arrow] (shift_m.west) 
@@ -164,7 +164,7 @@
     
     \node[preparation, anchor=north] (init_y) at ([yshift=-\nodegap]input_x.south) {$y = 0$};
     
-    \node[preparation, anchor=north] (init_s) at ([yshift=-\nodegap]init_y.south) {$s = N - 2$};
+    \node[preparation, anchor=north] (init_s) at ([yshift=-\nodegap]init_y.south) {$s = N - 1$};
     
     \node[decision, anchor=north] (dec_s) at ([yshift=-\nodegap]init_s.south) {$s > -3$};
     
