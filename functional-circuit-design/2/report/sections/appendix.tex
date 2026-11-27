@@ -1,0 +1,277 @@
+\section{Алгоритмы арифметических операций}
+\label{app:algorithms}
+
+В этом приложении представлены блок-схемы алгоритмов арифметических операций. В каждой блок-схеме символом $N$ обозначена разрядность входных операндов.
+
+\def\nodegap{.75cm}
+
+\vspace*{\fill}
+
+\begin{figure}[H]
+    \centering
+    
+    \begin{tikzpicture}[gost flowchart]
+    
+    % --- Nodes (using anchors and shifts) ---
+    \node[terminator, anchor=north] (start) at (0,0) {Начало};
+    
+    \node[data, anchor=north] (input_ab) at ([yshift=-\nodegap]start.south) {$a, b$};
+    
+    \node[preparation, anchor=north] (init_ctr) at ([yshift=-\nodegap]input_ab.south) {$ctr = 0$};
+    
+    \node[preparation, anchor=north] (init_res) at ([yshift=-\nodegap]init_ctr.south) {$part\_res = 0$};
+    
+    \node[decision, anchor=north] (dec_ctr) at ([yshift=-\nodegap]init_res.south) {$ctr < N-1$};
+    
+    \node[decision, anchor=north] (dec_bit) at ([yshift=-\nodegap]dec_ctr.south) {$b[ctr] = 1?$};
+    
+    \node[process, anchor=north] (calc_part) at ([yshift=-\nodegap]dec_bit.south) {$part\_res = part\_res + a \ll ctr$};
+    
+    \node[process, anchor=north] (inc_ctr) at ([yshift=-\nodegap]calc_part.south) {$ctr = ctr + 1$};
+    
+    % Right side branch
+    \node[process, anchor=west] (assign_res) at ([xshift=2*\nodegap]dec_ctr.east) {$result = part\_res$};
+    
+    \node[data, anchor=north] (output_res) at ([yshift=-\nodegap]assign_res.south) {$result$};
+    
+    \node[terminator, anchor=north] (end) at ([yshift=-\nodegap]output_res.south) {Конец};
+
+
+    % --- Connections (using regular arrow style and explicit anchors) ---
+
+    % Main vertical flow
+    \draw[regular arrow] (start.south) -- (input_ab.north);
+    \draw[regular arrow] (input_ab.south) -- (init_ctr.north);
+    \draw[regular arrow] (init_ctr.south) -- (init_res.north);
+    \draw[regular arrow] (init_res.south) -- (dec_ctr.north);
+    
+    % TRUE branch from ctr < N-1
+    \draw[regular arrow] (dec_ctr.south) -- node[right, font=\small] {Yes} (dec_bit.north);
+    
+    % TRUE branch from b[ctr] == 1
+    \draw[regular arrow] (dec_bit.south) -- node[right, font=\small] {Yes} (calc_part.north);
+    
+    \draw[regular arrow] (calc_part.south) -- (inc_ctr.north);
+
+    % FALSE branch from ctr < N-1 (goes right)
+    \draw[regular arrow] (dec_ctr.east) -- node[above, font=\small] {No} (assign_res.west);
+    
+    % Output to End
+    \draw[regular arrow] (assign_res.south) -- (output_res.north);
+    \draw[regular arrow] (output_res.south) -- (end.north);
+
+    % FALSE branch from b[ctr] == 1 (routes right, then down, then left to join the main flow)
+    % Joins exactly halfway between calc_part and inc_ctr (0.5cm shift since \nodegap is 1cm)
+    \draw[regular arrow] (dec_bit.east) 
+        -- node[above, font=\small] {No} ([xshift=2.5*\nodegap]dec_bit.east) 
+        |- (inc_ctr.east); 
+
+    % Loop back from ctr = ctr + 1 to ctr < N-1
+    % Joins exactly halfway between init_res and dec_ctr
+    \draw[regular arrow] (inc_ctr.west) 
+        -- ([xshift=-2.5*\nodegap]inc_ctr.west) 
+        |- (dec_ctr.west);
+
+    \end{tikzpicture}
+    \caption{Блок-схема алгоритма вычисления умножения чисел $a$ и $b$.}
+    \label{fig:cbrt_algorithm}
+\end{figure}
+
+\vspace*{\fill}
+
+\begin{figure}[p]
+    \centering
+    \begin{tikzpicture}[gost flowchart]
+    
+    % --- Nodes (using anchors and shifts) ---
+    \node[terminator] (start) at (0,0) {Start};
+    
+    \node[data, anchor=north] (input_x) at ([yshift=-\nodegap]start.south) {$x$};
+    
+    \node[preparation, anchor=north] (calc_m) at ([yshift=-\nodegap]input_x.south) {$m = 1 \ll (N-2)$};
+    
+    \node[preparation, anchor=north] (init_y) at ([yshift=-\nodegap]calc_m.south) {$y = 0$};
+    
+    \node[decision, anchor=north] (dec_m) at ([yshift=-\nodegap]init_y.south) {$m \neq 0$};
+    
+    \node[process, anchor=north] (calc_b) at ([yshift=-\nodegap]dec_m.south) {$b = y \mid m$};
+    
+    \node[process, anchor=north] (shift_y) at ([yshift=-\nodegap]calc_b.south) {$y = y \gg 1$};
+    
+    \node[decision, anchor=north] (dec_x) at ([yshift=-\nodegap]shift_y.south) {$x \geq b$};
+    
+    \node[process, anchor=north] (sub_x) at ([yshift=-\nodegap]dec_x.south) {$x = x - b$};
+    
+    \node[process, anchor=north] (or_y) at ([yshift=-\nodegap]sub_x.south) {$y = y \mid m$};
+    
+    \node[process, anchor=north] (shift_m) at ([yshift=-\nodegap]or_y.south) {$m = m \gg 2$};
+    
+    % Right side branch
+    \node[data, anchor=west] (output_y) at ([xshift=\nodegap]dec_m.east) {$y$};
+    
+    \node[terminator, anchor=north] (end) at ([yshift=-\nodegap]output_y.south) {End};
+
+
+    % --- Connections (using your 'join' style and explicit anchors) ---
+
+    % Main vertical flow
+    \draw[regular arrow] (start.south) -- (input_x.north);
+    \draw[regular arrow] (input_x.south) -- (calc_m.north);
+    \draw[regular arrow] (calc_m.south) -- (init_y.north);
+    \draw[regular arrow] (init_y.south) -- (dec_m.north);
+    
+    % TRUE branch from m != 0
+    \draw[regular arrow] (dec_m.south) -- node[right, font=\small] {Yes} (calc_b.north);
+    
+    \draw[regular arrow] (calc_b.south) -- (shift_y.north);
+    \draw[regular arrow] (shift_y.south) -- (dec_x.north);
+    
+    % TRUE branch from x >= b
+    \draw[regular arrow] (dec_x.south) -- node[right, font=\small] {Yes} (sub_x.north);
+    
+    \draw[regular arrow] (sub_x.south) -- (or_y.north);
+    \draw[regular arrow] (or_y.south) -- (shift_m.north);
+
+    % FALSE branch from m != 0 (goes right)
+    \draw[regular arrow] (dec_m.east) -- node[above, font=\small] {No} (output_y.west);
+    
+    % Output to End
+    \draw[regular arrow] (output_y.south) -- (end.north);
+
+    % FALSE branch from x >= b (routes right, then down to join the main flow)
+    \draw[regular arrow] (dec_x.east) 
+        -- node[above, font=\small] {No} ([xshift=\nodegap]dec_x.east) 
+        |- (shift_m.east);
+
+    % Loop back from m = m >> 2 to m != 0
+    \draw[regular arrow] (shift_m.west) 
+        -- ([xshift=-\nodegap]shift_m.west) 
+        |- (dec_m.west);
+
+\end{tikzpicture}
+    \caption{Блок-схема алгоритма вычисления квадратного корня числа $x$.}
+    \label{fig:cbrt_algorithm}
+\end{figure}
+
+\begin{figure}[p]
+    \centering
+    \begin{tikzpicture}[gost flowchart]
+    
+    % --- Nodes (using anchors and shifts) ---
+    \node[terminator, anchor=north] (start) at (0,0) {Start};
+    
+    \node[data, anchor=north] (input_x) at ([yshift=-\nodegap]start.south) {$x$};
+    
+    \node[preparation, anchor=north] (init_y) at ([yshift=-\nodegap]input_x.south) {$y = 0$};
+    
+    \node[preparation, anchor=north] (init_s) at ([yshift=-\nodegap]init_y.south) {$s = N - 1$};
+    
+    \node[decision, anchor=north] (dec_s) at ([yshift=-\nodegap]init_s.south) {$s > -3$};
+    
+    \node[process, anchor=north] (shift_y) at ([yshift=-\nodegap]dec_s.south) {$y = y \ll 1$};
+    
+    \node[process, anchor=north] (calc_b) at ([yshift=-\nodegap]shift_y.south) {$b = (3y(y+1)+1) \ll s$};
+    
+    \node[decision, anchor=north] (dec_x) at ([yshift=-\nodegap]calc_b.south) {$x \geq b$};
+    
+    \node[process, anchor=north] (sub_x) at ([yshift=-\nodegap]dec_x.south) {$x = x - b$};
+    
+    \node[process, anchor=north] (inc_y) at ([yshift=-\nodegap]sub_x.south) {$y = y + 1$};
+    
+    \node[process, anchor=north] (dec_s_update) at ([yshift=-\nodegap]inc_y.south) {$s = s - 3$};
+    
+    % Right side branch
+    \node[data, anchor=west] (output_y) at ([xshift=\nodegap]dec_s.east) {$y$};
+    
+    \node[terminator, anchor=north] (end) at ([yshift=-\nodegap]output_y.south) {End};
+
+
+    % --- Connections (using your 'join' style and explicit anchors) ---
+
+    % Main vertical flow
+    \draw[regular arrow] (start.south) -- (input_x.north);
+    \draw[regular arrow] (input_x.south) -- (init_y.north);
+    \draw[regular arrow] (init_y.south) -- (init_s.north);
+    \draw[regular arrow] (init_s.south) -- (dec_s.north);
+    
+    % TRUE branch from S > -3
+    \draw[regular arrow] (dec_s.south) -- node[right, font=\small] {Yes} (shift_y.north);
+    
+    \draw[regular arrow] (shift_y.south) -- (calc_b.north);
+    \draw[regular arrow] (calc_b.south) -- (dec_x.north);
+    
+    % TRUE branch from x >= b
+    \draw[regular arrow] (dec_x.south) -- node[right, font=\small] {Yes} (sub_x.north);
+    
+    \draw[regular arrow] (sub_x.south) -- (inc_y.north);
+    \draw[regular arrow] (inc_y.south) -- (dec_s_update.north);
+
+    % FALSE branch from S > -3 (goes right)
+    \draw[regular arrow] (dec_s.east) -- node[above, font=\small] {No} (output_y.west);
+    
+    % Output to End
+    \draw[regular arrow] (output_y.south) -- (end.north);
+
+    % FALSE branch from x >= b (routes right, then down to join the main flow)
+    \draw[regular arrow] (dec_x.east) 
+        -- node[above, font=\small] {No} ([xshift=\nodegap]dec_x.east) 
+        |- (dec_s_update.east); % Merges directly into the east anchor of the final process node
+
+    % Loop back from s = s - 3 to S > -3
+    \draw[regular arrow] (dec_s_update.west) 
+        -- ([xshift=-1.5*\nodegap]dec_s_update.west) 
+        |- (dec_s.west);
+
+    \end{tikzpicture}
+    \caption{Блок-схема алгоритма вычисления кубического корня числа \(x\).}
+    \label{fig:cbrt_algorithm}
+\end{figure}
+
+\newpage
+\section{Листинги разработанных модулей}
+\label{app:listings}
+
+\begin{code}
+\caption{Модуль сумматора.}
+\label{lst:summer}
+\begin{minted}{verilog}
+\end{minted}
+\end{code}
+
+\begin{code}
+\caption{Модуль умножителя.}
+\label{lst:multiplier}
+\begin{minted}{verilog}
+\end{minted}
+\end{code}
+
+\begin{code}
+\caption{Модуль квадратного корня.}
+\label{lst:sqrt}
+\begin{minted}{verilog}
+\end{minted}
+\end{code}
+
+\begin{code}
+\caption{Модуль кубического корня.}
+\label{lst:cbrt}
+\begin{minted}{verilog}
+\end{minted}
+\end{code}
+
+\begin{code}
+\caption{Модуль результата функции.}
+\label{lst:func_result}
+\begin{minted}{verilog}
+\end{minted}
+\end{code}
+
+\section{Результаты тестирования разработанных модулей}
+\label{app:testing}
+
+\begin{code}
+\caption{Вывод разработанного тестового модуля.}
+\label{lst:test_output}
+\begin{minted}{verilog}
+\end{minted}
+\end{code}
