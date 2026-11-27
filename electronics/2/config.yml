@@ -1,0 +1,4 @@
+report:
+    dir: report
+    name: main
+variant_num: 15

@@ -1,0 +1,17 @@
+{
+  "name": "XeTeX Local Container",
+  "dockerComposeFile": "./compose.yml",
+  "service": "report",
+  "workspaceFolder": "/app",
+  "runServices": ["spice", "report"],
+  "customizations": {
+    "vscode": {
+      "extensions": [
+        "ms-python.vscode-pylance",
+        "ms-python.python",
+        "ms-python.debugpy",
+        "ms-python.vscode-python-envs"
+      ]
+    }
+  }
+}
